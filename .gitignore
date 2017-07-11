@@ -1,0 +1,6 @@
+!.idea/codeStyleSettings.xml
+!.idea/copyright
+.idea/
+*.iml
+.gradle/
+build/
