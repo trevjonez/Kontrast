@@ -16,11 +16,18 @@
 
 package com.trevjonez.kontrast
 
-import android.util.Log
 import android.view.View
 
-class KontrastAndroidTestRule : KontrastRule() {
+class KontrastRobolectricRule: KontrastRule() {
+
+    init {
+        try {
+            Class.forName("org.robolectric.RuntimeEnvironment")
+        } catch (error: ClassNotFoundException) {
+            throw IllegalStateException("Robolectric rule should not be used for test runs without robolectric")
+        }
+    }
     override fun ofView(view: View) = LayoutHelper(view, className, methodName) {
-        Log.i("LayoutHelper", "KontrastCapture[${it.absolutePath}]")
+        TODO("Figure out how we want to signal back for the plugin to see what tests were just in the run")
     }
 }

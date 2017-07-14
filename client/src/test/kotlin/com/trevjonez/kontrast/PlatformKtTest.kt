@@ -16,11 +16,25 @@
 
 package com.trevjonez.kontrast
 
-import android.util.Log
-import android.view.View
+import org.assertj.core.api.Assertions.assertThat
+import org.junit.Test
+import org.robolectric.RuntimeEnvironment
 
-class KontrastAndroidTestRule : KontrastRule() {
-    override fun ofView(view: View) = LayoutHelper(view, className, methodName) {
-        Log.i("LayoutHelper", "KontrastCapture[${it.absolutePath}]")
+
+class PlatformKtTest: RoboTest() {
+    @Test
+    fun getOutputDirectoryTest() {
+        assertThat(getOutputDirectory(RuntimeEnvironment.application, "testArg").absolutePath)
+                .endsWith("/Kontrast/client/build/testArg")
+    }
+
+    @Test
+    fun isRunningOnDeviceTest() {
+        assertThat(isRunningOnDevice()).isFalse()
+    }
+
+    @Test
+    fun getProjectBuildDirTest() {
+        assertThat(getProjectBuildDir()).endsWith("/Kontrast/client/build")
     }
 }

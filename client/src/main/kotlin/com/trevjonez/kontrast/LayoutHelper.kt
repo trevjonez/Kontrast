@@ -28,10 +28,8 @@ import java.io.File
 import java.util.UUID
 
 class LayoutHelper(val view: View, val className: String, val methodName: String, val testRunnerNotifier: (File) -> Unit) {
-    val outputDirectory: File = view.context.getExternalFilesDir("Kontrast${File.separator}" +
-                                                                 "$className${File.separator}" +
-                                                                 "$methodName${File.separator}" +
-                                                                 "${UUID.randomUUID()}")
+    val outputDirectory: File = getOutputDirectory(view.context,
+            "Kontrast${File.separator}$className${File.separator}$methodName${File.separator}${UUID.randomUUID()}")
 
     var widthSpec = makeMeasureSpec(0, UNSPECIFIED)
     var heightSpec = makeMeasureSpec(0, UNSPECIFIED)
@@ -93,7 +91,7 @@ class LayoutHelper(val view: View, val className: String, val methodName: String
 
     private fun Int.dp2Px(): Int {
         return TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_DIP,
-                                         this.toFloat(),
-                                         view.context.resources.displayMetrics).toInt()
+                this.toFloat(),
+                view.context.resources.displayMetrics).toInt()
     }
 }

@@ -16,11 +16,21 @@
 
 package com.trevjonez.kontrast
 
-import android.util.Log
 import android.view.View
+import org.assertj.core.api.Assertions.assertThat
+import org.junit.Rule
+import org.junit.Test
+import org.robolectric.RuntimeEnvironment
 
-class KontrastAndroidTestRule : KontrastRule() {
-    override fun ofView(view: View) = LayoutHelper(view, className, methodName) {
-        Log.i("LayoutHelper", "KontrastCapture[${it.absolutePath}]")
+class LayoutHelperTest: RoboTest() {
+
+    @JvmField @Rule val testRule = KontrastRobolectricRule()
+
+    @Test
+    fun directoryIsAsExpected() {
+        val view = View(RuntimeEnvironment.application)
+        assertThat(testRule.ofView(view).outputDirectory.absolutePath)
+                .contains("/Kontrast/client/build/Kontrast/com.trevjonez.kontrast.LayoutHelperTest/directoryIsAsExpected/")
+        //No full path assertion since the output is based on a random uuid
     }
 }

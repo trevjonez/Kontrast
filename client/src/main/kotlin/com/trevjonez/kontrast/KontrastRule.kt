@@ -16,11 +16,20 @@
 
 package com.trevjonez.kontrast
 
-import android.util.Log
 import android.view.View
+import org.junit.rules.TestRule
+import org.junit.runner.Description
+import org.junit.runners.model.Statement
 
-class KontrastAndroidTestRule : KontrastRule() {
-    override fun ofView(view: View) = LayoutHelper(view, className, methodName) {
-        Log.i("LayoutHelper", "KontrastCapture[${it.absolutePath}]")
+abstract class KontrastRule : TestRule {
+    lateinit var className: String
+    lateinit var methodName: String
+
+    override fun apply(base: Statement, description: Description): Statement {
+        className = description.className
+        methodName = description.methodName
+        return base
     }
+
+    abstract fun ofView(view: View): LayoutHelper
 }

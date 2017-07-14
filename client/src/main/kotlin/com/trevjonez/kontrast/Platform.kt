@@ -16,11 +16,17 @@
 
 package com.trevjonez.kontrast
 
-import android.util.Log
-import android.view.View
+import android.content.Context
+import java.io.File
 
-class KontrastAndroidTestRule : KontrastRule() {
-    override fun ofView(view: View) = LayoutHelper(view, className, methodName) {
-        Log.i("LayoutHelper", "KontrastCapture[${it.absolutePath}]")
+fun getOutputDirectory(context: Context, subDirectoryPath: String): File {
+    return if(isRunningOnDevice()) {
+        context.getExternalFilesDir(subDirectoryPath)
+    } else { /* Probably Robolectric? might need this to be more robust. */
+        File("${getProjectBuildDir()}${File.separator}$subDirectoryPath")
     }
 }
+
+fun isRunningOnDevice() = System.getProperty("java.vendor").contains("android", true)
+
+fun getProjectBuildDir(): String = File("build").absolutePath

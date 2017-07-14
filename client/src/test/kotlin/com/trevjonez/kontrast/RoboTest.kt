@@ -16,11 +16,10 @@
 
 package com.trevjonez.kontrast
 
-import android.util.Log
-import android.view.View
+import org.junit.runner.RunWith
+import org.robolectric.RobolectricTestRunner
+import org.robolectric.annotation.Config
 
-class KontrastAndroidTestRule : KontrastRule() {
-    override fun ofView(view: View) = LayoutHelper(view, className, methodName) {
-        Log.i("LayoutHelper", "KontrastCapture[${it.absolutePath}]")
-    }
-}
+@RunWith(RobolectricTestRunner::class)
+@Config(constants = BuildConfig::class, sdk = intArrayOf(21))
+abstract class RoboTest
