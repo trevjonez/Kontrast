@@ -75,7 +75,9 @@ class LayoutHelper(val view: View, val className: String, val methodName: String
     @SuppressLint("SetWorldReadable")
     fun capture() {
         val snapshot = layout().draw()
+        outputDirectory.mkdirs()
         File(outputDirectory, "image.png").apply {
+            createNewFile()
             outputStream().use {
                 snapshot.compress(Bitmap.CompressFormat.PNG, 100, it)
             }

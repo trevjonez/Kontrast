@@ -55,7 +55,7 @@ class WindowAttachment {
 
     object NoopDetach : Closeable {
         override fun close() {
-
+            //Nothing to see here
         }
     }
 
@@ -65,6 +65,4 @@ class WindowAttachment {
             attachmentSet.remove(view)
         }
     }
-
-
 }

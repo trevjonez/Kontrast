@@ -18,16 +18,9 @@ package com.trevjonez.kontrast
 
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.Test
-import org.robolectric.RuntimeEnvironment
 
 
 class PlatformKtTest: RoboTest() {
-    @Test
-    fun getOutputDirectoryTest() {
-        assertThat(getOutputDirectory(RuntimeEnvironment.application, "testArg").absolutePath)
-                .endsWith("/Kontrast/client/build/testArg")
-    }
-
     @Test
     fun isRunningOnDeviceTest() {
         assertThat(isRunningOnDevice()).isFalse()

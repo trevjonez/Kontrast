@@ -22,7 +22,9 @@ import java.io.File
 fun getOutputDirectory(context: Context, subDirectoryPath: String): File {
     return if(isRunningOnDevice()) {
         context.getExternalFilesDir(subDirectoryPath)
-    } else { /* Probably Robolectric? might need this to be more robust. */
+    } else { /* Probably Robolectric? */
+        TODO("Robolectric does not support view rendering or real bitmap behaviour this must be ran on device/emu.\n" +
+             "I would love for this to work in the JVM but the work needed at this point is out of scope of MVP")
         File("${getProjectBuildDir()}${File.separator}$subDirectoryPath")
     }
 }
