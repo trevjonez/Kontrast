@@ -21,7 +21,31 @@ import android.view.ViewGroup
 import java.io.Closeable
 import java.util.WeakHashMap
 
-class WindowAttachment {
+object WindowAttachment {
+
+    val attachmentSet = WeakHashMap<View, Unit>()
+
+    fun emulateAttach(view: View): Closeable {
+        if (view.windowToken != null || attachmentSet.containsKey(view)) return NoopDetach
+
+        attachmentSet.put(view, Unit)
+        AttachMethod.ATTACH(view)
+
+        return EmulatedDetach(view)
+    }
+
+    class EmulatedDetach(val view: View) : Closeable {
+        override fun close() {
+            AttachMethod.DETACH(view)
+            attachmentSet.remove(view)
+        }
+    }
+
+    object NoopDetach : Closeable {
+        override fun close() {
+            //Nothing to see here
+        }
+    }
 
     enum class AttachMethod(val methodName: String) {
         ATTACH("onAttachedToWindow"), DETACH("onDetachedFromWindow");
@@ -36,33 +60,6 @@ class WindowAttachment {
                     this(view.getChildAt(childIndex))
                 }
             }
-        }
-    }
-
-    companion object {
-        val attachmentSet = WeakHashMap<View, Unit>()
-
-        fun emulateAttach(view: View): Closeable {
-            if (view.windowToken != null || attachmentSet.containsKey(view)) return NoopDetach
-
-            attachmentSet.put(view, Unit)
-            AttachMethod.ATTACH(view)
-
-            return EmulatedDetach(view)
-        }
-
-    }
-
-    object NoopDetach : Closeable {
-        override fun close() {
-            //Nothing to see here
-        }
-    }
-
-    class EmulatedDetach(val view: View) : Closeable {
-        override fun close() {
-            AttachMethod.DETACH(view)
-            attachmentSet.remove(view)
         }
     }
 }

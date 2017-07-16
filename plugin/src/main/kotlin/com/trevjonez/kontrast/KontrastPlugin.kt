@@ -19,8 +19,24 @@ package com.trevjonez.kontrast
 import org.gradle.api.Plugin
 import org.gradle.api.Project
 
-class KontrastPlugin: Plugin<Project> {
+class KontrastPlugin : Plugin<Project> {
     override fun apply(project: Project) {
+        //PTV -> Per testable variant
+        //PCD -> Per connected device
 
+        //A: Install main apk task (PTV)
+
+        //B: Install test apk task (PTV)
+
+        //C: Run kontrast test task (PTV)
+        //      Clear any previous test run data from build directory (PCD)
+        //      Scan the adb output and pull test outputs as produced
+        //      Delete on device test outputs once they have been pulled
+
+        //D: Create task to record current test run output as the test key (PTV)
+
+        //E: Create task to perform image diffing and report gen inputs (PTV)
+
+        //F: Create task to generate report html page and junit formatted xml report (PTV)
     }
 }

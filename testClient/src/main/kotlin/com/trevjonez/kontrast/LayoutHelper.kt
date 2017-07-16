@@ -25,11 +25,14 @@ import android.view.View.MeasureSpec.EXACTLY
 import android.view.View.MeasureSpec.UNSPECIFIED
 import android.view.View.MeasureSpec.makeMeasureSpec
 import java.io.File
-import java.util.UUID
 
-class LayoutHelper(val view: View, val className: String, val methodName: String, val testRunnerNotifier: (File) -> Unit) {
-    val outputDirectory: File = getOutputDirectory(view.context,
-            "Kontrast${File.separator}$className${File.separator}$methodName${File.separator}${UUID.randomUUID()}")
+class LayoutHelper(val view: View,
+                   val className: String,
+                   val methodName: String,
+                   val testKey: String,
+                   val testRunnerNotifier: (LayoutHelper) -> Unit) {
+
+    val outputDirectory: File = getOutputDirectory(view.context, "Kontrast${File.separator}$className${File.separator}$methodName${File.separator}$testKey")
 
     var widthSpec = makeMeasureSpec(0, UNSPECIFIED)
     var heightSpec = makeMeasureSpec(0, UNSPECIFIED)
@@ -88,12 +91,12 @@ class LayoutHelper(val view: View, val className: String, val methodName: String
 
         //TODO layout hierarchy //uiautomator dump [file]
 
-        testRunnerNotifier(outputDirectory)
+        testRunnerNotifier(this)
     }
 
     private fun Int.dp2Px(): Int {
         return TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_DIP,
-                this.toFloat(),
-                view.context.resources.displayMetrics).toInt()
+                                         this.toFloat(),
+                                         view.context.resources.displayMetrics).toInt()
     }
 }

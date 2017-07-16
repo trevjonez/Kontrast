@@ -16,7 +16,8 @@
 
 package com.trevjonez.kontrast
 
-import android.util.Log
+import android.os.Bundle
+import android.support.test.InstrumentationRegistry
 import android.view.View
 import org.junit.rules.TestRule
 import org.junit.runner.Description
@@ -32,16 +33,48 @@ abstract class KontrastRule : TestRule {
         return base
     }
 
-    abstract fun ofView(view: View): LayoutHelper
+    fun ofView(view: View): LayoutHelper {
+        return ofView(view, methodName)
+    }
+
+    abstract fun ofView(view: View, testKey: String): LayoutHelper
 }
 
 class KontrastAndroidTestRule : KontrastRule() {
-    override fun ofView(view: View) = LayoutHelper(view, className, methodName) {
-        Log.i("LayoutHelper", "KontrastCapture[${it.absolutePath}]")
+    companion object {
+        const val KONTRAST_SIGNAL_CODE = 42
+        const val CLASS_NAME = "ClassName"
+        const val METHOD_NAME = "MethodName"
+        const val EXTRAS = "Extras"
+        const val DESCRIPTION = "Description"
+        const val OUTPUT_DIR = "OutputDir"
+    }
+
+    override fun ofView(view: View, testKey: String): LayoutHelper {
+        return LayoutHelper(view, className, methodName, testKey) { helper ->
+            val data = Bundle().apply {
+                putString(CLASS_NAME, helper.className)
+                putString(METHOD_NAME, helper.methodName)
+                putString(EXTRAS, helper.extras.map({ (k, v) -> "$k:$v" }).joinToString())
+                putString(DESCRIPTION, helper.description)
+                putString(OUTPUT_DIR, helper.outputDirectory.absolutePath)
+            }
+
+            InstrumentationRegistry.getInstrumentation().sendStatus(KONTRAST_SIGNAL_CODE, data)
+            /*
+            INSTRUMENTATION_STATUS: OutputDir=/storage/emulated/0/Android/data/com.trevjonez.kontrast.app/files/Kontrast/com.trevjonez.kontrast.CardLayoutKontrastTest/johnDoeCard/johnDoeCard
+            INSTRUMENTATION_STATUS: Description=null
+            INSTRUMENTATION_STATUS: MethodName=johnDoeCard
+            INSTRUMENTATION_STATUS: ClassName=com.trevjonez.kontrast.CardLayoutKontrastTest
+            INSTRUMENTATION_STATUS: Extras=
+            INSTRUMENTATION_STATUS_CODE: 42
+            */
+
+        }
     }
 }
 
-class KontrastRobolectricRule: KontrastRule() {
+class KontrastRobolectricRule : KontrastRule() {
     init {
         TODO("Robolectric is not supported.\n" +
              "The only limitation I am aware of is that the bitmap implementation doesn't actually do anything.\n" +
@@ -53,7 +86,7 @@ class KontrastRobolectricRule: KontrastRule() {
         }
     }
 
-    override fun ofView(view: View) = LayoutHelper(view, className, methodName) {
+    override fun ofView(view: View, testKey: String) = LayoutHelper(view, className, methodName, testKey) {
         TODO("Figure out how we want to signal back for the plugin to see what tests were just in the run. If we even get this far")
     }
 }
