@@ -16,6 +16,8 @@
 
 buildscript {
     ext.kotlin_version = '1.1.3-2'
+    ext.android_plugin_version = '2.3.3'
+
     repositories {
         google()
         jcenter()
@@ -23,7 +25,7 @@ buildscript {
     dependencies {
         classpath group: 'org.jetbrains.kotlin', name: 'kotlin-gradle-plugin', version: kotlin_version
         classpath group: 'com.netflix.nebula', name: 'nebula-kotlin-plugin', version: kotlin_version
-        classpath group: 'com.android.tools.build', name: 'gradle', version: '2.3.3'
+        classpath group: 'com.android.tools.build', name: 'gradle', version: android_plugin_version
     }
 }
 

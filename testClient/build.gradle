@@ -31,13 +31,14 @@ android {
     sourceSets {
         main.java.srcDirs += 'src/main/kotlin'
         test.java.srcDirs += 'src/test/kotlin'
-        androidTest.java.srcDirs += 'src/androidTest/kotlin'
     }
 }
 
 dependencies {
     compile group: 'junit', name: 'junit', version: '4.12'
     compile group: 'org.jetbrains.kotlin', name: 'kotlin-stdlib', version: kotlin_version
+    compile group: 'com.android.support', name: 'appcompat-v7', version: '25.4.0'
+    compile group: 'com.android.support.test', name: 'rules', version: '0.5'
 }
 
 dependencies {

@@ -14,6 +14,13 @@
  *    limitations under the License.
  */
 
-rootProject.name = 'Kontrast'
+package com.trevjonez.kontrast
 
-include ':plugin', ':testClient', ':appClient', ':app'
+import org.junit.Test
+
+class KontrastRobolectricRuleTest: RoboTest() {
+    @Test(expected = NotImplementedError::class)
+    fun failWithError() {
+        KontrastRobolectricRule()
+    }
+}

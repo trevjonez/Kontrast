@@ -14,6 +14,12 @@
  *    limitations under the License.
  */
 
-rootProject.name = 'Kontrast'
+package com.trevjonez.kontrast
 
-include ':plugin', ':testClient', ':appClient', ':app'
+import android.support.v7.app.AppCompatActivity
+
+/**
+ * Due to the nature of most applications depending on appcompat for things such as vector drawables
+ * this activity exists to enable you to use a standard activity rule targeting it as a convenience
+ */
+class KontrastActivity: AppCompatActivity()

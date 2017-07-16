@@ -1,6 +1,11 @@
-!.idea/codeStyleSettings.xml
-!.idea/copyright
-.idea/
-*.iml
-.gradle/
 build/
+.gradle/
+.idea/dictionaries
+.idea/libraries
+.idea/dbnavigator.xml
+.idea/gradle.xml
+.idea/misc.xml
+.idea/modules.xml
+.idea/vcs.xml
+.idea/workspace.xml
+*.iml

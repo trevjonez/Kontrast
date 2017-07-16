@@ -16,18 +16,7 @@
 
 package com.trevjonez.kontrast
 
-import org.assertj.core.api.Assertions.assertThat
-import org.junit.Test
-
-
-class PlatformKtTest: RoboTest() {
-    @Test
-    fun isRunningOnDeviceTest() {
-        assertThat(isRunningOnDevice()).isFalse()
-    }
-
-    @Test
-    fun getProjectBuildDirTest() {
-        assertThat(getProjectBuildDir()).endsWith("/Kontrast/client/build")
-    }
-}
+/**
+ * Test suite marker annotation
+ */
+annotation class KontrastTest

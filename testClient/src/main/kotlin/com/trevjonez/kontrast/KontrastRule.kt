@@ -16,6 +16,7 @@
 
 package com.trevjonez.kontrast
 
+import android.util.Log
 import android.view.View
 import org.junit.rules.TestRule
 import org.junit.runner.Description
@@ -32,4 +33,27 @@ abstract class KontrastRule : TestRule {
     }
 
     abstract fun ofView(view: View): LayoutHelper
+}
+
+class KontrastAndroidTestRule : KontrastRule() {
+    override fun ofView(view: View) = LayoutHelper(view, className, methodName) {
+        Log.i("LayoutHelper", "KontrastCapture[${it.absolutePath}]")
+    }
+}
+
+class KontrastRobolectricRule: KontrastRule() {
+    init {
+        TODO("Robolectric is not supported.\n" +
+             "The only limitation I am aware of is that the bitmap implementation doesn't actually do anything.\n" +
+             "PR welcome from anyone that wants to do a custom bitmap shadow that might make it work.")
+        try {
+            Class.forName("org.robolectric.RuntimeEnvironment")
+        } catch (error: ClassNotFoundException) {
+            throw IllegalStateException("Robolectric rule should not be used for test runs without robolectric")
+        }
+    }
+
+    override fun ofView(view: View) = LayoutHelper(view, className, methodName) {
+        TODO("Figure out how we want to signal back for the plugin to see what tests were just in the run. If we even get this far")
+    }
 }
