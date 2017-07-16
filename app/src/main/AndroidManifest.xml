@@ -15,6 +15,13 @@
   ~    limitations under the License.
   -->
 
-<manifest package="com.trevjonez.kontrast.app">
+<manifest
+        xmlns:android="http://schemas.android.com/apk/res/android"
+        package="com.trevjonez.kontrast.app">
+
+    <application
+            android:theme="@style/AppTheme"
+            android:allowBackup="false"
+            android:icon="@mipmap/ic_launcher"/>
 
 </manifest>

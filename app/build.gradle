@@ -29,9 +29,11 @@ android {
         versionCode 1
         versionName "1.0"
         testInstrumentationRunner "android.support.test.runner.AndroidJUnitRunner"
+        vectorDrawables.useSupportLibrary = true
     }
     sourceSets {
         main.java.srcDirs += 'src/main/kotlin'
+        androidTest.java.srcDirs += 'src/androidTest/kotlin'
     }
     dataBinding {
         enabled = true
@@ -41,7 +43,9 @@ android {
 dependencies {
     compile group: 'org.jetbrains.kotlin', name: 'kotlin-stdlib', version: kotlin_version
     kapt group: 'com.android.databinding', name: 'compiler', version: android_plugin_version
-    
+    compile group: 'com.android.support', name: 'cardview-v7', version: '25.4.0'
+    compile group: 'com.android.support.constraint', name: 'constraint-layout', version: '1.0.2'
+
     debugCompile project(':appClient')
     androidTestCompile project(':testClient')
 }
