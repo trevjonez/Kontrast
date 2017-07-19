@@ -14,17 +14,19 @@
  *    limitations under the License.
  */
 
-package com.trevjonez.kontrast
+package com.trevjonez.kontrast.task
 
-enum class AdbStatus(val adbOutput: String) {
-    ONLINE("device"), UNAUTHORIZED("unauthorized"), OFFLINE("offline");
+import com.trevjonez.kontrast.AdbDevice
+import io.reactivex.subjects.PublishSubject
+import org.gradle.api.tasks.TaskAction
 
-    companion object {
-        fun fromString(stringRepresentation: String): AdbStatus {
-            AdbStatus.values().forEach {
-                if (stringRepresentation == it.adbOutput) return it
-            }
-            throw IllegalArgumentException("Unknown status: $stringRepresentation. Must be one of ${AdbStatus.values()}")
-        }
+open class SelectDeviceTask : AdbCommandTask() {
+
+    val resultSubject: PublishSubject<AdbDevice> = PublishSubject.create()
+
+    @TaskAction
+    fun invoke() {
+        //TODO provide optional dsl to override this selection
+        adb.devices().map { it.first() }.subscribe(resultSubject::onNext)
     }
 }

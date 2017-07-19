@@ -11,3 +11,4 @@ build/
 .idea/runConfigurations.xml
 .idea/runConfigurations
 *.iml
+local.properties

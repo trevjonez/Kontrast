@@ -16,8 +16,9 @@
 
 package com.trevjonez.kontrast
 
+//adb shell settings get secure android_id
 interface AdbDevice {
     val id: String
     val status: AdbStatus
-    val isEmulator: Boolean
+    val androidId: String?
 }

@@ -14,17 +14,16 @@
  *    limitations under the License.
  */
 
-package com.trevjonez.kontrast
+package com.trevjonez.kontrast.task
 
-enum class AdbStatus(val adbOutput: String) {
-    ONLINE("device"), UNAUTHORIZED("unauthorized"), OFFLINE("offline");
+import com.trevjonez.kontrast.Adb
+import com.trevjonez.kontrast.KontrastPlugin
+import org.gradle.api.DefaultTask
 
-    companion object {
-        fun fromString(stringRepresentation: String): AdbStatus {
-            AdbStatus.values().forEach {
-                if (stringRepresentation == it.adbOutput) return it
-            }
-            throw IllegalArgumentException("Unknown status: $stringRepresentation. Must be one of ${AdbStatus.values()}")
-        }
-    }
+abstract class AdbCommandTask: DefaultTask() {
+    val plugin: KontrastPlugin
+        get() = project.plugins.findPlugin(KontrastPlugin::class.java)
+
+    val adb: Adb
+        get() = plugin.adb
 }

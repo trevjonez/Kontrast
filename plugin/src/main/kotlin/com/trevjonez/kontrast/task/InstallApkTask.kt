@@ -14,25 +14,27 @@
  *    limitations under the License.
  */
 
-package com.trevjonez.kontrast
+package com.trevjonez.kontrast.task
 
-import io.reactivex.Completable
-import io.reactivex.Observable
+import com.trevjonez.kontrast.AdbDevice
+import com.trevjonez.kontrast.AdbInstallFlag.ALLOW_TEST_PACKAGES
+import com.trevjonez.kontrast.AdbInstallFlag.REPLACE_EXISTING
 import io.reactivex.Single
+import org.gradle.api.tasks.Input
+import org.gradle.api.tasks.InputFile
+import org.gradle.api.tasks.TaskAction
 import java.io.File
 
-interface Adb {
-    val executable: File
+open class InstallApkTask : AdbCommandTask() {
+    @get:InputFile
+    lateinit var apk: File
 
-    fun devices(): Single<Set<AdbDevice>>
+    @get:Input
+    lateinit var device: Single<AdbDevice>
 
-    fun install(device: AdbDevice, apk: File, vararg flags: AdbInstallFlag): Completable
-
-    fun logcat(device: AdbDevice, vararg options: LogcatOption): Observable<String>
-
-    fun pull(device: AdbDevice, remote: File, local: File, preserveTimestamps: Boolean): Completable
-
-    fun push(device: AdbDevice, local: File, remote: File): Completable
-
-    fun shell(device: AdbDevice, command: String): Observable<String>
+    @TaskAction
+    fun invoke() {
+        device.flatMapCompletable { adb.install(it, apk, ALLOW_TEST_PACKAGES, REPLACE_EXISTING) }
+                .blockingAwait()
+    }
 }
