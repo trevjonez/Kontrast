@@ -16,6 +16,7 @@
 
 package com.trevjonez.kontrast
 
+import android.annotation.SuppressLint
 import android.os.Bundle
 import android.support.test.InstrumentationRegistry
 import android.view.View
@@ -45,31 +46,35 @@ class KontrastAndroidTestRule : KontrastRule() {
         const val KONTRAST_SIGNAL_CODE = 42
         const val CLASS_NAME = "ClassName"
         const val METHOD_NAME = "MethodName"
+        const val TEST_KEY = "TestKey"
         const val EXTRAS = "Extras"
         const val DESCRIPTION = "Description"
         const val OUTPUT_DIR = "OutputDir"
+        const val KONTRAST = "Kontrast"
     }
 
+    @SuppressLint("NewApi")
     override fun ofView(view: View, testKey: String): LayoutHelper {
         return LayoutHelper(view, className, methodName, testKey) { helper ->
             val data = Bundle().apply {
-                putString(CLASS_NAME, helper.className)
-                putString(METHOD_NAME, helper.methodName)
-                putString(EXTRAS, helper.extras.map({ (k, v) -> "$k:$v" }).joinToString())
-                putString(DESCRIPTION, helper.description)
-                putString(OUTPUT_DIR, helper.outputDirectory.absolutePath)
+                putString("$KONTRAST:$CLASS_NAME", helper.className)
+                putString("$KONTRAST:$METHOD_NAME", helper.methodName)
+                putString("$KONTRAST:$TEST_KEY", helper.testKey)
+                putString("$KONTRAST:$EXTRAS", helper.extras.map({ (k, v) -> """"$k":"$v"""" }).joinToString(prefix = "[", postfix = "]"))
+                putString("$KONTRAST:$DESCRIPTION", helper.description)
+                putString("$KONTRAST:$OUTPUT_DIR", helper.outputDirectory.absolutePath)
             }
 
             InstrumentationRegistry.getInstrumentation().sendStatus(KONTRAST_SIGNAL_CODE, data)
             /*
-            INSTRUMENTATION_STATUS: OutputDir=/storage/emulated/0/Android/data/com.trevjonez.kontrast.app/files/Kontrast/com.trevjonez.kontrast.CardLayoutKontrastTest/johnDoeCard/johnDoeCard
-            INSTRUMENTATION_STATUS: Description=null
-            INSTRUMENTATION_STATUS: MethodName=johnDoeCard
-            INSTRUMENTATION_STATUS: ClassName=com.trevjonez.kontrast.CardLayoutKontrastTest
-            INSTRUMENTATION_STATUS: Extras=
-            INSTRUMENTATION_STATUS_CODE: 42
+INSTRUMENTATION_STATUS: Kontrast:TestKey=johnDoeCard
+INSTRUMENTATION_STATUS: Kontrast:MethodName=johnDoeCard
+INSTRUMENTATION_STATUS: Kontrast:Description=null
+INSTRUMENTATION_STATUS: Kontrast:ClassName=com.trevjonez.kontrast.CardLayoutKontrastTest
+INSTRUMENTATION_STATUS: Kontrast:Extras=[]
+INSTRUMENTATION_STATUS: Kontrast:OutputDir=/storage/emulated/0/Android/data/com.trevjonez.kontrast.app/files/Kontrast/com.trevjonez.kontrast.CardLayoutKontrastTest/johnDoeCard/johnDoeCard
+INSTRUMENTATION_STATUS_CODE: 42
             */
-
         }
     }
 }

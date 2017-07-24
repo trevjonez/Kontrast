@@ -37,18 +37,17 @@ import kotlin.reflect.KClass
 
 //C: Install test apk task (PTV)
 
-//D: Run kontrast test task (PTV)
-//      Clear any previous test run data from build directory
-//      Scan the adb output and pull test outputs as produced
+//D: Run kontrast rendering task (PTV)
+//      Clear any previous render run data from build directory
+//      Scan the adb output and pull render outputs as produced
 //      Delete on device test outputs once they have been pulled
 
-//E: Create task to record current test run output as the test key (PTV)
+//E: Create task to record current rendering run output as the test key (PTV)
 
 //F: Create task to perform image diffing and report gen inputs (PTV)
+//      Custom test task that gets configured via properties passed in and uses parametrized test runner
 
 //G: Create task to generate report html page (PTV)
-
-//H: Create task to generate junit formatted xml report (PTV)
 
 class KontrastPlugin : Plugin<Project> {
     companion object {
