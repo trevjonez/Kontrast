@@ -14,27 +14,12 @@
  *    limitations under the License.
  */
 
-package com.trevjonez.kontrast
+package com.trevjonez.kontrast.internal
 
 import io.reactivex.Completable
 import io.reactivex.Observable
-import io.reactivex.Single
-import java.io.File
 
-interface Adb {
-    val executable: File
+internal fun <T> Completable.andThenEmit(value: T) = andThenObserve { Observable.just(value) }
 
-    fun devices(): Single<Set<AdbDevice>>
-
-    fun install(device: AdbDevice, apk: File, vararg flags: AdbInstallFlag): Completable
-
-    fun logcat(device: AdbDevice, vararg options: LogcatOption): Observable<String>
-
-    fun pull(device: AdbDevice, remote: File, local: File, preserveTimestamps: Boolean): Completable
-
-    fun push(device: AdbDevice, local: File, remote: File): Completable
-
-    fun shell(device: AdbDevice, command: String): Observable<String>
-
-    fun deleteDir(device: AdbDevice, directory: File): Completable
-}
+internal inline fun <T> Completable.andThenObserve(crossinline func: () -> Observable<T>): Observable<T> =
+        andThen(Observable.unsafeCreate { func().subscribe(it::onNext, it::onError, it::onComplete) })

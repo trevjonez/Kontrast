@@ -18,8 +18,9 @@ package com.trevjonez.kontrast
 
 import com.android.build.gradle.AppExtension
 import com.android.build.gradle.api.ApplicationVariant
+import com.trevjonez.kontrast.task.CaptureTestKeyTask
 import com.trevjonez.kontrast.task.InstallApkTask
-import com.trevjonez.kontrast.task.RunKontrastTestsTask
+import com.trevjonez.kontrast.task.RenderOnDeviceTask
 import com.trevjonez.kontrast.task.SelectDeviceTask
 import io.reactivex.Single
 import org.gradle.api.DefaultTask
@@ -56,7 +57,7 @@ class KontrastPlugin : Plugin<Project> {
 
     val adb: Adb by lazy { TODO() }
 
-    lateinit var selectedDevice: Single<AdbDevice>
+    private lateinit var selectedDevice: Single<AdbDevice>
 
     override fun apply(project: Project) {
         //TODO configuration DSL?
@@ -64,7 +65,7 @@ class KontrastPlugin : Plugin<Project> {
         val deviceSelectTask = project.createTask(type = SelectDeviceTask::class,
                                                   name = "selectKontrastDevice",
                                                   description = "Get adb devices and select one for kontrast tasks to target").apply {
-            selectedDevice = resultSubject.firstOrError().cache()
+            selectedDevice = resultSubject.firstOrError()
         }
 
         project.afterEvaluate { this.observeVariants(it, deviceSelectTask) }
@@ -77,14 +78,25 @@ class KontrastPlugin : Plugin<Project> {
 
             val mainInstall = createMainInstallTask(project, variant, selectTask)
             val testInstall = createTestInstallTask(project, variant, selectTask)
-            val runTests = createRunTestTask(project, variant, mainInstall, testInstall)
+            val render = createRenderTask(project, variant, mainInstall, testInstall)
+            val keyCapture = createKeyCaptureTask(project, variant, render)
         }
     }
 
-    private fun createRunTestTask(project: Project, variant: ApplicationVariant, mainInstall: InstallApkTask, testInstall: InstallApkTask): RunKontrastTestsTask {
-        return project.createTask(type = RunKontrastTestsTask::class,
-                                  name = "test${variant.name.capitalize()}KontrastTest",
-                                  description = "Run kontrast tests",
+    private fun createKeyCaptureTask(project: Project, variant: ApplicationVariant, renderTask: RenderOnDeviceTask): CaptureTestKeyTask {
+        return project.createTask(type = CaptureTestKeyTask::class,
+                                  name = "capture${variant.name.capitalize()}TestKeys",
+                                  description = "Capture the current render outputs as new test key",
+                                  dependsOn = listOf(renderTask)).apply {
+            pulledOutputs = renderTask.resultSubject.firstOrError()
+            outputsDir = File(project.projectDir, "Kontrast${File.separator}${variant.name}")
+        }
+    }
+
+    private fun createRenderTask(project: Project, variant: ApplicationVariant, mainInstall: InstallApkTask, testInstall: InstallApkTask): RenderOnDeviceTask {
+        return project.createTask(type = RenderOnDeviceTask::class,
+                                  name = "render${variant.name.capitalize()}KontrastViews",
+                                  description = "Run kontrast rendering step",
                                   dependsOn = listOf(mainInstall, testInstall)).apply {
             device = selectedDevice
             testRunner = variant.testRunner

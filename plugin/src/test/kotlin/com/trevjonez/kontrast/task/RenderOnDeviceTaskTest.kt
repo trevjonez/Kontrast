@@ -16,13 +16,14 @@
 
 package com.trevjonez.kontrast.task
 
+import com.trevjonez.kontrast.internal.TestOutput
 import io.reactivex.Observable
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.Test
 import java.io.File
 
 
-class RunKontrastTestsTaskTest {
+class RenderOnDeviceTaskTest {
 
     @Test
     fun testParsingIntegrationCheck() {

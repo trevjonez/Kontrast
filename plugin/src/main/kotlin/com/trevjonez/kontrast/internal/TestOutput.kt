@@ -14,19 +14,18 @@
  *    limitations under the License.
  */
 
-package com.trevjonez.kontrast.task
+package com.trevjonez.kontrast.internal
 
-import com.trevjonez.kontrast.AdbDevice
-import io.reactivex.subjects.BehaviorSubject
-import org.gradle.api.tasks.TaskAction
+import java.io.File
 
-open class SelectDeviceTask : AdbCommandTask() {
+internal data class TestOutput(val testKey: String,
+                      val methodName: String,
+                      val description: String?,
+                      val className: String,
+                      val extras: Map<String, String>,
+                      val outputDirectory: File) {
 
-    internal val resultSubject: BehaviorSubject<AdbDevice> = BehaviorSubject.create()
-
-    @TaskAction
-    fun invoke() {
-        //TODO provide optional dsl to override this selection
-        adb.devices().map { it.first() }.subscribe(resultSubject::onNext)
+    fun subDirectory(): String {
+        return className + File.separator + methodName + File.separator + testKey
     }
 }
