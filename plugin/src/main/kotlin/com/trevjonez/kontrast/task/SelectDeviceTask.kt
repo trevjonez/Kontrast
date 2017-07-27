@@ -16,7 +16,7 @@
 
 package com.trevjonez.kontrast.task
 
-import com.trevjonez.kontrast.AdbDevice
+import com.trevjonez.kontrast.adb.AdbDevice
 import io.reactivex.subjects.BehaviorSubject
 import org.gradle.api.tasks.TaskAction
 

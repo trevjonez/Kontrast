@@ -14,7 +14,7 @@
  *    limitations under the License.
  */
 
-package com.trevjonez.kontrast
+package com.trevjonez.kontrast.adb
 
 enum class AdbStatus(val adbOutput: String) {
     ONLINE("device"), UNAUTHORIZED("unauthorized"), OFFLINE("offline");

@@ -14,7 +14,7 @@
  *    limitations under the License.
  */
 
-package com.trevjonez.kontrast
+package com.trevjonez.kontrast.adb
 
 sealed class LogcatOption {
     abstract fun toCliString(): String
@@ -97,7 +97,7 @@ sealed class LogcatOption {
         override fun toCliString() = "-last"
     }
 
-    data class Buffer(val options: Set<Buffer.Option>) : LogcatOption() {
+    data class Buffer(val options: Set<Option>) : LogcatOption() {
         enum class Option(val cliString: String) {
             MAIN("main"),
             SYSTEM("system"),

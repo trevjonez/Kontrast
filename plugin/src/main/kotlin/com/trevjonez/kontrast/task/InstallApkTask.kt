@@ -16,14 +16,15 @@
 
 package com.trevjonez.kontrast.task
 
-import com.trevjonez.kontrast.AdbDevice
-import com.trevjonez.kontrast.AdbInstallFlag.ALLOW_TEST_PACKAGES
-import com.trevjonez.kontrast.AdbInstallFlag.REPLACE_EXISTING
+import com.trevjonez.kontrast.adb.AdbDevice
+import com.trevjonez.kontrast.adb.AdbInstallFlag.ALLOW_TEST_PACKAGES
+import com.trevjonez.kontrast.adb.AdbInstallFlag.REPLACE_EXISTING
 import io.reactivex.Single
 import org.gradle.api.tasks.Input
 import org.gradle.api.tasks.InputFile
 import org.gradle.api.tasks.TaskAction
 import java.io.File
+import java.util.concurrent.TimeUnit
 
 open class InstallApkTask : AdbCommandTask() {
     @get:InputFile
@@ -35,6 +36,6 @@ open class InstallApkTask : AdbCommandTask() {
     @TaskAction
     fun invoke() {
         device.flatMapCompletable { adb.install(it, apk, ALLOW_TEST_PACKAGES, REPLACE_EXISTING) }
-                .blockingAwait()
+                .blockingAwait(60, TimeUnit.SECONDS)
     }
 }

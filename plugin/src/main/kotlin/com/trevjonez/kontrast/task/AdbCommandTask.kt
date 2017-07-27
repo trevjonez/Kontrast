@@ -16,8 +16,8 @@
 
 package com.trevjonez.kontrast.task
 
-import com.trevjonez.kontrast.Adb
 import com.trevjonez.kontrast.KontrastPlugin
+import com.trevjonez.kontrast.adb.Adb
 import org.gradle.api.DefaultTask
 
 abstract class AdbCommandTask: DefaultTask() {

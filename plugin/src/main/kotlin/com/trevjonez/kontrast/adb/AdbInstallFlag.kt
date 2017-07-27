@@ -14,11 +14,13 @@
  *    limitations under the License.
  */
 
-package com.trevjonez.kontrast
+package com.trevjonez.kontrast.adb
 
-//adb shell settings get secure android_id
-interface AdbDevice {
-    val id: String
-    val status: AdbStatus
-    val androidId: String?
+enum class AdbInstallFlag(val cliFlag: String) {
+    FORWARD_LOCK_APPLICATION("-l"),
+    REPLACE_EXISTING("-r"),
+    ALLOW_TEST_PACKAGES("-t"),
+    INSTALL_ON_SDCARD("-s"),
+    ALLOW_VERSION_DOWNGRADE("-d"),
+    GRANT_ALL_RUNTIME_PERMISSIONS("-g")
 }

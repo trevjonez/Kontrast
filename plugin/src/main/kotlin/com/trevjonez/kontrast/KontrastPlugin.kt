@@ -18,11 +18,11 @@ package com.trevjonez.kontrast
 
 import com.android.build.gradle.AppExtension
 import com.android.build.gradle.api.ApplicationVariant
+import com.trevjonez.kontrast.adb.Adb
 import com.trevjonez.kontrast.task.CaptureTestKeyTask
 import com.trevjonez.kontrast.task.InstallApkTask
 import com.trevjonez.kontrast.task.RenderOnDeviceTask
 import com.trevjonez.kontrast.task.SelectDeviceTask
-import io.reactivex.Single
 import org.gradle.api.DefaultTask
 import org.gradle.api.Plugin
 import org.gradle.api.Project
@@ -55,20 +55,20 @@ class KontrastPlugin : Plugin<Project> {
         const val GROUP = "Kontrast"
     }
 
-    val adb: Adb by lazy { TODO() }
-
-    private lateinit var selectedDevice: Single<AdbDevice>
+    internal lateinit var adb: Adb
 
     override fun apply(project: Project) {
         //TODO configuration DSL?
 
         val deviceSelectTask = project.createTask(type = SelectDeviceTask::class,
                                                   name = "selectKontrastDevice",
-                                                  description = "Get adb devices and select one for kontrast tasks to target").apply {
-            selectedDevice = resultSubject.firstOrError()
-        }
+                                                  description = "Get adb devices and select one for kontrast tasks to target")
 
-        project.afterEvaluate { this.observeVariants(it, deviceSelectTask) }
+        project.afterEvaluate {
+            //TODO allow override adb location via config dsl
+            adb = Adb.Impl(File(System.getenv("ANDROID_HOME"), "platform-tools/adb"))
+            this.observeVariants(it, deviceSelectTask)
+        }
     }
 
     fun observeVariants(project: Project, selectTask: SelectDeviceTask) {
@@ -78,7 +78,7 @@ class KontrastPlugin : Plugin<Project> {
 
             val mainInstall = createMainInstallTask(project, variant, selectTask)
             val testInstall = createTestInstallTask(project, variant, selectTask)
-            val render = createRenderTask(project, variant, mainInstall, testInstall)
+            val render = createRenderTask(project, variant, selectTask, mainInstall, testInstall)
             val keyCapture = createKeyCaptureTask(project, variant, render)
         }
     }
@@ -93,12 +93,12 @@ class KontrastPlugin : Plugin<Project> {
         }
     }
 
-    private fun createRenderTask(project: Project, variant: ApplicationVariant, mainInstall: InstallApkTask, testInstall: InstallApkTask): RenderOnDeviceTask {
+    private fun createRenderTask(project: Project, variant: ApplicationVariant, selectTask: SelectDeviceTask, mainInstall: InstallApkTask, testInstall: InstallApkTask): RenderOnDeviceTask {
         return project.createTask(type = RenderOnDeviceTask::class,
                                   name = "render${variant.name.capitalize()}KontrastViews",
                                   description = "Run kontrast rendering step",
                                   dependsOn = listOf(mainInstall, testInstall)).apply {
-            device = selectedDevice
+            device = selectTask.resultSubject.firstOrError()
             testRunner = variant.testRunner
             testPackage = "${variant.applicationId}.test"
             outputsDir = File(project.buildDir, "Kontrast${File.separator}${variant.name}")
@@ -112,7 +112,7 @@ class KontrastPlugin : Plugin<Project> {
                                   description = "Install test apk for variant ${variant.name}",
                                   dependsOn = listOf(selectTask, assembleTestTask)).apply {
             apk = variant.testApk
-            device = selectedDevice
+            device = selectTask.resultSubject.firstOrError()
         }
     }
 
@@ -123,7 +123,7 @@ class KontrastPlugin : Plugin<Project> {
                                   description = "Install main apk for variant ${it.name}",
                                   dependsOn = listOf(selectTask, assembleTask)).apply {
             apk = it.apk
-            device = selectedDevice
+            device = selectTask.resultSubject.firstOrError()
         }
     }
 

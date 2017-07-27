@@ -14,18 +14,26 @@
  *    limitations under the License.
  */
 
-package com.trevjonez.kontrast.internal
+package com.trevjonez.kontrast.adb
 
+import org.assertj.core.api.Assertions.assertThat
+import org.junit.Test
 import java.io.File
 
-internal data class TestOutput(val testKey: String,
-                      val methodName: String,
-                      val description: String?,
-                      val className: String,
-                      val extras: Map<String, String>,
-                      val outputDirectory: File) {
+class AdbImplTest {
+    val adb = Adb.Impl(File(System.getenv("ANDROID_HOME"), "platform-tools/adb"))
 
-    fun subDirectory(): String {
-        return className + File.separator + methodName
+    @Test
+    fun devices() {
+        assertThat(adb.devices().blockingGet()).containsExactly(AdbDevice("emulator-5554", AdbStatus.ONLINE))
+    }
+
+    @Test
+    fun shell() {
+        adb.shell(adb.devices().blockingGet().first(), "echo 'Hello World'").test().let {
+            it.values().forEach { println(it) }
+            it.assertValueAt(0) { it == "Hello World" }
+            it.assertValueCount(1)
+        }
     }
 }

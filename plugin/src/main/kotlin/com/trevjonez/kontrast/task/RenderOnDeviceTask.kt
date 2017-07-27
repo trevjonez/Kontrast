@@ -16,8 +16,8 @@
 
 package com.trevjonez.kontrast.task
 
-import com.trevjonez.kontrast.Adb
-import com.trevjonez.kontrast.AdbDevice
+import com.trevjonez.kontrast.adb.Adb
+import com.trevjonez.kontrast.adb.AdbDevice
 import com.trevjonez.kontrast.internal.Collector
 import com.trevjonez.kontrast.internal.PulledOutput
 import com.trevjonez.kontrast.internal.TestOutput
@@ -71,14 +71,12 @@ open class RenderOnDeviceTask : AdbCommandTask() {
 internal fun Observable<TestOutput>.pullOutputsAndDeleteFromDevice(deviceSelection: Single<AdbDevice>, outputsDir: File, adb: Adb): Observable<PulledOutput> {
     return flatMap { testOutput ->
         val localOutputDir = File(outputsDir, testOutput.subDirectory())
-        deviceSelection.flatMapCompletable { device ->
+        deviceSelection.flatMapObservable { device ->
             adb.pull(device, testOutput.outputDirectory, localOutputDir, true)
                     .subscribeOn(Schedulers.io())
-                    .andThen {
-                        adb.deleteDir(device, testOutput.outputDirectory)
-                                .subscribeOn(Schedulers.io())
-                    }
-        }.andThenEmit(PulledOutput(localOutputDir, testOutput))
+                    .andThen(adb.deleteDir(device, testOutput.outputDirectory).subscribeOn(Schedulers.io()))
+                    .andThenEmit(PulledOutput(localOutputDir, testOutput))
+        }
     }
 }
 
