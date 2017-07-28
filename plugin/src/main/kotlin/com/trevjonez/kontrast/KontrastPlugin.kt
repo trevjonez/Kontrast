@@ -27,6 +27,7 @@ import org.gradle.api.DefaultTask
 import org.gradle.api.Plugin
 import org.gradle.api.Project
 import org.gradle.api.Task
+import org.gradle.api.tasks.testing.Test
 import java.io.File
 import kotlin.reflect.KClass
 
@@ -65,14 +66,13 @@ class KontrastPlugin : Plugin<Project> {
                                                   description = "Get adb devices and select one for kontrast tasks to target")
 
         project.afterEvaluate {
-            //TODO allow override adb location via config dsl
-            adb = Adb.Impl(File(System.getenv("ANDROID_HOME"), "platform-tools/adb"))
-            this.observeVariants(it, deviceSelectTask)
+            val androidExt = project.extensions.findByName("android") as AppExtension
+            adb = Adb.Impl(androidExt.adbExecutable)
+            this.observeVariants(it, deviceSelectTask, androidExt)
         }
     }
 
-    fun observeVariants(project: Project, selectTask: SelectDeviceTask) {
-        val androidExt = project.extensions.findByName("android") as AppExtension
+    fun observeVariants(project: Project, selectTask: SelectDeviceTask, androidExt: AppExtension) {
         androidExt.applicationVariants.all { variant ->
             if (variant.testVariant == null) return@all
 
@@ -80,7 +80,12 @@ class KontrastPlugin : Plugin<Project> {
             val testInstall = createTestInstallTask(project, variant, selectTask)
             val render = createRenderTask(project, variant, selectTask, mainInstall, testInstall)
             val keyCapture = createKeyCaptureTask(project, variant, render)
+            val test = createTestTask(project, variant, render)
         }
+    }
+
+    private fun createTestTask(project: Project, variant: ApplicationVariant, renderTask: RenderOnDeviceTask): Test {
+        TODO()
     }
 
     private fun createKeyCaptureTask(project: Project, variant: ApplicationVariant, renderTask: RenderOnDeviceTask): CaptureTestKeyTask {

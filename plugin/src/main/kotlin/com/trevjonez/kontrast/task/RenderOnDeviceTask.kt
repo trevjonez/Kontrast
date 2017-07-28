@@ -61,6 +61,7 @@ open class RenderOnDeviceTask : AdbCommandTask() {
                 .takeWhile { !it.startsWith("INSTRUMENTATION_CODE") }
                 .parseTestCases()
                 .pullOutputsAndDeleteFromDevice(device, outputsDir, adb)
+                .writeExtrasToFile(outputsDir)
                 .collectInto(mutableSetOf<PulledOutput>()) { set, output -> set.add(output) }
                 .blockingGet()
 
@@ -68,9 +69,23 @@ open class RenderOnDeviceTask : AdbCommandTask() {
     }
 }
 
+internal fun Observable<PulledOutput>.writeExtrasToFile(outputsDir: File): Observable<PulledOutput> {
+    fun Map<String, String>.toJson(): String {
+        return this.map { """"${it.key}": "${it.value}"""" }.joinToString(prefix = "{\n  ", separator = ",\n  ", postfix = "\n}")
+    }
+
+    return doOnNext {
+        File(File(outputsDir, it.output.subDirectory()), "extras.json").apply {
+            if (exists()) delete()
+            writeText(it.output.extras.toJson())
+        }
+    }
+}
+
 internal fun Observable<TestOutput>.pullOutputsAndDeleteFromDevice(deviceSelection: Single<AdbDevice>, outputsDir: File, adb: Adb): Observable<PulledOutput> {
     return flatMap { testOutput ->
-        val localOutputDir = File(outputsDir, testOutput.subDirectory())
+        //don't use sub directory here because the adb pull will copy the leaf directory down
+        val localOutputDir = File(outputsDir, "${testOutput.className}${File.separator}${testOutput.methodName}")
         deviceSelection.flatMapObservable { device ->
             adb.pull(device, testOutput.outputDirectory, localOutputDir, true)
                     .subscribeOn(Schedulers.io())

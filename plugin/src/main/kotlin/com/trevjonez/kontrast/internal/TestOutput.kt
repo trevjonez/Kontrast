@@ -26,6 +26,6 @@ internal data class TestOutput(val testKey: String,
                       val outputDirectory: File) {
 
     fun subDirectory(): String {
-        return className + File.separator + methodName
+        return className + File.separator + methodName + File.separator + testKey
     }
 }

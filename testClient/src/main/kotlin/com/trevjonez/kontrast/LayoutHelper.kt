@@ -35,21 +35,34 @@ class LayoutHelper(val view: View,
     val outputDirectory: File = getOutputDirectory(view.context, "Kontrast${File.separator}$className${File.separator}$methodName${File.separator}$testKey")
 
     var widthSpec = makeMeasureSpec(0, UNSPECIFIED)
+
     var heightSpec = makeMeasureSpec(0, UNSPECIFIED)
+
     var description: String? = null
 
-    val extras = mutableMapOf<String, String>()
+    val extras = mutableMapOf<String, String>().apply {
+        put("Width", "wrap_content")
+        put("Height", "wrap_content")
+    }
 
-    fun setWidthDp(dp: Int) = setWidthPx(dp.dp2Px())
+    fun setWidthDp(dp: Int) = apply {
+        widthSpec = makeMeasureSpec(dp.dp2Px(), EXACTLY)
+        extra("Width", "${dp}dp")
+    }
 
     fun setWidthPx(px: Int) = apply {
         widthSpec = makeMeasureSpec(px, EXACTLY)
+        extra("Width", "${px}px")
     }
 
-    fun setHeightDp(dp: Int) = setHeightPx(dp.dp2Px())
+    fun setHeightDp(dp: Int) = apply {
+        heightSpec = makeMeasureSpec(dp.dp2Px(), EXACTLY)
+        extra("Height", "${dp}dp")
+    }
 
     fun setHeightPx(px: Int) = apply {
         heightSpec = makeMeasureSpec(px, EXACTLY)
+        extra("Height", "${px}px")
     }
 
     fun description(value: String) = apply {
@@ -86,8 +99,6 @@ class LayoutHelper(val view: View,
             }
             setReadable(true, false)
         }
-
-        //TODO meta info //json file?
 
         //TODO layout hierarchy //uiautomator dump [file]
 

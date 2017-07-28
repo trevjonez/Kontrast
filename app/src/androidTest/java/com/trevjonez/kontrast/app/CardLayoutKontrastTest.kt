@@ -14,10 +14,13 @@
  *    limitations under the License.
  */
 
-package com.trevjonez.kontrast
+package com.trevjonez.kontrast.app
 
 import android.annotation.SuppressLint
+import android.support.v4.content.ContextCompat
 import android.widget.FrameLayout
+import com.trevjonez.kontrast.KontrastTest
+import com.trevjonez.kontrast.KontrastTestBase
 import com.trevjonez.kontrast.app.databinding.CardLayoutBinding
 import org.junit.Test
 
@@ -38,6 +41,25 @@ class CardLayoutKontrastTest : KontrastTestBase() {
 
             kontrastRule.ofView(outerFrame)
                     .setWidthDp(320)
+                    .extra("Username", "John Doe")
+                    .capture()
+        }
+    }
+
+    @Test
+    @KontrastTest
+    fun janeDoeCard() {
+        activity.runOnUiThread {
+            val outerFrame = FrameLayout(activity)
+
+            CardLayoutBinding.inflate(layoutInflater, outerFrame, true).apply {
+                username.text = "Jane Doe"
+                avatar.setImageDrawable(ContextCompat.getDrawable(activity, R.drawable.ic_accessibility_black_24dp))
+            }
+
+            kontrastRule.ofView(outerFrame)
+                    .setWidthDp(320)
+                    .extra("Username", "Jane Doe")
                     .capture()
         }
     }
