@@ -43,5 +43,5 @@ dependencies {
     compile group: 'com.android.support.constraint', name: 'constraint-layout', version: '1.0.2'
 
     debugCompile project(':appClient')
-    androidTestCompile project(':testClient')
+    androidTestCompile project(':androidTestClient')
 }

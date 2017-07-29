@@ -14,6 +14,10 @@
  *    limitations under the License.
  */
 
-rootProject.name = 'Kontrast'
+apply plugin: 'kotlin'
 
-include ':plugin', ':androidTestClient', ':appClient', ':app', ':unitTestClient'
+dependencies {
+    compile group: 'junit', name: 'junit', version: '4.12'
+    compile group: 'org.jetbrains.kotlin', name: 'kotlin-stdlib', version: kotlin_version
+    compile group: 'io.reactivex.rxjava2', name: 'rxjava', version: '2.1.1'
+}

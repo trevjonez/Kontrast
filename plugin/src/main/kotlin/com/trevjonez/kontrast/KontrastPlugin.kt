@@ -53,6 +53,7 @@ import kotlin.reflect.KClass
 
 class KontrastPlugin : Plugin<Project> {
     companion object {
+        const val KONTRAST_CONFIG = "kontrast"
         const val GROUP = "Kontrast"
     }
 
@@ -60,6 +61,11 @@ class KontrastPlugin : Plugin<Project> {
 
     override fun apply(project: Project) {
         //TODO configuration DSL?
+
+        if (project.configurations.findByName(KONTRAST_CONFIG) == null) {
+            project.configurations.create(KONTRAST_CONFIG)
+//            project.dependencies.add(KONTRAST_CONFIG, ) unit test client
+        }
 
         val deviceSelectTask = project.createTask(type = SelectDeviceTask::class,
                                                   name = "selectKontrastDevice",
@@ -80,12 +86,29 @@ class KontrastPlugin : Plugin<Project> {
             val testInstall = createTestInstallTask(project, variant, selectTask)
             val render = createRenderTask(project, variant, selectTask, mainInstall, testInstall)
             val keyCapture = createKeyCaptureTask(project, variant, render)
-//            val test = createTestTask(project, variant, render)
+            val test = createTestTask(project, variant, render, keyCapture)
         }
     }
 
-    private fun createTestTask(project: Project, variant: ApplicationVariant, renderTask: RenderOnDeviceTask): Test {
-        TODO()
+    open class TempTest: Test() {
+        override fun executeTests() {
+            testClassesDirs.forEach { println("ConfigFile: $it") }
+            super.executeTests()
+        }
+    }
+
+    private fun createTestTask(project: Project, variant: ApplicationVariant, renderTask: RenderOnDeviceTask, keyTask: CaptureTestKeyTask): Test {
+        return project.createTask(type = TempTest::class,
+                                  name = "test${variant.name.capitalize()}KontrastTest",
+                                  description = "Compare current captured key with render results",
+                                  dependsOn = listOf(renderTask)).apply {
+            useJUnit()
+            systemProperty("KontrastInputDir", renderTask.outputsDir.absolutePath)
+            systemProperty("KontrastKeyDir", keyTask.outputsDir.absolutePath)
+            val config = project.configurations.findByName(KONTRAST_CONFIG)
+            classpath = config
+            testClassesDirs = config
+        }
     }
 
     private fun createKeyCaptureTask(project: Project, variant: ApplicationVariant, renderTask: RenderOnDeviceTask): CaptureTestKeyTask {

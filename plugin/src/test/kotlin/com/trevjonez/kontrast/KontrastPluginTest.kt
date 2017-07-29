@@ -33,13 +33,13 @@ class KontrastPluginTest {
         val projectDir = tempDirRule.root.apply {
             copyDirectory(File(".", "../app"), File(this, "app"))
             copyDirectory(File(".", "../appClient"), File(this, "appClient"))
-            copyDirectory(File(".", "../testClient"), File(this, "testClient"))
+            copyDirectory(File(".", "../androidTestClient"), File(this, "androidTestClient"))
             File(this, "libs").also {
                 it.mkdir()
                 copyFileToDirectory(File(".", "build/libs/plugin.jar"), it)
             }
             File(this, "local.properties").writeText("sdk.dir=${System.getenv("HOME")}/Library/Android/sdk")
-            File(this, "settings.gradle").writeText("include ':testClient', ':appClient', ':app'")
+            File(this, "settings.gradle").writeText("include ':androidTestClient', ':appClient', ':app'")
             File(this, "build.gradle").writeText("""
 buildscript {
     ext.kotlin_version = '1.1.3-2'
@@ -92,14 +92,15 @@ allprojects {
         val projectDir = tempDirRule.root.apply {
             copyDirectory(File(".", "../app"), File(this, "app"))
             copyDirectory(File(".", "../appClient"), File(this, "appClient"))
-            copyDirectory(File(".", "../testClient"), File(this, "testClient"))
+            copyDirectory(File(".", "../androidTestClient"), File(this, "androidTestClient"))
+            copyDirectory(File(".", "../unitTestClient"), File(this, "unitTestClient"))
             copyDirectory(File(javaClass.getResource("/Kontrast").path), File(this, "app/Kontrast"))
             File(this, "libs").also {
                 it.mkdir()
                 copyFileToDirectory(File(".", "build/libs/plugin.jar"), it)
             }
             File(this, "local.properties").writeText("sdk.dir=${System.getenv("HOME")}/Library/Android/sdk")
-            File(this, "settings.gradle").writeText("include ':testClient', ':appClient', ':app'")
+            File(this, "settings.gradle").writeText("include ':androidTestClient', ':unitTestClient', ':appClient', ':app'")
             File(this, "build.gradle").writeText("""
 buildscript {
     ext.kotlin_version = '1.1.3-2'
@@ -126,14 +127,20 @@ allprojects {
 """)
         }
 
-        File(projectDir, "app/build.gradle").appendText("""apply plugin: 'kontrast'""")
+        File(projectDir, "app/build.gradle").appendText("""
+apply plugin: 'kontrast'
+
+dependencies {
+    kontrast project(":unitTestClient")
+}
+""")
 
         GradleRunner.create()
                 .withProjectDir(projectDir)
                 .withDebug(true)
                 .forwardOutput()
-                .withArguments("app:testDebugKontrastTest")
-                .buildAndFail()
+                .withArguments("app:testDebugKontrastTest", "--stacktrace")
+                .build()
 
         copyDirectory(projectDir, File("build/pluginTestResult"))
     }
