@@ -80,7 +80,7 @@ class KontrastPlugin : Plugin<Project> {
             val testInstall = createTestInstallTask(project, variant, selectTask)
             val render = createRenderTask(project, variant, selectTask, mainInstall, testInstall)
             val keyCapture = createKeyCaptureTask(project, variant, render)
-            val test = createTestTask(project, variant, render)
+//            val test = createTestTask(project, variant, render)
         }
     }
 

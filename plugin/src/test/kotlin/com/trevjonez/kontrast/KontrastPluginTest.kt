@@ -72,7 +72,7 @@ allprojects {
                 .withProjectDir(projectDir)
                 .withDebug(true)
                 .forwardOutput()
-                .withArguments("app:tasks", "app:captureDebugTestKeys")
+                .withArguments("app:tasks", "app:captureDebugTestKeys", "--stacktrace")
                 .build()
 
         assertThat(File(projectDir, "app/Kontrast/debug/com.trevjonez.kontrast.app.CardLayoutKontrastTest")).isDirectory().satisfies {

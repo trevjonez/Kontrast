@@ -75,7 +75,7 @@ internal fun Observable<PulledOutput>.writeExtrasToFile(outputsDir: File): Obser
     }
 
     return doOnNext {
-        File(File(outputsDir, it.output.subDirectory()), "extras.json").apply {
+        File(File(outputsDir, it.output.keySubDirectory()), "extras.json").apply {
             if (exists()) delete()
             writeText(it.output.extras.toJson())
         }
@@ -85,7 +85,7 @@ internal fun Observable<PulledOutput>.writeExtrasToFile(outputsDir: File): Obser
 internal fun Observable<TestOutput>.pullOutputsAndDeleteFromDevice(deviceSelection: Single<AdbDevice>, outputsDir: File, adb: Adb): Observable<PulledOutput> {
     return flatMap { testOutput ->
         //don't use sub directory here because the adb pull will copy the leaf directory down
-        val localOutputDir = File(outputsDir, "${testOutput.className}${File.separator}${testOutput.methodName}")
+        val localOutputDir = File(outputsDir, testOutput.methodSubDirectory())
         deviceSelection.flatMapObservable { device ->
             adb.pull(device, testOutput.outputDirectory, localOutputDir, true)
                     .subscribeOn(Schedulers.io())
