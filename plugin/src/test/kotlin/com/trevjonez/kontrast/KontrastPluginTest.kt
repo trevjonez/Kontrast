@@ -95,7 +95,13 @@ afterEvaluate {
                 assertThat(File(it, "image.png")).exists()
                 assertThat(File(it, "extras.json")).exists()
             }
+            assertThat(File(it, "jackDoeCard/jackDoeCard")).isDirectory().satisfies {
+                assertThat(File(it, "image.png")).exists()
+                assertThat(File(it, "extras.json")).exists()
+            }
         }
+
+        copyDirectory(projectDir, File("build/pluginTestProjects/renderAndCaptureTestKey"))
     }
 
     @Test
@@ -157,6 +163,6 @@ afterEvaluate {
                 .withArguments("app:testDebugKontrastTest", "--stacktrace")
                 .buildAndFail()
 
-        copyDirectory(projectDir, File("build/pluginTestResult"))
+        copyDirectory(projectDir, File("build/pluginTestProjects/compareRenderWithTestKeys"))
     }
 }

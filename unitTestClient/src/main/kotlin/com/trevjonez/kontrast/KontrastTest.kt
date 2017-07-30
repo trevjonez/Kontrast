@@ -33,23 +33,41 @@ import java.lang.Math.max
 class KontrastTest(val case: KontrastCase) {
     companion object {
         @JvmStatic
-        @Parameters(name = "{index}: {0}")
+        @Parameters(name = "{0}")
         fun params(): Iterable<Any> {
-            val dir = File(System.getProperty("KontrastKeyDir") ?: throw NullPointerException("KontrastKeyDir Required"))
+            val keyRoot = File(System.getProperty("KontrastKeyDir") ?: throw NullPointerException("KontrastKeyDir Required"))
             val inputRoot = File(System.getProperty("KontrastInputDir") ?: throw NullPointerException("KontrastInputDir Required"))
-            return childDirectories(dir) //classDirs
+
+            val keyCases = childDirectories(keyRoot) //classDirs
                     .flatMap(this::childDirectories) //methodDirs
                     .flatMap(this::childDirectories) //testDirs
                     .map { KontrastCase(it, File(inputRoot, "${it.parentFile.parentFile.name}/${it.parentFile.name}/${it.name}")) }
-                    .toList()
+
+            val inputCases = childDirectories(inputRoot) //classDirs
+                    .flatMap(this::childDirectories) //methodDirs
+                    .flatMap(this::childDirectories)
+                    .map { KontrastCase(File(keyRoot, "${it.parentFile.parentFile.name}/${it.parentFile.name}/${it.name}"), it) }
+
+            return keyCases.mergeWith(inputCases)
         }
 
         private fun childDirectories(it: File) = it.listFiles().filter(File::isDirectory)
+
+        private fun List<KontrastCase>.mergeWith(other: List<KontrastCase>): List<KontrastCase> {
+            val result = associateBy { it.toString() }.toMutableMap()
+
+            other.forEach {
+                result.putIfAbsent(it.toString(), it)
+            }
+
+            return result.map { it.value }
+        }
     }
 
     @Test
     fun kontrastCase() {
         assumeTrue("Input missing for case with test key", case.inputDir.exists())
+        assumeTrue("Key missing for case with input", case.keyDir.exists())
 
         val keyReader = PngReader(File(case.keyDir, "image.png"))
         val inputReader = PngReader(File(case.inputDir, "image.png"))

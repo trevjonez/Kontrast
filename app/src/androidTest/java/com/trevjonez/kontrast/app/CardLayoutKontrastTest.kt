@@ -63,4 +63,22 @@ class CardLayoutKontrastTest : KontrastTestBase() {
                     .capture()
         }
     }
+
+    @Test
+    @KontrastTest
+    fun jackDoeCard() {
+        activity.runOnUiThread {
+            val outerFrame = FrameLayout(activity)
+
+            CardLayoutBinding.inflate(layoutInflater, outerFrame, true).apply {
+                username.text = "Jack Doe"
+                avatar.setImageDrawable(ContextCompat.getDrawable(activity, R.drawable.ic_assignment_ind_black_24dp))
+            }
+
+            kontrastRule.ofView(outerFrame)
+                    .setWidthDp(320)
+                    .extra("Username", "Jack Doe")
+                    .capture()
+        }
+    }
 }
