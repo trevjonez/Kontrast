@@ -18,11 +18,18 @@ package com.trevjonez.kontrast
 
 import com.android.build.gradle.AppExtension
 import com.android.build.gradle.api.ApplicationVariant
+import com.squareup.moshi.Moshi
+import com.squareup.moshi.Types
 import com.trevjonez.kontrast.adb.Adb
+import com.trevjonez.kontrast.internal.testEvents
+import com.trevjonez.kontrast.report.TestCaseOutput
 import com.trevjonez.kontrast.task.CaptureTestKeyTask
+import com.trevjonez.kontrast.task.HtmlReportTask
 import com.trevjonez.kontrast.task.InstallApkTask
 import com.trevjonez.kontrast.task.RenderOnDeviceTask
 import com.trevjonez.kontrast.task.SelectDeviceTask
+import okio.Okio.buffer
+import okio.Okio.source
 import org.gradle.api.DefaultTask
 import org.gradle.api.Plugin
 import org.gradle.api.Project
@@ -54,9 +61,8 @@ import kotlin.reflect.KClass
 //G: Create task to generate report html page (PTV)
 
 /**
- * if we move the adb reading to the configuration phase (only do it if we know we are going to run a kontrast task?)
- * from there we can create install, render, record, and test tasks per variant per connected device
- * this will help with the differences in rendering when ran on different screen config devices
+ * if we move the adb reading to the configuration phase we can create install, render, record, and test tasks per variant per connected device
+ * this will help with the differences in rendering when ran on different config devices
  */
 class KontrastPlugin : Plugin<Project> {
     companion object {
@@ -65,14 +71,17 @@ class KontrastPlugin : Plugin<Project> {
     }
 
     internal lateinit var adb: Adb
+    internal lateinit var moshi: Moshi
 
     override fun apply(project: Project) {
         //TODO configuration DSL?
 
         if (project.configurations.findByName(KONTRAST_CONFIG) == null) {
             project.configurations.create(KONTRAST_CONFIG)
-//            project.dependencies.add(KONTRAST_CONFIG, ) unit test client
+//            project.dependencies.add(KONTRAST_CONFIG, ) TODO add unit test client automatically
         }
+
+        moshi = Moshi.Builder().build()
 
         val deviceSelectTask = project.createTask(type = SelectDeviceTask::class,
                                                   name = "selectKontrastDevice",
@@ -97,7 +106,7 @@ class KontrastPlugin : Plugin<Project> {
         }
     }
 
-    fun observeVariants(project: Project, selectTask: SelectDeviceTask, unziptestTask: Copy, androidExt: AppExtension) {
+    private fun observeVariants(project: Project, selectTask: SelectDeviceTask, unziptestTask: Copy, androidExt: AppExtension) {
         androidExt.applicationVariants.all { variant ->
             if (variant.testVariant == null) return@all
 
@@ -105,11 +114,18 @@ class KontrastPlugin : Plugin<Project> {
             val testInstall = createTestInstallTask(project, variant, selectTask)
             val render = createRenderTask(project, variant, selectTask, mainInstall, testInstall)
             val keyCapture = createKeyCaptureTask(project, variant, render)
-            val test = createTestTask(project, variant, render, keyCapture, unziptestTask)
+            val report = createReportTask(project, variant)
+            val test = createTestTask(project, variant, render, keyCapture, unziptestTask, report)
         }
     }
 
-    private fun createTestTask(project: Project, variant: ApplicationVariant, renderTask: RenderOnDeviceTask, keyTask: CaptureTestKeyTask, unziptestTask: Copy): Test {
+    private fun createReportTask(project: Project, variant: ApplicationVariant): HtmlReportTask {
+        return project.createTask(type = HtmlReportTask::class,
+                                  name = "generate${variant.name.capitalize()}KontrastHtmlReport",
+                                  description = "Generate HTML test result report")
+    }
+
+    private fun createTestTask(project: Project, variant: ApplicationVariant, renderTask: RenderOnDeviceTask, keyTask: CaptureTestKeyTask, unziptestTask: Copy, reportTask: HtmlReportTask): Test {
         return project.createTask(type = Test::class,
                                   name = "test${variant.name.capitalize()}KontrastTest",
                                   description = "Compare current captured key with render results",
@@ -120,6 +136,21 @@ class KontrastPlugin : Plugin<Project> {
             val config = project.configurations.findByName(KONTRAST_CONFIG)
             classpath = config
             testClassesDirs = SimpleFileCollection(unziptestTask.destinationDir)
+            keyTask.finalizedBy(this)
+            setFinalizedBy(listOf(reportTask))
+
+            val adapter = moshi.adapter<Map<String, String>>(Types.newParameterizedType(Map::class.java, String::class.java, String::class.java))
+            reportTask.testCases = testEvents().map { (descriptor, result) ->
+                val names = descriptor.name
+                        .removePrefix("Test kontrastCase[")
+                        .removeSuffix("](com.trevjonez.kontrast.KontrastTest)")
+                        .split("$$")
+
+                val inputExtras = adapter.fromJson(buffer(source(File(renderTask.outputsDir, "${names.joinToString(File.separator)}${File.separator}extras.json")))) ?: mapOf()
+                val keyExtras = adapter.fromJson(buffer(source(File(keyTask.outputsDir, "${names.joinToString(File.separator)}${File.separator}extras.json")))) ?: mapOf()
+
+                TestCaseOutput(names[0], names[1], names[2], result, renderTask.outputsDir, keyTask.outputsDir, inputExtras, keyExtras)
+            }.toList()
         }
     }
 
@@ -142,6 +173,7 @@ class KontrastPlugin : Plugin<Project> {
             testRunner = variant.testRunner
             testPackage = "${variant.applicationId}.test"
             outputsDir = File(project.buildDir, "Kontrast${File.separator}${variant.name}")
+            extrasAdapter = moshi.adapter(Types.newParameterizedType(Map::class.java, String::class.java, String::class.java))
         }
     }
 

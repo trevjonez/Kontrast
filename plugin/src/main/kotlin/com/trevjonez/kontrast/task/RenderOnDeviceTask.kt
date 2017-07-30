@@ -16,6 +16,7 @@
 
 package com.trevjonez.kontrast.task
 
+import com.squareup.moshi.JsonAdapter
 import com.trevjonez.kontrast.adb.Adb
 import com.trevjonez.kontrast.adb.AdbDevice
 import com.trevjonez.kontrast.internal.Collector
@@ -26,12 +27,15 @@ import io.reactivex.Observable
 import io.reactivex.Single
 import io.reactivex.schedulers.Schedulers
 import io.reactivex.subjects.BehaviorSubject
+import okio.Okio
 import org.gradle.api.tasks.Input
 import org.gradle.api.tasks.OutputDirectory
 import org.gradle.api.tasks.TaskAction
 import java.io.File
 
 open class RenderOnDeviceTask : AdbCommandTask() {
+
+    lateinit var extrasAdapter: JsonAdapter<Map<String, String>>
 
     lateinit var device: Single<AdbDevice>
 
@@ -61,7 +65,7 @@ open class RenderOnDeviceTask : AdbCommandTask() {
                 .takeWhile { !it.startsWith("INSTRUMENTATION_CODE") }
                 .parseTestCases()
                 .pullOutputsAndDeleteFromDevice(device, outputsDir, adb)
-                .writeExtrasToFile(outputsDir)
+                .writeExtrasToFile(outputsDir, extrasAdapter)
                 .collectInto(mutableSetOf<PulledOutput>()) { set, output -> set.add(output) }
                 .blockingGet()
 
@@ -69,15 +73,12 @@ open class RenderOnDeviceTask : AdbCommandTask() {
     }
 }
 
-internal fun Observable<PulledOutput>.writeExtrasToFile(outputsDir: File): Observable<PulledOutput> {
-    fun Map<String, String>.toJson(): String {
-        return this.map { """"${it.key}": "${it.value}"""" }.joinToString(prefix = "{\n  ", separator = ",\n  ", postfix = "\n}")
-    }
-
+internal fun Observable<PulledOutput>.writeExtrasToFile(outputsDir: File, adapter: JsonAdapter<Map<String, String>>): Observable<PulledOutput> {
     return doOnNext {
         File(File(outputsDir, it.output.keySubDirectory()), "extras.json").apply {
             if (exists()) delete()
-            writeText(it.output.extras.toJson())
+            createNewFile()
+            adapter.toJson(Okio.buffer(Okio.sink(this)), it.output.extras)
         }
     }
 }

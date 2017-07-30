@@ -14,16 +14,19 @@
  *    limitations under the License.
  */
 
-package com.trevjonez.kontrast
+package com.trevjonez.kontrast.task
 
-import java.io.File
+import com.trevjonez.kontrast.report.TestCaseOutput
+import io.reactivex.Single
+import org.gradle.api.DefaultTask
+import org.gradle.api.tasks.TaskAction
 
-class KontrastCase(val keyDir: File, val inputDir: File) {
-    override fun toString(): String {
-        val className: String = keyDir.parentFile.parentFile.name
-        val methodName: String = keyDir.parentFile.name
-        val testKey: String = keyDir.name
+open class HtmlReportTask : DefaultTask() {
 
-        return "$className$$$methodName$$$testKey"
+    lateinit var testCases: Single<List<TestCaseOutput>>
+
+    @TaskAction
+    fun invoke() {
+
     }
 }

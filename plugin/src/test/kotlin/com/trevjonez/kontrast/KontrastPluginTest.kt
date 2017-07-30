@@ -54,6 +54,7 @@ buildscript {
         classpath group: 'org.jetbrains.kotlin', name: 'kotlin-gradle-plugin', version: kotlin_version
         classpath group: 'com.android.tools.build', name: 'gradle', version: android_plugin_version
         classpath group: 'io.reactivex.rxjava2', name: 'rxjava', version: '2.1.1'
+        classpath group: 'com.squareup.moshi', name:'moshi', version: '1.5.0'
         classpath files("libs/plugin.jar")
     }
 }
@@ -131,6 +132,7 @@ buildscript {
         classpath group: 'org.jetbrains.kotlin', name: 'kotlin-gradle-plugin', version: kotlin_version
         classpath group: 'com.android.tools.build', name: 'gradle', version: android_plugin_version
         classpath group: 'io.reactivex.rxjava2', name: 'rxjava', version: '2.1.1'
+        classpath group: 'com.squareup.moshi', name:'moshi', version: '1.5.0'
         classpath files("libs/plugin.jar")
     }
 }
