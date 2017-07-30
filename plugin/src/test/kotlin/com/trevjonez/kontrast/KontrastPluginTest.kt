@@ -33,13 +33,14 @@ class KontrastPluginTest {
         val projectDir = tempDirRule.root.apply {
             copyDirectory(File(".", "../app"), File(this, "app"))
             copyDirectory(File(".", "../appClient"), File(this, "appClient"))
+            copyDirectory(File(".", "../unitTestClient"), File(this, "unitTestClient"))
             copyDirectory(File(".", "../androidTestClient"), File(this, "androidTestClient"))
             File(this, "libs").also {
                 it.mkdir()
                 copyFileToDirectory(File(".", "build/libs/plugin.jar"), it)
             }
             File(this, "local.properties").writeText("sdk.dir=${System.getenv("HOME")}/Library/Android/sdk")
-            File(this, "settings.gradle").writeText("include ':androidTestClient', ':appClient', ':app'")
+            File(this, "settings.gradle").writeText("include ':androidTestClient', ':unitTestClient', ':appClient', ':app'")
             File(this, "build.gradle").writeText("""
 buildscript {
     ext.kotlin_version = '1.1.3-2'
@@ -66,7 +67,17 @@ allprojects {
 """)
         }
 
-        File(projectDir, "app/build.gradle").appendText("""apply plugin: 'kontrast'""")
+        File(projectDir, "app/build.gradle").appendText("""
+apply plugin: 'kontrast'
+
+dependencies {
+    kontrast project(":unitTestClient")
+}
+
+afterEvaluate {
+    tasks.testDebugKontrastTest.outputs.upToDateWhen { false }
+}
+""")
 
         GradleRunner.create()
                 .withProjectDir(projectDir)
@@ -133,6 +144,10 @@ apply plugin: 'kontrast'
 dependencies {
     kontrast project(":unitTestClient")
 }
+
+afterEvaluate {
+    tasks.testDebugKontrastTest.outputs.upToDateWhen { false }
+}
 """)
 
         GradleRunner.create()
@@ -140,7 +155,7 @@ dependencies {
                 .withDebug(true)
                 .forwardOutput()
                 .withArguments("app:testDebugKontrastTest", "--stacktrace")
-                .build()
+                .buildAndFail()
 
         copyDirectory(projectDir, File("build/pluginTestResult"))
     }

@@ -14,10 +14,19 @@
  *    limitations under the License.
  */
 
-apply plugin: 'kotlin'
+package com.trevjonez.kontrast
 
-dependencies {
-    compile group: 'junit', name: 'junit', version: '4.12'
-    compile group: 'org.jetbrains.kotlin', name: 'kotlin-stdlib', version: kotlin_version
-    compile group: 'ar.com.hjg', name: 'pngj', version: '2.1.0'
+import java.io.File
+
+class KontrastCase(val keyDir: File, val inputDir: File) {
+    override fun toString(): String {
+        val className: String = keyDir.parentFile.parentFile.name
+        val methodName: String = keyDir.parentFile.name
+        val testKey: String = keyDir.name
+
+        return if (methodName == testKey)
+            "$className/$methodName"
+        else
+            "$className/$methodName/$testKey"
+    }
 }

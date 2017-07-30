@@ -16,15 +16,21 @@
 
 package com.trevjonez.kontrast
 
-import io.reactivex.Observable.fromArray
+import ar.com.hjg.pngj.ImageInfo
+import ar.com.hjg.pngj.ImageLineInt
+import ar.com.hjg.pngj.PngReader
+import ar.com.hjg.pngj.PngWriter
+import org.junit.Assert
+import org.junit.Assume.assumeTrue
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.junit.runners.Parameterized
 import org.junit.runners.Parameterized.Parameters
 import java.io.File
+import java.lang.Math.max
 
 @RunWith(Parameterized::class)
-class KontrastTest {
+class KontrastTest(val case: KontrastCase) {
     companion object {
         @JvmStatic
         @Parameters(name = "{index}: {0}")
@@ -32,32 +38,111 @@ class KontrastTest {
             val dir = File(System.getProperty("KontrastKeyDir") ?: throw NullPointerException("KontrastKeyDir Required"))
             val inputRoot = File(System.getProperty("KontrastInputDir") ?: throw NullPointerException("KontrastInputDir Required"))
             return childDirectories(dir) //classDirs
-                    .concatMap(this::childDirectories) //methodDirs
-                    .concatMap(this::childDirectories) //testDirs
+                    .flatMap(this::childDirectories) //methodDirs
+                    .flatMap(this::childDirectories) //testDirs
                     .map { KontrastCase(it, File(inputRoot, "${it.parentFile.parentFile.name}/${it.parentFile.name}/${it.name}")) }
-                    .doOnNext { println("KCase: $it") }
                     .toList()
-                    .blockingGet()
         }
 
-        private fun childDirectories(it: File) = fromArray(*it.listFiles()).filter(File::isDirectory)
+        private fun childDirectories(it: File) = it.listFiles().filter(File::isDirectory)
     }
 
     @Test
-    fun kontrastCase(case: KontrastCase) {
+    fun kontrastCase() {
+        assumeTrue("Input missing for case with test key", case.inputDir.exists())
 
+        val keyReader = PngReader(File(case.keyDir, "image.png"))
+        val inputReader = PngReader(File(case.inputDir, "image.png"))
+
+        val diffInfo = ImageInfo(max(keyReader.imgInfo.cols, inputReader.imgInfo.cols),
+                                 max(keyReader.imgInfo.rows, inputReader.imgInfo.rows),
+                                 keyReader.imgInfo.bitDepth, true)
+
+        val diffWriter = PngWriter(File(case.inputDir, "diff.png"), diffInfo)
+
+        var diffCount = 0
+        var rowIndex = 0
+
+        while (keyReader.hasMoreRows() && inputReader.hasMoreRows()) {
+            val keyRow = keyReader.readRow() as ImageLineInt
+            val inputRow = inputReader.readRow() as ImageLineInt
+            val diffRow = ImageLineInt(diffInfo)
+
+            val keyPixels = keyRow.scanline.toPixels()
+            val inputPixels = inputRow.scanline.toPixels()
+
+            mapFromEachWithPad(keyPixels, inputPixels, Pixel.EMPTY) { key, input ->
+                if (key != input) {
+                    diffCount++
+                    Pixel.RED
+                } else {
+                    key mixWith Pixel.TRANS_BLACK
+                }
+            }.forEachIndexed { offset, pixel ->
+                diffRow.writePixelAtOffset(offset, pixel)
+            }
+
+            diffWriter.writeRow(diffRow)
+            rowIndex++
+        }
+
+        val redRow = ImageLineInt(diffInfo)
+        for (offset in 0 until diffInfo.cols) {
+            redRow.writePixelAtOffset(offset, Pixel.RED)
+        }
+        while (rowIndex < diffInfo.rows) {
+            diffWriter.writeRow(redRow)
+        }
+
+        keyReader.end()
+        inputReader.end()
+        diffWriter.end()
+
+        Assert.assertTrue("There were $diffCount(${prettyPrintPercent(diffCount, diffInfo.rows * diffInfo.cols)}) variant pixels in processed images", diffCount == 0)
+    }
+
+    private fun prettyPrintPercent(num: Int, div: Int): String {
+        val percentage = (num.toFloat() / div.toFloat()) * 100F
+        return "%.2f%%%n".format(percentage).trim()
+    }
+
+    private fun ImageLineInt.writePixelAtOffset(offset: Int, pixel: Pixel) {
+        scanline[offset * 4] = pixel.r
+        scanline[offset * 4 + 1] = pixel.g
+        scanline[offset * 4 + 2] = pixel.b
+        scanline[offset * 4 + 3] = pixel.a
+    }
+
+    private fun IntArray.toPixels(): List<Pixel> {
+        return asIterable()
+                .buffer(4)
+                .map { Pixel(it[0], it[1], it[2], it[3]) }
+    }
+
+    private fun <T, R> mapFromEachWithPad(first: List<T>, second: List<T>, pad: T, action: (first: T, second: T) -> R): List<R> {
+        val size = max(first.size, second.size)
+        val result = ArrayList<R>(size)
+        for (index in 0 until size) {
+            val f = first.getOrElse(index) { pad }
+            val s = second.getOrElse(index) { pad }
+            result.add(action(f, s))
+        }
+
+        return result.toList()
     }
 }
 
-class KontrastCase(val keyDir: File, val inputDir: File) {
-    override fun toString(): String {
-        val className: String = keyDir.parentFile.parentFile.name
-        val methodName: String = keyDir.parentFile.name
-        val testKey: String = keyDir.name
-
-        return if (methodName == testKey)
-            "$className/$methodName"
-        else
-            "$className/$methodName/$testKey"
+private fun <T> Iterable<T>.buffer(bufferSize: Int): List<List<T>> {
+    require(bufferSize > 0)
+    val iter = iterator()
+    val result = ArrayList<List<T>>(count() / bufferSize + 1)
+    var nextBuf = ArrayList<T>(bufferSize)
+    while (iter.hasNext()) {
+        nextBuf.add(iter.next())
+        if (nextBuf.size == bufferSize) {
+            result.add(nextBuf)
+            nextBuf = ArrayList<T>(bufferSize)
+        }
     }
+    return result
 }
