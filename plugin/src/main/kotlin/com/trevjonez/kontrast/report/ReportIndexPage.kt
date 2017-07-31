@@ -22,7 +22,6 @@ import kotlinx.html.div
 import kotlinx.html.head
 import kotlinx.html.header
 import kotlinx.html.html
-import kotlinx.html.li
 import kotlinx.html.link
 import kotlinx.html.meta
 import kotlinx.html.nav
@@ -31,7 +30,6 @@ import kotlinx.html.section
 import kotlinx.html.span
 import kotlinx.html.stream.appendHTML
 import kotlinx.html.title
-import kotlinx.html.ul
 import java.io.File
 
 class ReportIndexPage(val outputDir: File, val variantName: String) : ReportPage {
@@ -45,8 +43,7 @@ class ReportIndexPage(val outputDir: File, val variantName: String) : ReportPage
             writer().use {
                 it.appendln("<!DOCTYPE html>")
                 it.appendHTML().html {
-                    classAtr = "mdc-typography"
-
+                    attributes.put("class", "mdc-typography")
                     head {
                         meta {
                             charset = "utf-8"
@@ -61,78 +58,38 @@ class ReportIndexPage(val outputDir: File, val variantName: String) : ReportPage
                             href = "https://unpkg.com/material-components-web@latest/dist/material-components-web.min.css"
                         }
                     }
-
                     body {
-                        header {
-                            classAtr = "mdc-toolbar mdc-toolbar--fixed mdc-toolbar--waterfall"
-                            div {
-                                classAtr = "mdc-toolbar__row"
-                                section {
-                                    classAtr = "mdc-toolbar__section mdc-toolbar__section--align-start"
-                                    span {
-                                        classAtr = "mdc-toolbar__title"
+                        header("mdc-toolbar mdc-toolbar--fixed mdc-toolbar--waterfall") {
+                            mdcAutoInit = "MDCToolbar"
+                            div("mdc-toolbar__row") {
+                                section("mdc-toolbar__section mdc-toolbar__section--align-start") {
+                                    span("mdc-toolbar__title") {
                                         text("Kontrast Test Report: $variantName")
                                     }
                                 }
-                                section {
-                                    classAtr = "mdc-toolbar__section mdc-toolbar__section--align-end"
-                                    nav {
-                                        classAtr = "toolbar-nav"
-                                        ul {
-                                            classAtr = "toolbar-nav__links"
-                                            li {
-                                                a {
-                                                    classAtr = "toolbar-nav-link toolbar-nav-link--active"
-                                                    href = "#" //TODO
-                                                    span {
-                                                        classAtr = "toolbar-nav-link__text"
-                                                        text("All") //TODO count
-                                                    }
-                                                }
-                                            }
-                                            li {
-                                                a {
-                                                    classAtr = "toolbar-nav-link"
-                                                    href = "#" //TODO
-                                                    span {
-                                                        classAtr = "toolbar-nav-link__text"
-                                                        text("Passed") //TODO count
-                                                    }
-                                                }
-                                            }
-                                            li {
-                                                classAtr = "mdc-menu-anchor"
-                                                a {
-                                                    classAtr = "toolbar-nav-link"
-                                                    href = "#" //TODO
-                                                    span {
-                                                        classAtr = "toolbar-nav-link__text"
-                                                        text("Failed") //TODO count
-                                                    }
-                                                }
-                                            }
-                                            li {
-                                                a {
-                                                    classAtr = "toolbar-nav-link"
-                                                    href = "#" //TODO
-                                                    span {
-                                                        classAtr = "toolbar-nav-link__text"
-                                                        text("Skipped") //TODO count
-                                                    }
-                                                }
-                                            }
+                                section("mdc-toolbar__section mdc-toolbar__section--align-end") {
+                                    nav("mdc-tab-bar") {
+                                        mdcAutoInit = "MDCTabBar"
+                                        a(href = "#", classes = "mdc-tab mdc-tab--active") {
+                                            text("All")
                                         }
+                                        a(href = "#", classes = "mdc-tab") {
+                                            text("Passed")
+                                        }
+                                        a(href = "#", classes = "mdc-tab") {
+                                            text("Failed")
+                                        }
+                                        a(href = "#", classes = "mdc-tab") {
+                                            text("skipped")
+                                        }
+                                        span("mdc-tab-bar__indicator") {}
                                     }
                                 }
                             }
                         }
-                        script {
-                            text("var toolbar = mdc.toolbar.MDCToolbar.attackTo(document.querySelector('.mdc-toolbar'));" + "\n" +
-                                 "toolbar.fixedAdjustElement = document.querySelector('.mdc-toolbar-fixed-adjust');")
-                        }
 
                         script {
-                            src = "https://unpkg.com/material-components-web@latest/dist/material-components-web.min.js"
+                            src = "https://unpkg.com/material-components-web@latest/dist/material-components-web.js"
                         }
                         script {
                             text("window.mdc.autoInit();")
