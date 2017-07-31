@@ -60,7 +60,7 @@ class ReportIndexPage(val outputDir: File, val variantName: String) : ReportPage
                     }
                     body {
                         header("mdc-toolbar mdc-toolbar--fixed mdc-toolbar--waterfall") {
-                            mdcAutoInit = "MDCToolbar"
+                            autoInit("MDCToolbar")
                             div("mdc-toolbar__row") {
                                 section("mdc-toolbar__section mdc-toolbar__section--align-start") {
                                     span("mdc-toolbar__title") {
@@ -69,7 +69,7 @@ class ReportIndexPage(val outputDir: File, val variantName: String) : ReportPage
                                 }
                                 section("mdc-toolbar__section mdc-toolbar__section--align-end") {
                                     nav("mdc-tab-bar") {
-                                        mdcAutoInit = "MDCTabBar"
+                                        autoInit("MDCTabBar")
                                         a(href = "#", classes = "mdc-tab mdc-tab--active") {
                                             text("All")
                                         }

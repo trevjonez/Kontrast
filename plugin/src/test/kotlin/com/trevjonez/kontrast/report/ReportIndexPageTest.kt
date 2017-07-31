@@ -24,7 +24,7 @@ class ReportIndexPageTest {
     fun generateIndex() {
         val outputDir = File("build${File.separator}htmlReportTestOutputs${File.separator}generateIndex")
         outputDir.mkdirs()
-        val page = ReportIndexPage(outputDir, "reportTaskTest")
+        val page = ReportIndexPage(outputDir, "Index page render test")
         page.write()
     }
 }

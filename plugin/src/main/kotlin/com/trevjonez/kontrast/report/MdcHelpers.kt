@@ -18,8 +18,6 @@ package com.trevjonez.kontrast.report
 
 import kotlinx.html.Tag
 
-var Tag.mdcAutoInit: String?
-    get() = attributes["data-mdc-auto-init"]
-    set(value) {
-        value?.let { attributes.put("data-mdc-auto-init", it) }
-    }
+fun Tag.autoInit(className: String) {
+    attributes.put("data-mdc-auto-init", className)
+}
