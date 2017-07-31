@@ -16,17 +16,31 @@
 
 package com.trevjonez.kontrast.task
 
+import com.trevjonez.kontrast.report.ReportIndexPage
 import com.trevjonez.kontrast.report.TestCaseOutput
 import io.reactivex.Single
 import org.gradle.api.DefaultTask
+import org.gradle.api.tasks.OutputDirectory
 import org.gradle.api.tasks.TaskAction
+import java.io.File
 
 open class HtmlReportTask : DefaultTask() {
 
     lateinit var testCases: Single<List<TestCaseOutput>>
 
+    @OutputDirectory
+    lateinit var outputDir: File
+
+    lateinit var variantName: String
+
     @TaskAction
     fun invoke() {
+        if (outputDir.exists())
+            if (!outputDir.deleteRecursively()) throw IllegalStateException("Unable to delete old report directory")
 
+        if (!outputDir.mkdirs()) throw IllegalStateException("Unable to create new report directory")
+
+        val indexPage = ReportIndexPage(outputDir, variantName)
+        indexPage.write()
     }
 }

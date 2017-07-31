@@ -41,12 +41,12 @@ class KontrastTest(val case: KontrastCase) {
             val keyCases = childDirectories(keyRoot) //classDirs
                     .flatMap(this::childDirectories) //methodDirs
                     .flatMap(this::childDirectories) //testDirs
-                    .map { KontrastCase(it, File(inputRoot, "${it.parentFile.parentFile.name}/${it.parentFile.name}/${it.name}")) }
+                    .map { KontrastCase(it, File(inputRoot, "${it.parentFile.parentFile.name}${File.separator}${it.parentFile.name}${File.separator}${it.name}")) }
 
             val inputCases = childDirectories(inputRoot) //classDirs
                     .flatMap(this::childDirectories) //methodDirs
                     .flatMap(this::childDirectories)
-                    .map { KontrastCase(File(keyRoot, "${it.parentFile.parentFile.name}/${it.parentFile.name}/${it.name}"), it) }
+                    .map { KontrastCase(File(keyRoot, "${it.parentFile.parentFile.name}${File.separator}${it.parentFile.name}${File.separator}${it.name}"), it) }
 
             return keyCases.mergeWith(inputCases)
         }

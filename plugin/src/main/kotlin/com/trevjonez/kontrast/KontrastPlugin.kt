@@ -122,7 +122,10 @@ class KontrastPlugin : Plugin<Project> {
     private fun createReportTask(project: Project, variant: ApplicationVariant): HtmlReportTask {
         return project.createTask(type = HtmlReportTask::class,
                                   name = "generate${variant.name.capitalize()}KontrastHtmlReport",
-                                  description = "Generate HTML test result report")
+                                  description = "Generate HTML test result report").apply {
+            outputDir = File(project.buildDir, "reports${File.separator}Kontrast${File.separator}${variant.name}")
+            variantName = variant.name
+        }
     }
 
     private fun createTestTask(project: Project, variant: ApplicationVariant, renderTask: RenderOnDeviceTask, keyTask: CaptureTestKeyTask, unziptestTask: Copy, reportTask: HtmlReportTask): Test {
