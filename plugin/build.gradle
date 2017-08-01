@@ -31,7 +31,7 @@ gradlePlugin {
 }
 
 dependencies {
-    compile group: 'org.jetbrains.kotlinx', name: 'kotlinx-html-jvm', version: '0.6.3'
+    compile group: 'org.jetbrains.kotlinx', name: 'kotlinx-html-jvm', version: kotlinx_html_version
     compile group: 'com.android.tools.build', name: 'gradle', version: '2.3.3'
     compile group: 'io.reactivex.rxjava2', name: 'rxjava', version: '2.1.1'
     compile group: 'com.squareup.moshi', name:'moshi', version: '1.5.0'
@@ -41,6 +41,25 @@ dependencies {
     testCompile group: 'junit', name: 'junit', version: '4.12'
     testCompile group: 'org.assertj', name: 'assertj-core', version: '3.8.0'
     testCompile group: 'commons-io', name: 'commons-io', version: '2.5'
+}
+
+configurations {
+    reportResources
+}
+
+dependencies {
+    reportResources project(':reportJs')
+}
+
+processResources {
+    dependsOn(':reportJs:jar')
+    configurations.reportResources.each { File file ->
+        from zipTree(file.absolutePath)
+        include { fileTreeElement ->
+            def path = fileTreeElement.path
+            path.endsWith(".js") || path.endsWith(".map")
+        }
+    }
 }
 
 test {

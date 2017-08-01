@@ -14,6 +14,24 @@
  *    limitations under the License.
  */
 
-rootProject.name = 'Kontrast'
+apply plugin: 'kotlin2js'
 
-include ':plugin', ':androidTestClient', ':appClient', ':app', ':unitTestClient', ':reportJs'
+dependencies {
+    compile group: 'org.jetbrains.kotlin', name: 'kotlin-stdlib-js', version: kotlin_version
+}
+
+compileKotlin2Js {
+    kotlinOptions.sourceMap = true
+}
+
+afterEvaluate {
+    jar {
+        configurations.compile.each { File file ->
+            from zipTree(file.absolutePath)
+            include { fileTreeElement ->
+                def path = fileTreeElement.path
+                path.endsWith(".js")
+            }
+        }
+    }
+}

@@ -16,6 +16,7 @@
 
 package com.trevjonez.kontrast.report
 
+import kotlinx.html.ScriptType
 import kotlinx.html.a
 import kotlinx.html.body
 import kotlinx.html.div
@@ -45,13 +46,8 @@ class ReportIndexPage(val outputDir: File, val variantName: String) : ReportPage
                 it.appendHTML().html {
                     attributes.put("class", "mdc-typography")
                     head {
-                        meta {
-                            charset = "utf-8"
-                        }
-                        meta {
-                            name = "viewport"
-                            content = "width=device-width,initial-scale=1"
-                        }
+                        meta { charset = "utf-8" }
+                        meta { name = "viewport"; content = "width=device-width,initial-scale=1" }
                         title("Kontrast Report: $variantName")
                         link {
                             rel = "stylesheet"
@@ -63,40 +59,27 @@ class ReportIndexPage(val outputDir: File, val variantName: String) : ReportPage
                             autoInit("MDCToolbar")
                             div("mdc-toolbar__row") {
                                 section("mdc-toolbar__section mdc-toolbar__section--align-start") {
-                                    span("mdc-toolbar__title") {
-                                        text("Kontrast Test Report: $variantName")
-                                    }
+                                    span("mdc-toolbar__title") { text("Kontrast Test Report: $variantName") }
                                 }
                                 section("mdc-toolbar__section mdc-toolbar__section--align-end") {
                                     nav("mdc-tab-bar") {
                                         autoInit("MDCTabBar")
-                                        a(href = "#", classes = "mdc-tab mdc-tab--active") {
-                                            text("All")
-                                        }
-                                        a(href = "#", classes = "mdc-tab") {
-                                            text("Passed")
-                                        }
-                                        a(href = "#", classes = "mdc-tab") {
-                                            text("Failed")
-                                        }
-                                        a(href = "#", classes = "mdc-tab") {
-                                            text("skipped")
-                                        }
+                                        a(href = "#", classes = "mdc-tab mdc-tab--active") { text("All") }
+                                        a(href = "#", classes = "mdc-tab") { text("Passed") }
+                                        a(href = "#", classes = "mdc-tab") { text("Failed") }
+                                        a(href = "#", classes = "mdc-tab") { text("skipped") }
                                         span("mdc-tab-bar__indicator") {}
                                     }
                                 }
                             }
                         }
 
-                        script {
-                            src = "https://unpkg.com/material-components-web@latest/dist/material-components-web.js"
-                        }
-                        script {
-                            text("window.mdc.autoInit();")
-                        }
+                        script { src = "https://unpkg.com/material-components-web@latest/dist/material-components-web.js" }
+                        script(type = ScriptType.textJavaScript) { text("window.mdc.autoInit();") }
+                        script { src = "js/kotlin.js"}
+                        script { src = "js/kontrast.js"}
                     }
                 }
-                it.flush()
             }
         }
     }

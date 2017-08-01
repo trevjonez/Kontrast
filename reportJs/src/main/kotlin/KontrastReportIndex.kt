@@ -14,6 +14,6 @@
  *    limitations under the License.
  */
 
-rootProject.name = 'Kontrast'
+fun main(args: Array<String>) {
 
-include ':plugin', ':androidTestClient', ':appClient', ':app', ':unitTestClient', ':reportJs'
+}
