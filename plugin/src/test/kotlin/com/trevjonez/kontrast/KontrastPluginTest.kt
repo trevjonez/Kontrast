@@ -35,15 +35,17 @@ class KontrastPluginTest {
             copyDirectory(File(".", "../appClient"), File(this, "appClient"))
             copyDirectory(File(".", "../unitTestClient"), File(this, "unitTestClient"))
             copyDirectory(File(".", "../androidTestClient"), File(this, "androidTestClient"))
+            copyDirectory(File(".", "../reportJs"), File(this, "reportJs"))
             File(this, "libs").also {
                 it.mkdir()
                 copyFileToDirectory(File(".", "build/libs/plugin.jar"), it)
             }
             File(this, "local.properties").writeText("sdk.dir=${System.getenv("HOME")}/Library/Android/sdk")
-            File(this, "settings.gradle").writeText("include ':androidTestClient', ':unitTestClient', ':appClient', ':app'")
+            File(this, "settings.gradle").writeText("include ':androidTestClient', ':unitTestClient', ':appClient', ':app', ':reportJs'")
             File(this, "build.gradle").writeText("""
 buildscript {
     ext.kotlin_version = '1.1.3-2'
+    ext.kotlinx_html_version = '0.6.3'
     ext.android_plugin_version = '2.3.3'
 
     repositories {
@@ -55,6 +57,7 @@ buildscript {
         classpath group: 'com.android.tools.build', name: 'gradle', version: android_plugin_version
         classpath group: 'io.reactivex.rxjava2', name: 'rxjava', version: '2.1.1'
         classpath group: 'com.squareup.moshi', name:'moshi', version: '1.5.0'
+        classpath group: 'org.jetbrains.kotlinx', name: 'kotlinx-html-jvm', version: kotlinx_html_version
         classpath files("libs/plugin.jar")
     }
 }
@@ -112,16 +115,18 @@ afterEvaluate {
             copyDirectory(File(".", "../appClient"), File(this, "appClient"))
             copyDirectory(File(".", "../androidTestClient"), File(this, "androidTestClient"))
             copyDirectory(File(".", "../unitTestClient"), File(this, "unitTestClient"))
+            copyDirectory(File(".", "../reportJs"), File(this, "reportJs"))
             copyDirectory(File(javaClass.getResource("/Kontrast").path), File(this, "app/Kontrast"))
             File(this, "libs").also {
                 it.mkdir()
                 copyFileToDirectory(File(".", "build/libs/plugin.jar"), it)
             }
             File(this, "local.properties").writeText("sdk.dir=${System.getenv("HOME")}/Library/Android/sdk")
-            File(this, "settings.gradle").writeText("include ':androidTestClient', ':unitTestClient', ':appClient', ':app'")
+            File(this, "settings.gradle").writeText("include ':androidTestClient', ':unitTestClient', ':appClient', ':app', ':reportJs'")
             File(this, "build.gradle").writeText("""
 buildscript {
     ext.kotlin_version = '1.1.3-2'
+    ext.kotlinx_html_version = '0.6.3'
     ext.android_plugin_version = '2.3.3'
 
     repositories {
@@ -133,6 +138,7 @@ buildscript {
         classpath group: 'com.android.tools.build', name: 'gradle', version: android_plugin_version
         classpath group: 'io.reactivex.rxjava2', name: 'rxjava', version: '2.1.1'
         classpath group: 'com.squareup.moshi', name:'moshi', version: '1.5.0'
+        classpath group: 'org.jetbrains.kotlinx', name: 'kotlinx-html-jvm', version: kotlinx_html_version
         classpath files("libs/plugin.jar")
     }
 }

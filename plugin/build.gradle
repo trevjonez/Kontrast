@@ -55,10 +55,6 @@ processResources {
     dependsOn(':reportJs:jar')
     configurations.reportResources.each { File file ->
         from zipTree(file.absolutePath)
-        include { fileTreeElement ->
-            def path = fileTreeElement.path
-            path.endsWith(".js") || path.endsWith(".map")
-        }
     }
 }
 

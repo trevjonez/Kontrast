@@ -27,7 +27,8 @@ import io.reactivex.Observable
 import io.reactivex.Single
 import io.reactivex.schedulers.Schedulers
 import io.reactivex.subjects.BehaviorSubject
-import okio.Okio
+import okio.Okio.buffer
+import okio.Okio.sink
 import org.gradle.api.tasks.Input
 import org.gradle.api.tasks.OutputDirectory
 import org.gradle.api.tasks.TaskAction
@@ -74,11 +75,13 @@ open class RenderOnDeviceTask : AdbCommandTask() {
 }
 
 internal fun Observable<PulledOutput>.writeExtrasToFile(outputsDir: File, adapter: JsonAdapter<Map<String, String>>): Observable<PulledOutput> {
-    return doOnNext {
-        File(File(outputsDir, it.output.keySubDirectory()), "extras.json").apply {
+    return doOnNext { pulledOutput ->
+        File(File(outputsDir, pulledOutput.output.keySubDirectory()), "extras.json").apply {
             if (exists()) delete()
             createNewFile()
-            adapter.toJson(Okio.buffer(Okio.sink(this)), it.output.extras)
+            buffer(sink(this)).use {
+                adapter.toJson(it, pulledOutput.output.extras)
+            }
         }
     }
 }

@@ -19,7 +19,7 @@ package com.trevjonez.kontrast.task
 import com.trevjonez.kontrast.report.ReportIndexPage
 import com.trevjonez.kontrast.report.TestCaseOutput
 import io.reactivex.Single
-import org.apache.commons.io.FileUtils
+import org.apache.commons.io.IOUtils
 import org.gradle.api.DefaultTask
 import org.gradle.api.tasks.OutputDirectory
 import org.gradle.api.tasks.TaskAction
@@ -41,18 +41,18 @@ open class HtmlReportTask : DefaultTask() {
 
         if (!outputDir.mkdirs()) throw IllegalStateException("Unable to create new report directory")
 
-        val indexPage = ReportIndexPage(outputDir, variantName)
+        val indexPage = ReportIndexPage(outputDir, variantName, testCases.blockingGet())
         indexPage.write()
 
-        copyFileFromResources("kotlin.js", "js${File.separator}kotlin.js", outputDir)
-        copyFileFromResources("reportJs_main.js", "js${File.separator}kontrast.js", outputDir)
+        copyFileFromResources("kotlin.js", "kotlin.js", File(outputDir, "js"))
+        copyFileFromResources("reportJs_main.js", "kontrast.js", File(outputDir, "js"))
+        copyFileFromResources("kontrast.css", "kontrast.css", File(outputDir, "css"))
     }
-
 }
 
 fun copyFileFromResources(resName: String, destFileName: String, outputDir: File) {
-    val resource = Thread.currentThread().contextClassLoader.getResource(resName)
-    val src = File(resource.file)
+    if(!outputDir.exists()) outputDir.mkdirs()
+    val resource = Thread.currentThread().contextClassLoader.getResourceAsStream(resName)
     val dest = File(outputDir, destFileName)
-    FileUtils.copyFile(src, dest)
+    IOUtils.copy(resource, dest.outputStream())
 }

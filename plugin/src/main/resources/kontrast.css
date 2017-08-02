@@ -1,0 +1,24 @@
+.report-list-root {
+    padding-top: 16px;
+    max-width: 1202px;
+    margin-left: auto;
+    margin-right: auto;
+}
+
+.toolbar-row {
+    max-width: 1250px;
+    margin-left: auto;
+    margin-right: auto;
+}
+
+.report-card {
+    margin-top: 32px;
+    max-width: 860px;
+    margin-left: auto;
+    margin-right: auto;
+    background-color: #FFFFFF;
+}
+
+.mdc-toolbar-fixed-adjust {
+    margin-top: 80px;
+}

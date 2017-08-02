@@ -25,9 +25,11 @@ class ReportIndexPageTest {
     fun generateIndex() {
         val outputDir = File("build${File.separator}htmlReportTestOutputs${File.separator}generateIndex")
         outputDir.mkdirs()
-        copyFileFromResources("kotlin.js", "js${File.separator}kotlin.js", outputDir)
-        copyFileFromResources("reportJs_main.js", "js${File.separator}kontrast.js", outputDir)
-        val page = ReportIndexPage(outputDir, "Index page render test")
-        page.write()
+
+        ReportIndexPage(outputDir, "Index page render test", listOf()).write()
+
+        copyFileFromResources("kotlin.js", "kotlin.js", File(outputDir, "js"))
+        copyFileFromResources("reportJs_main.js", "kontrast.js", File(outputDir, "js"))
+        copyFileFromResources("kontrast.css", "kontrast.css", File(outputDir, "css"))
     }
 }

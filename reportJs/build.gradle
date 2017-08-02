@@ -30,7 +30,7 @@ afterEvaluate {
             from zipTree(file.absolutePath)
             include { fileTreeElement ->
                 def path = fileTreeElement.path
-                path.endsWith(".js")
+                path.endsWith(".js") || path.endsWith(".map")
             }
         }
     }
