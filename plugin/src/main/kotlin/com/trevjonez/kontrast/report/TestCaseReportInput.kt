@@ -19,17 +19,15 @@ package com.trevjonez.kontrast.report
 import org.gradle.api.tasks.testing.TestResult
 import java.io.File
 
-data class TestCaseOutput(
+data class TestCaseReportInput(
         override val className: String,
         override val methodName: String,
         override val testKey: String,
         override val inputExtras: Map<String, String>,
         override val keyExtras: Map<String, String>,
         override val status: TestResult.ResultType,
-        val inputRoot: File,
-        val keyRoot: File) : TestCaseData {
-    override val inputImage = File(inputRoot, "${subDirectory()}${File.separator}image.png")
-    override val keyImage = File(keyRoot, "${subDirectory()}${File.separator}image.png")
-    override val diffImage = File(inputRoot, "${subDirectory()}${File.separator}diff.png")
+        val reportContentRoot: File) : TestCaseData {
+    override val inputImage = File(reportContentRoot, "${subDirectory()}${File.separator}input.png")
+    override val keyImage = File(reportContentRoot, "${subDirectory()}${File.separator}key.png")
+    override val diffImage = File(reportContentRoot, "${subDirectory()}${File.separator}diff.png")
 }
-

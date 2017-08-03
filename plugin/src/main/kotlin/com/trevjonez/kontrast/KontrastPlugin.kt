@@ -38,6 +38,7 @@ import org.gradle.api.internal.file.collections.SimpleFileCollection
 import org.gradle.api.tasks.Copy
 import org.gradle.api.tasks.testing.Test
 import java.io.File
+import java.io.FileNotFoundException
 import kotlin.reflect.KClass
 
 //PTV -> Per testable variant
@@ -145,14 +146,22 @@ class KontrastPlugin : Plugin<Project> {
             val adapter = moshi.adapter<Map<String, String>>(Types.newParameterizedType(Map::class.java, String::class.java, String::class.java))
             reportTask.testCases = testEvents().map { (descriptor, result) ->
                 val names = descriptor.name
-                        .removePrefix("Test kontrastCase[")
-                        .removeSuffix("](com.trevjonez.kontrast.KontrastTest)")
+                        .removePrefix("kontrastCase[")
+                        .removeSuffix("]")
                         .split("$$")
 
-                val inputExtras = adapter.fromJson(buffer(source(File(renderTask.outputsDir, "${names.joinToString(File.separator)}${File.separator}extras.json")))) ?: mapOf()
-                val keyExtras = adapter.fromJson(buffer(source(File(keyTask.outputsDir, "${names.joinToString(File.separator)}${File.separator}extras.json")))) ?: mapOf()
+                val inputExtras = try {
+                    adapter.fromJson(buffer(source(File(renderTask.outputsDir, "${names.joinToString(File.separator)}${File.separator}extras.json")))) ?: mapOf()
+                } catch(ignore: FileNotFoundException) {
+                    mapOf<String, String>()
+                }
+                val keyExtras = try {
+                    adapter.fromJson(buffer(source(File(keyTask.outputsDir, "${names.joinToString(File.separator)}${File.separator}extras.json")))) ?: mapOf()
+                } catch(ignore: FileNotFoundException) {
+                    mapOf<String, String>()
+                }
 
-                TestCaseOutput(names[0], names[1], names[2], result, renderTask.outputsDir, keyTask.outputsDir, inputExtras, keyExtras)
+                TestCaseOutput(names[0], names[1], names[2], inputExtras, keyExtras, result.resultType, renderTask.outputsDir, keyTask.outputsDir)
             }.toList()
         }
     }

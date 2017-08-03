@@ -35,7 +35,7 @@ import kotlinx.html.style
 import kotlinx.html.title
 import java.io.File
 
-class ReportIndexPage(val outputDir: File, val variantName: String, blockingGet: List<TestCaseOutput>) : ReportPage {
+class ReportIndexPage(val outputDir: File, val variantName: String, testCases: List<TestCaseData>) : ReportPage {
 
     override fun write() {
         require(outputDir.exists()) { "Invalid output dir, must be pre-existing. ${outputDir.absolutePath}" }

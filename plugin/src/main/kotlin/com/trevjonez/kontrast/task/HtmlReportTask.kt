@@ -18,7 +18,9 @@ package com.trevjonez.kontrast.task
 
 import com.trevjonez.kontrast.report.ReportIndexPage
 import com.trevjonez.kontrast.report.TestCaseOutput
+import com.trevjonez.kontrast.report.TestCaseReportInput
 import io.reactivex.Single
+import org.apache.commons.io.FileUtils
 import org.apache.commons.io.IOUtils
 import org.gradle.api.DefaultTask
 import org.gradle.api.tasks.OutputDirectory
@@ -41,8 +43,27 @@ open class HtmlReportTask : DefaultTask() {
 
         if (!outputDir.mkdirs()) throw IllegalStateException("Unable to create new report directory")
 
-        val indexPage = ReportIndexPage(outputDir, variantName, testCases.blockingGet())
-        indexPage.write()
+        testCases.map {
+            it.map { testCase ->
+                TestCaseReportInput(testCase.className, testCase.methodName,
+                                    testCase.testKey, testCase.inputExtras,
+                                    testCase.keyExtras, testCase.status,
+                                    outputDir)
+                        .also { reportCase ->
+                            if (testCase.inputImage.exists())
+                                FileUtils.copyFile(testCase.inputImage, reportCase.inputImage)
+
+                            if (testCase.keyImage.exists())
+                                FileUtils.copyFile(testCase.keyImage, reportCase.keyImage)
+
+                            if (testCase.diffImage.exists())
+                                FileUtils.copyFile(testCase.diffImage, reportCase.diffImage)
+                        }
+            }
+        }
+                .map { ReportIndexPage(outputDir, variantName, it) }
+                .blockingGet()
+                .write()
 
         copyFileFromResources("kotlin.js", "kotlin.js", File(outputDir, "js"))
         copyFileFromResources("reportJs_main.js", "kontrast.js", File(outputDir, "js"))
@@ -51,7 +72,7 @@ open class HtmlReportTask : DefaultTask() {
 }
 
 fun copyFileFromResources(resName: String, destFileName: String, outputDir: File) {
-    if(!outputDir.exists()) outputDir.mkdirs()
+    if (!outputDir.exists()) outputDir.mkdirs()
     val resource = Thread.currentThread().contextClassLoader.getResourceAsStream(resName)
     val dest = File(outputDir, destFileName)
     IOUtils.copy(resource, dest.outputStream())
