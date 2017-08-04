@@ -23,7 +23,7 @@
 }
 
 .mdc-toolbar-fixed-adjust {
-    margin-top: 80px;
+    margin-top: 90px;
 }
 
 .skipped-title {
@@ -36,4 +36,8 @@
 
 .failed-title {
     color: #BF360C;
+}
+
+.hidden-test-case {
+    display: none;
 }
