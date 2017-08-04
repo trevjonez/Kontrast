@@ -26,8 +26,8 @@ data class TestCaseReportInput(
         override val inputExtras: Map<String, String>,
         override val keyExtras: Map<String, String>,
         override val status: TestResult.ResultType,
-        val reportContentRoot: File) : TestCaseData {
-    override val inputImage = File(reportContentRoot, "${subDirectory()}${File.separator}input.png")
-    override val keyImage = File(reportContentRoot, "${subDirectory()}${File.separator}key.png")
-    override val diffImage = File(reportContentRoot, "${subDirectory()}${File.separator}diff.png")
+        val reportImageDir: File) : TestCaseData {
+    override val inputImage = File(reportImageDir, "${subDirectory()}${File.separator}input.png")
+    override val keyImage = File(reportImageDir, "${subDirectory()}${File.separator}key.png")
+    override val diffImage = File(reportImageDir, "${subDirectory()}${File.separator}diff.png")
 }

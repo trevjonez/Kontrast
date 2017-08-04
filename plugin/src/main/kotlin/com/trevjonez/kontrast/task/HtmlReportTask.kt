@@ -48,7 +48,7 @@ open class HtmlReportTask : DefaultTask() {
                 TestCaseReportInput(testCase.className, testCase.methodName,
                                     testCase.testKey, testCase.inputExtras,
                                     testCase.keyExtras, testCase.status,
-                                    outputDir)
+                                    File(outputDir, "images"))
                         .also { reportCase ->
                             if (testCase.inputImage.exists())
                                 FileUtils.copyFile(testCase.inputImage, reportCase.inputImage)

@@ -11,14 +11,29 @@
     margin-right: auto;
 }
 
-.report-card {
-    margin-top: 32px;
+.report-body-content {
     max-width: 860px;
     margin-left: auto;
     margin-right: auto;
+}
+
+.report-card {
     background-color: #FFFFFF;
+    margin-bottom: 32px;
 }
 
 .mdc-toolbar-fixed-adjust {
     margin-top: 80px;
+}
+
+.skipped-title {
+    color: #F57F17;
+}
+
+.success-title {
+    color: #1B5E20;
+}
+
+.failed-title {
+    color: #BF360C;
 }
