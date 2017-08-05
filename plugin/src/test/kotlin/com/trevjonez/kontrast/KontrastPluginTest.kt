@@ -17,7 +17,6 @@
 package com.trevjonez.kontrast
 
 import org.apache.commons.io.FileUtils.copyDirectory
-import org.apache.commons.io.FileUtils.copyFileToDirectory
 import org.assertj.core.api.Assertions.assertThat
 import org.gradle.testkit.runner.GradleRunner
 import org.junit.Rule
@@ -30,18 +29,11 @@ class KontrastPluginTest {
 
     @Test
     fun renderAndCaptureTestKey() {
+        val kontrastVersion = System.getProperty("KontrastVersion")
         val projectDir = tempDirRule.root.apply {
             copyDirectory(File(".", "../app"), File(this, "app"))
-            copyDirectory(File(".", "../appClient"), File(this, "appClient"))
-            copyDirectory(File(".", "../unitTestClient"), File(this, "unitTestClient"))
-            copyDirectory(File(".", "../androidTestClient"), File(this, "androidTestClient"))
-            copyDirectory(File(".", "../reportJs"), File(this, "reportJs"))
-            File(this, "libs").also {
-                it.mkdir()
-                copyFileToDirectory(File(".", "build/libs/plugin.jar"), it)
-            }
             File(this, "local.properties").writeText("sdk.dir=${System.getenv("HOME")}/Library/Android/sdk")
-            File(this, "settings.gradle").writeText("include ':androidTestClient', ':unitTestClient', ':appClient', ':app', ':reportJs'")
+            File(this, "settings.gradle").writeText("include ':app'")
             File(this, "build.gradle").writeText("""
 buildscript {
     ext.kotlin_version = '1.1.3-2'
@@ -51,6 +43,7 @@ buildscript {
     repositories {
         google()
         jcenter()
+        mavenLocal()
     }
     dependencies {
         classpath group: 'org.jetbrains.kotlin', name: 'kotlin-gradle-plugin', version: kotlin_version
@@ -58,7 +51,7 @@ buildscript {
         classpath group: 'io.reactivex.rxjava2', name: 'rxjava', version: '2.1.1'
         classpath group: 'com.squareup.moshi', name:'moshi', version: '1.5.0'
         classpath group: 'org.jetbrains.kotlinx', name: 'kotlinx-html-jvm', version: kotlinx_html_version
-        classpath files("libs/plugin.jar")
+        classpath group: 'com.github.trevjonez.Kontrast', name: 'plugin', version: '$kontrastVersion'
     }
 }
 
@@ -66,20 +59,18 @@ allprojects {
     repositories {
         google()
         jcenter()
+        mavenLocal()
     }
 }
 """)
         }
 
-        File(projectDir, "app/build.gradle").appendText("""
+        File(projectDir, "app/kontrast.gradle").writeText("""
 apply plugin: 'kontrast'
 
 dependencies {
-    kontrast project(":unitTestClient")
-}
-
-afterEvaluate {
-    tasks.testDebugKontrastTest.outputs.upToDateWhen { false }
+    debugCompile group: 'com.github.trevjonez.Kontrast', name: 'appClient', version: '$kontrastVersion'
+    androidTestCompile group: 'com.github.trevjonez.Kontrast', name: 'androidTestClient', version: '$kontrastVersion'
 }
 """)
 
@@ -110,19 +101,12 @@ afterEvaluate {
 
     @Test
     fun compareRenderWithTestKeys() {
+        val kontrastVersion = System.getProperty("KontrastVersion")
         val projectDir = tempDirRule.root.apply {
             copyDirectory(File(".", "../app"), File(this, "app"))
-            copyDirectory(File(".", "../appClient"), File(this, "appClient"))
-            copyDirectory(File(".", "../androidTestClient"), File(this, "androidTestClient"))
-            copyDirectory(File(".", "../unitTestClient"), File(this, "unitTestClient"))
-            copyDirectory(File(".", "../reportJs"), File(this, "reportJs"))
             copyDirectory(File(javaClass.getResource("/Kontrast").path), File(this, "app/Kontrast"))
-            File(this, "libs").also {
-                it.mkdir()
-                copyFileToDirectory(File(".", "build/libs/plugin.jar"), it)
-            }
             File(this, "local.properties").writeText("sdk.dir=${System.getenv("HOME")}/Library/Android/sdk")
-            File(this, "settings.gradle").writeText("include ':androidTestClient', ':unitTestClient', ':appClient', ':app', ':reportJs'")
+            File(this, "settings.gradle").writeText("include ':app'")
             File(this, "build.gradle").writeText("""
 buildscript {
     ext.kotlin_version = '1.1.3-2'
@@ -132,6 +116,7 @@ buildscript {
     repositories {
         google()
         jcenter()
+        mavenLocal()
     }
     dependencies {
         classpath group: 'org.jetbrains.kotlin', name: 'kotlin-gradle-plugin', version: kotlin_version
@@ -139,7 +124,7 @@ buildscript {
         classpath group: 'io.reactivex.rxjava2', name: 'rxjava', version: '2.1.1'
         classpath group: 'com.squareup.moshi', name:'moshi', version: '1.5.0'
         classpath group: 'org.jetbrains.kotlinx', name: 'kotlinx-html-jvm', version: kotlinx_html_version
-        classpath files("libs/plugin.jar")
+        classpath group: 'com.github.trevjonez.Kontrast', name: 'plugin', version: '$kontrastVersion'
     }
 }
 
@@ -147,20 +132,18 @@ allprojects {
     repositories {
         google()
         jcenter()
+        mavenLocal()
     }
 }
 """)
         }
 
-        File(projectDir, "app/build.gradle").appendText("""
+        File(projectDir, "app/kontrast.gradle").writeText("""
 apply plugin: 'kontrast'
 
 dependencies {
-    kontrast project(":unitTestClient")
-}
-
-afterEvaluate {
-    tasks.testDebugKontrastTest.outputs.upToDateWhen { false }
+    debugCompile group: 'com.github.trevjonez.Kontrast', name: 'appClient', version: '$kontrastVersion'
+    androidTestCompile group: 'com.github.trevjonez.Kontrast', name: 'androidTestClient', version: '$kontrastVersion'
 }
 """)
 

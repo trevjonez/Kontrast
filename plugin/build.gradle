@@ -19,6 +19,7 @@ apply plugin: 'java-gradle-plugin'
 apply plugin: 'maven'
 
 group = rootProject.group
+version = rootProject.version
 sourceCompatibility = 1.8
 
 gradlePlugin {
@@ -61,17 +62,27 @@ processResources {
 test {
     testLogging.showStandardStreams = true
     testLogging.exceptionFormat = 'full'
+    systemProperty("KontrastVersion", version)
 }
 
-tasks.findByPath('test').dependsOn('jar')
+tasks.findByPath('test').dependsOn(':plugin:install')
+tasks.findByPath('test').dependsOn(':unitTestClient:install')
+tasks.findByPath('test').dependsOn(':androidTestClient:install')
+tasks.findByPath('test').dependsOn(':appClient:install')
 
 task sourcesJar(type: Jar, dependsOn: classes) {
-    classifier = 'sources'
+    classifier 'sources'
     from sourceSets.main.allSource
+}
+
+task javadocJar(type: Jar, dependsOn: javadoc) {
+    classifier 'javadoc'
+    from javadoc.destinationDir
 }
 
 artifacts {
     archives sourcesJar
+    archives javadocJar
 }
 
 install {

@@ -41,7 +41,6 @@ dependencies {
     kapt group: 'com.android.databinding', name: 'compiler', version: android_plugin_version
     compile group: 'com.android.support', name: 'cardview-v7', version: '25.4.0'
     compile group: 'com.android.support.constraint', name: 'constraint-layout', version: '1.0.2'
-
-    debugCompile project(':appClient')
-    androidTestCompile project(':androidTestClient')
 }
+
+apply from: 'kontrast.gradle'

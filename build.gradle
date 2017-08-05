@@ -27,6 +27,7 @@ buildscript {
         classpath group: 'org.jetbrains.kotlin', name: 'kotlin-gradle-plugin', version: kotlin_version
         classpath group: 'com.netflix.nebula', name: 'nebula-kotlin-plugin', version: kotlin_version
         classpath group: 'com.android.tools.build', name: 'gradle', version: android_plugin_version
+        classpath group: 'com.github.dcendents', name: 'android-maven-gradle-plugin', version: '1.5'
     }
 }
 
@@ -41,9 +42,5 @@ task clean(type: Delete) {
     delete rootProject.buildDir
 }
 
-task wrapper(type: Wrapper) {
-    gradleVersion = '4.0'
-    distributionUrl = "https://services.gradle.org/distributions/gradle-${gradleVersion}-all.zip"
-}
-
-group = 'com.github.trevjonez.kontrast'
+group = 'com.github.trevjonez.Kontrast'
+version = '0.1.0'

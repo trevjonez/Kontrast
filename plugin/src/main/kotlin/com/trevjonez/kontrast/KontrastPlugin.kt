@@ -76,10 +76,10 @@ class KontrastPlugin : Plugin<Project> {
 
     override fun apply(project: Project) {
         //TODO configuration DSL?
-
+        val kontrastVersion = ClassLoader.getSystemResourceAsStream("version").use { it.reader().readText() }
         if (project.configurations.findByName(KONTRAST_CONFIG) == null) {
             project.configurations.create(KONTRAST_CONFIG)
-//            project.dependencies.add(KONTRAST_CONFIG, ) TODO add unit test client automatically
+            project.dependencies.add(KONTRAST_CONFIG, "com.github.trevjonez.Kontrast:unitTestClient:$kontrastVersion")
         }
 
         moshi = Moshi.Builder().build()
