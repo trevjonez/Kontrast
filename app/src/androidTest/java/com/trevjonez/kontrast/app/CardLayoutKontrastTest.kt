@@ -22,6 +22,7 @@ import android.widget.FrameLayout
 import com.trevjonez.kontrast.KontrastTest
 import com.trevjonez.kontrast.KontrastTestBase
 import com.trevjonez.kontrast.app.databinding.CardLayoutBinding
+import org.junit.Test
 
 @SuppressLint("SetTextI18n")
 class CardLayoutKontrastTest : KontrastTestBase() {
