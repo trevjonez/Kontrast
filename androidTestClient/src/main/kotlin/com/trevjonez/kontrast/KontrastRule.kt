@@ -19,6 +19,7 @@ package com.trevjonez.kontrast
 import android.annotation.SuppressLint
 import android.os.Bundle
 import android.support.test.InstrumentationRegistry
+import android.support.test.rule.ActivityTestRule
 import android.view.View
 import org.junit.rules.TestRule
 import org.junit.runner.Description
@@ -41,7 +42,7 @@ abstract class KontrastRule : TestRule {
     abstract fun ofView(view: View, testKey: String): LayoutHelper
 }
 
-class KontrastAndroidTestRule : KontrastRule() {
+class KontrastAndroidTestRule(val activityRule: ActivityTestRule<*>) : KontrastRule() {
     companion object {
         const val KONTRAST_SIGNAL_CODE = 42
         const val CLASS_NAME = "ClassName"
@@ -76,6 +77,14 @@ INSTRUMENTATION_STATUS: Kontrast:OutputDir=/storage/emulated/0/Android/data/com.
 INSTRUMENTATION_STATUS_CODE: 42
             */
         }
+    }
+
+    fun <T> processOnMainThread(processor: () -> T): T {
+        var result: T? = null
+        activityRule.runOnUiThread {
+            result = processor()
+        }
+        return result ?: throw NullPointerException("Didn't receive anything from work on main thread")
     }
 }
 

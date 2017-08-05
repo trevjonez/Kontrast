@@ -36,7 +36,7 @@ abstract class KontrastTestBase(hostActivity: Class<out Activity> = KontrastTest
     }
 
     @JvmField @Rule val activityRule = ActivityTestRule(hostActivity)
-    @JvmField @Rule val kontrastRule = KontrastAndroidTestRule()
+    @JvmField @Rule val kontrastRule = KontrastAndroidTestRule(activityRule)
 
     val activity: Activity by lazy { activityRule.activity }
     val layoutInflater by lazy { LayoutInflater.from(activity) }

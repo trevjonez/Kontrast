@@ -22,7 +22,6 @@ import android.widget.FrameLayout
 import com.trevjonez.kontrast.KontrastTest
 import com.trevjonez.kontrast.KontrastTestBase
 import com.trevjonez.kontrast.app.databinding.CardLayoutBinding
-import org.junit.Test
 
 @SuppressLint("SetTextI18n")
 class CardLayoutKontrastTest : KontrastTestBase() {
@@ -30,55 +29,53 @@ class CardLayoutKontrastTest : KontrastTestBase() {
     @Test
     @KontrastTest
     fun johnDoeCard() {
-        //Databinding enforces inflation on main thread
-        activity.runOnUiThread {
-            //Need a frame to attach to so that margins render correctly, specific to this layout
-            val outerFrame = FrameLayout(activity)
-
-            CardLayoutBinding.inflate(layoutInflater, outerFrame, true).apply {
-                username.text = "John Doe"
+        val view = kontrastRule.processOnMainThread {
+            FrameLayout(activity).also {
+                CardLayoutBinding.inflate(layoutInflater, it, true).apply {
+                    username.text = "John Doe"
+                }
             }
-
-            kontrastRule.ofView(outerFrame)
-                    .setWidthDp(320)
-                    .extra("Username", "John Doe")
-                    .capture()
         }
+
+        kontrastRule.ofView(view)
+                .setWidthDp(320)
+                .extra("Username", "John Doe")
+                .capture()
     }
 
     @Test
     @KontrastTest
     fun janeDoeCard() {
-        activity.runOnUiThread {
-            val outerFrame = FrameLayout(activity)
-
-            CardLayoutBinding.inflate(layoutInflater, outerFrame, true).apply {
-                username.text = "Jane Doe"
-                avatar.setImageDrawable(ContextCompat.getDrawable(activity, R.drawable.ic_accessibility_black_24dp))
+        val view = kontrastRule.processOnMainThread {
+            FrameLayout(activity).also {
+                CardLayoutBinding.inflate(layoutInflater, it, true).apply {
+                    username.text = "Jane Doe"
+                    avatar.setImageDrawable(ContextCompat.getDrawable(activity, R.drawable.ic_accessibility_black_24dp))
+                }
             }
-
-            kontrastRule.ofView(outerFrame)
-                    .setWidthDp(320)
-                    .extra("Username", "Jane Doe")
-                    .capture()
         }
+
+        kontrastRule.ofView(view)
+                .setWidthDp(320)
+                .extra("Username", "Jane Doe")
+                .capture()
     }
 
     @Test
     @KontrastTest
     fun jackDoeCard() {
-        activity.runOnUiThread {
-            val outerFrame = FrameLayout(activity)
-
-            CardLayoutBinding.inflate(layoutInflater, outerFrame, true).apply {
-                username.text = "Jack Doe"
-                avatar.setImageDrawable(ContextCompat.getDrawable(activity, R.drawable.ic_assignment_ind_black_24dp))
+        val view = kontrastRule.processOnMainThread {
+            FrameLayout(activity).also {
+                CardLayoutBinding.inflate(layoutInflater, it, true).apply {
+                    username.text = "Jack Doe"
+                    avatar.setImageDrawable(ContextCompat.getDrawable(activity, R.drawable.ic_assignment_ind_black_24dp))
+                }
             }
-
-            kontrastRule.ofView(outerFrame)
-                    .setWidthDp(320)
-                    .extra("Username", "Jack Doe")
-                    .capture()
         }
+
+        kontrastRule.ofView(view)
+                .setWidthDp(320)
+                .extra("Username", "Jack Doe")
+                .capture()
     }
 }
