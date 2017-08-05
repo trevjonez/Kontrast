@@ -17,6 +17,7 @@
 package com.trevjonez.kontrast.report
 
 import kotlinx.html.ScriptType
+import kotlinx.html.a
 import kotlinx.html.body
 import kotlinx.html.div
 import kotlinx.html.h1
@@ -25,6 +26,7 @@ import kotlinx.html.h3
 import kotlinx.html.head
 import kotlinx.html.header
 import kotlinx.html.html
+import kotlinx.html.img
 import kotlinx.html.link
 import kotlinx.html.meta
 import kotlinx.html.nav
@@ -96,12 +98,49 @@ class ReportIndexPage(val outputDir: File, val variantName: String, val testCase
                                 section("mdc-card__supporting-text") {
                                     text(testCase.cardBodyMessage())
                                 }
-                                section("mdc-card__actions") {
-                                    span("mdc-button mdc-button--compact mdc-card__action") {
-                                        text("Extras")
+                                section("mdc-card__media") {
+                                    if (testCase.inputImage.exists()) {
+                                        section("mdc-card__supporting-text") {
+                                            text("Input Image:")
+                                        }
+                                        "images${File.separator}${testCase.subDirectory()}${File.separator}input.png".let { imgPath ->
+                                            a(imgPath) { img("input", imgPath, "test-image") }
+                                        }
                                     }
-                                    span("mdc-button mdc-button--compact mdc-card__action") {
-                                        text("Button 2")
+
+                                    if (testCase.inputExtras.isNotEmpty()) {
+                                        section("mdc-card__supporting-text") {
+                                            text("Input Extras: ${testCase.inputExtras}")
+                                        }
+                                    }
+
+                                    if (testCase.keyImage.exists()) {
+                                        section("mdc-card__supporting-text") {
+                                            text("Key Image:")
+                                        }
+                                        "images${File.separator}${testCase.subDirectory()}${File.separator}key.png".let { imgPath ->
+                                            a(imgPath) { img("key", imgPath, "test-image") }
+                                        }
+                                    }
+
+                                    if (testCase.keyExtras.isNotEmpty()) {
+                                        section("mdc-card__supporting-text") {
+                                            text("Key Extras: ${testCase.keyExtras}")
+                                        }
+                                    }
+
+                                    if (testCase.diffImage.exists()) {
+                                        section("mdc-card__supporting-text") {
+                                            text("Diff Image:")
+                                        }
+                                        "images${File.separator}${testCase.subDirectory()}${File.separator}diff.png".let { imgPath ->
+                                            a(imgPath) { img("diff", imgPath, "test-image") }
+                                        }
+
+                                        val diffExtras = mapDiff(testCase.inputExtras, testCase.keyExtras)
+                                        section("mdc-card__supporting-text ${if (diffExtras.isNotEmpty()) "extras-diff" else ""}") {
+                                            text("Extras Diff: $diffExtras")
+                                        }
                                     }
                                 }
                             }
@@ -115,6 +154,29 @@ class ReportIndexPage(val outputDir: File, val variantName: String, val testCase
                 }
             }
         }
+    }
+
+    private fun String?.diffWrap(): String {
+        return this?.let {
+            """"$this""""
+        } ?: "null"
+    }
+
+    private fun mapDiff(inputSet: Map<String, String>, keySet: Map<String, String>): Map<String, String> {
+        val differentPairs = mutableMapOf<String, String>()
+        inputSet.entries.forEach { (inKey, inVal) ->
+            val keyVal = keySet[inKey]
+            if (inVal != keyVal) {
+                differentPairs.put(inKey, "${inVal.diffWrap()}:${keyVal.diffWrap()}")
+            }
+        }
+        keySet.entries.forEach { (keyKey, keyVal) ->
+            val inVal = inputSet[keyKey]
+            if (inVal != keyVal) {
+                differentPairs.put(keyKey, "${inVal.diffWrap()}:${keyVal.diffWrap()}")
+            }
+        }
+        return differentPairs
     }
 
     private fun cardClass(status: TestResult.ResultType): String {

@@ -50,7 +50,7 @@ class ReportIndexPageTest {
                                        "johnDoeCard",
                                        "johnDoeCard",
                                        mapOf("Width" to "320dp", "Height" to "wrap_content", "Username" to "John Doe"),
-                                       mapOf("Width" to "320dp", "Height" to "wrap_content", "Username" to "John Doe"),
+                                       mapOf("Width" to "320dp", "Height" to "wrap_content", "Username" to "Johnny Doe", "Something" to "Different"),
                                        TestResult.ResultType.FAILURE, //Key and input variance
                                        File(outputDir, "images"))
 
