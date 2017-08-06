@@ -31,7 +31,13 @@ abstract class KontrastRule : TestRule {
 
     override fun apply(base: Statement, description: Description): Statement {
         className = description.className
-        methodName = description.methodName
+        methodName = description.methodName.let {
+            //language=RegExp
+            if (it.endsWith(']')) {
+                val start = it.indexOf('[')
+                it.removeRange(start, it.length)
+            } else it
+        }
         return base
     }
 
@@ -56,7 +62,7 @@ class KontrastAndroidTestRule(val activityRule: ActivityTestRule<*>) : KontrastR
 
     @SuppressLint("NewApi")
     override fun ofView(view: View, testKey: String): LayoutHelper {
-        return LayoutHelper(view, className, methodName, testKey) { helper ->
+        return LayoutHelper(view, className, methodName, testKey.removeWhiteSpace()) { helper ->
             val data = Bundle().apply {
                 putString("$KONTRAST:$CLASS_NAME", helper.className)
                 putString("$KONTRAST:$METHOD_NAME", helper.methodName)
@@ -88,19 +94,6 @@ INSTRUMENTATION_STATUS_CODE: 42
     }
 }
 
-class KontrastRobolectricRule : KontrastRule() {
-    init {
-        TODO("Robolectric is not supported.\n" +
-             "The only limitation I am aware of is that the bitmap implementation doesn't actually do anything.\n" +
-             "PR welcome from anyone that wants to do a custom bitmap shadow that might make it work.")
-        try {
-            Class.forName("org.robolectric.RuntimeEnvironment")
-        } catch (error: ClassNotFoundException) {
-            throw IllegalStateException("Robolectric rule should not be used for test runs without robolectric")
-        }
-    }
-
-    override fun ofView(view: View, testKey: String) = LayoutHelper(view, className, methodName, testKey) {
-        TODO("Figure out how we want to signal back for the plugin to see what tests were just in the run. If we even get this far")
-    }
+private fun String.removeWhiteSpace(): String {
+    return split(' ').joinToString("")
 }

@@ -37,16 +37,22 @@ class KontrastTest(val case: KontrastCase) {
         fun params(): Iterable<Any> {
             val keyRoot = File(System.getProperty("KontrastKeyDir") ?: throw NullPointerException("KontrastKeyDir Required"))
             val inputRoot = File(System.getProperty("KontrastInputDir") ?: throw NullPointerException("KontrastInputDir Required"))
+            println("KeyRoot: ${keyRoot.absolutePath}")
+            println("InputRoot: ${inputRoot.absolutePath}")
 
-            val keyCases = childDirectories(keyRoot) //classDirs
-                    .flatMap(this::childDirectories) //methodDirs
-                    .flatMap(this::childDirectories) //testDirs
-                    .map { KontrastCase(it, File(inputRoot, "${it.parentFile.parentFile.name}${File.separator}${it.parentFile.name}${File.separator}${it.name}")) }
+            val keyCases = if (keyRoot.exists())
+                childDirectories(keyRoot) //classDirs
+                        .flatMap(this::childDirectories) //methodDirs
+                        .flatMap(this::childDirectories) //testDirs
+                        .map { KontrastCase(it, File(inputRoot, "${it.parentFile.parentFile.name}${File.separator}${it.parentFile.name}${File.separator}${it.name}")) }
+            else emptyList()
 
-            val inputCases = childDirectories(inputRoot) //classDirs
-                    .flatMap(this::childDirectories) //methodDirs
-                    .flatMap(this::childDirectories)
-                    .map { KontrastCase(File(keyRoot, "${it.parentFile.parentFile.name}${File.separator}${it.parentFile.name}${File.separator}${it.name}"), it) }
+            val inputCases = if (inputRoot.exists())
+                childDirectories(inputRoot) //classDirs
+                        .flatMap(this::childDirectories) //methodDirs
+                        .flatMap(this::childDirectories)
+                        .map { KontrastCase(File(keyRoot, "${it.parentFile.parentFile.name}${File.separator}${it.parentFile.name}${File.separator}${it.name}"), it) }
+            else emptyList()
 
             return keyCases.mergeWith(inputCases)
         }

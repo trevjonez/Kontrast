@@ -19,6 +19,7 @@ package com.trevjonez.kontrast.adb
 import io.reactivex.Completable
 import io.reactivex.Observable
 import io.reactivex.Single
+import org.slf4j.Logger
 import java.io.File
 import java.util.stream.Collectors
 
@@ -35,11 +36,12 @@ interface Adb {
 
     fun deleteDir(device: AdbDevice, directory: File): Completable
 
-    class Impl(override val executable: File) : Adb {
+    class Impl(override val executable: File, val logger: Logger) : Adb {
         override fun devices(): Single<Set<AdbDevice>> {
             return Single.fromCallable {
                 ProcessBuilder(executable.absolutePath, "devices").start()
                         .inputStream.bufferedReader().lines()
+                        .map { logger.info(it); it }
                         .filter { it.endsWith("offline") || it.endsWith("device") || it.endsWith("unauthorized") }
                         .map { it.split("""\s""".toRegex()).let { AdbDevice(it[0], AdbStatus.fromString(it[1])) } }
                         .collect(Collectors.toSet())
@@ -95,7 +97,11 @@ interface Adb {
                                                  "-s", device.id,
                                                  "shell", command).start()
 
-                    process.inputStream.bufferedReader().forEachLine { emitter.onNext(it) }
+                    process.inputStream.bufferedReader()
+                            .forEachLine {
+                                logger.info(it)
+                                emitter.onNext(it)
+                            }
 
                     val result = process.waitFor()
                     if (result != 0) {

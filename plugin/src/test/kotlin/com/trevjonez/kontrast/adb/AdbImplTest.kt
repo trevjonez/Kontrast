@@ -18,10 +18,13 @@ package com.trevjonez.kontrast.adb
 
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.Test
+import org.slf4j.Logger
+import org.slf4j.LoggerFactory
 import java.io.File
 
 class AdbImplTest {
-    val adb = Adb.Impl(File(System.getenv("ANDROID_HOME"), "platform-tools/adb"))
+    val logger: Logger = LoggerFactory.getLogger(AdbImplTest::class.java)
+    val adb = Adb.Impl(File(System.getenv("ANDROID_HOME"), "platform-tools/adb"), logger)
 
     @Test
     fun devices() {

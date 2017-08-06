@@ -104,7 +104,7 @@ class KontrastPlugin : Plugin<Project> {
             }
 
             val androidExt = project.extensions.findByName("android") as AppExtension
-            adb = Adb.Impl(androidExt.adbExecutable)
+            adb = Adb.Impl(androidExt.adbExecutable, project.logger)
             this.observeVariants(it, deviceSelectTask, unzipTestTask, androidExt)
         }
     }

@@ -32,6 +32,7 @@ import okio.Okio.sink
 import org.gradle.api.tasks.Input
 import org.gradle.api.tasks.OutputDirectory
 import org.gradle.api.tasks.TaskAction
+import org.slf4j.Logger
 import java.io.File
 
 open class RenderOnDeviceTask : AdbCommandTask() {
@@ -63,10 +64,11 @@ open class RenderOnDeviceTask : AdbCommandTask() {
         //TODO test orchestrator?
         val pulledOuputs = device.flatMapObservable { adb.shell(it, "am instrument -w -r -e debug false $testPackage/$testRunner") }
                 .map(String::trim)
+                .doOnEach { logger.info("$it") }
                 .takeWhile { !it.startsWith("INSTRUMENTATION_CODE") }
                 .parseTestCases()
-                .pullOutputsAndDeleteFromDevice(device, outputsDir, adb)
-                .writeExtrasToFile(outputsDir, extrasAdapter)
+                .pullOutputsAndDeleteFromDevice(device, outputsDir, adb, logger)
+                .writeExtrasToFile(outputsDir, extrasAdapter, logger)
                 .collectInto(mutableSetOf<PulledOutput>()) { set, output -> set.add(output) }
                 .blockingGet()
 
@@ -74,9 +76,10 @@ open class RenderOnDeviceTask : AdbCommandTask() {
     }
 }
 
-internal fun Observable<PulledOutput>.writeExtrasToFile(outputsDir: File, adapter: JsonAdapter<Map<String, String>>): Observable<PulledOutput> {
+internal fun Observable<PulledOutput>.writeExtrasToFile(outputsDir: File, adapter: JsonAdapter<Map<String, String>>, logger: Logger): Observable<PulledOutput> {
     return doOnNext { pulledOutput ->
         File(File(outputsDir, pulledOutput.output.keySubDirectory()), "extras.json").apply {
+        logger.info("writing extras file [${this.absolutePath}]")
             if (exists()) delete()
             createNewFile()
             buffer(sink(this)).use {
@@ -86,11 +89,12 @@ internal fun Observable<PulledOutput>.writeExtrasToFile(outputsDir: File, adapte
     }
 }
 
-internal fun Observable<TestOutput>.pullOutputsAndDeleteFromDevice(deviceSelection: Single<AdbDevice>, outputsDir: File, adb: Adb): Observable<PulledOutput> {
+internal fun Observable<TestOutput>.pullOutputsAndDeleteFromDevice(deviceSelection: Single<AdbDevice>, outputsDir: File, adb: Adb, logger: Logger): Observable<PulledOutput> {
     return flatMap { testOutput ->
         //don't use sub directory here because the adb pull will copy the leaf directory down
         val localOutputDir = File(outputsDir, testOutput.methodSubDirectory())
         deviceSelection.flatMapObservable { device ->
+            logger.info("attempting to pull and delete [${testOutput.outputDirectory.absolutePath}]")
             adb.pull(device, testOutput.outputDirectory, localOutputDir, true)
                     .subscribeOn(Schedulers.io())
                     .andThen(adb.deleteDir(device, testOutput.outputDirectory).subscribeOn(Schedulers.io()))
