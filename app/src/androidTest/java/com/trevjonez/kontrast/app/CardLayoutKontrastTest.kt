@@ -30,9 +30,9 @@ class CardLayoutKontrastTest : KontrastTestBase() {
     @Test
     @KontrastTest
     fun johnDoeCard() {
-        val view = kontrastRule.processOnMainThread {
-            FrameLayout(activity).also {
-                CardLayoutBinding.inflate(layoutInflater, it, true).apply {
+        val view = kontrastRule.inflateOnMainThread { inflater ->
+            FrameLayout(inflater.context).also {
+                CardLayoutBinding.inflate(inflater, it, true).apply {
                     username.text = "John Doe"
                 }
             }
@@ -47,11 +47,11 @@ class CardLayoutKontrastTest : KontrastTestBase() {
     @Test
     @KontrastTest
     fun janeDoeCard() {
-        val view = kontrastRule.processOnMainThread {
-            FrameLayout(activity).also {
-                CardLayoutBinding.inflate(layoutInflater, it, true).apply {
+        val view = kontrastRule.inflateOnMainThread { inflater ->
+            FrameLayout(inflater.context).also {
+                CardLayoutBinding.inflate(inflater, it, true).apply {
                     username.text = "Jane Doe"
-                    avatar.setImageDrawable(ContextCompat.getDrawable(activity, R.drawable.ic_accessibility_black_24dp))
+                    avatar.setImageDrawable(ContextCompat.getDrawable(inflater.context, R.drawable.ic_accessibility_black_24dp))
                 }
             }
         }
@@ -65,11 +65,11 @@ class CardLayoutKontrastTest : KontrastTestBase() {
     @Test
     @KontrastTest
     fun jackDoeCard() {
-        val view = kontrastRule.processOnMainThread {
-            FrameLayout(activity).also {
-                CardLayoutBinding.inflate(layoutInflater, it, true).apply {
+        val view = kontrastRule.inflateOnMainThread { inflater ->
+            FrameLayout(inflater.context).also {
+                CardLayoutBinding.inflate(inflater, it, true).apply {
                     username.text = "Jack Doe"
-                    avatar.setImageDrawable(ContextCompat.getDrawable(activity, R.drawable.ic_assignment_ind_black_24dp))
+                    avatar.setImageDrawable(ContextCompat.getDrawable(inflater.context, R.drawable.ic_assignment_ind_black_24dp))
                 }
             }
         }

@@ -16,17 +16,22 @@
 
 package com.trevjonez.kontrast
 
+import android.annotation.SuppressLint
 import android.content.Context
+import android.content.Context.MODE_WORLD_READABLE
+import android.os.Build.VERSION.SDK_INT
+import android.os.Build.VERSION_CODES.LOLLIPOP
 import java.io.File
 
+@Suppress("DEPRECATION")
+@SuppressLint("WorldReadableFiles")
 fun getOutputDirectory(context: Context, subDirectoryPath: String): File {
-    return if(isRunningOnDevice()) {
+    require(isRunningOnDevice())
+    val outputRoot = "${context.packageName}${File.separator}$subDirectoryPath"
+    return if (SDK_INT >= LOLLIPOP)
         context.getExternalFilesDir(subDirectoryPath)
-    } else { /* Probably Robolectric? */
-        TODO("Robolectric does not support view rendering or real bitmap behaviour this must be ran on device/emu.\n" +
-             "I would love for this to work in the JVM but the work needed at this point is out of scope of MVP")
-        File("${getProjectBuildDir()}${File.separator}$subDirectoryPath")
-    }
+    else
+        File(context.getDir("Kontrast", MODE_WORLD_READABLE), outputRoot)
 }
 
 fun isRunningOnDevice() = System.getProperty("java.vendor").contains("android", true)

@@ -35,6 +35,8 @@ open class CaptureTestKeyTask : DefaultTask() {
             throw IllegalStateException("Unable to create output directory: ${outputsDir.absolutePath}")
 
         pulledOutputs.blockingGet().forEach {
+            logger.info("localOutputDir: ${it.localOutputDir.absolutePath}")
+            logger.info("Capturing test outputs: ${it.output.methodSubDirectory()}")
             it.localOutputDir.copyRecursively(File(outputsDir, it.output.methodSubDirectory()))
         }
     }

@@ -30,6 +30,7 @@ import io.reactivex.subjects.BehaviorSubject
 import okio.Okio.buffer
 import okio.Okio.sink
 import org.gradle.api.tasks.Input
+import org.gradle.api.tasks.InputFile
 import org.gradle.api.tasks.OutputDirectory
 import org.gradle.api.tasks.TaskAction
 import org.slf4j.Logger
@@ -42,6 +43,12 @@ open class RenderOnDeviceTask : AdbCommandTask() {
     lateinit var device: Single<AdbDevice>
 
     internal val resultSubject: BehaviorSubject<Set<PulledOutput>> = BehaviorSubject.create()
+
+    @get:InputFile
+    lateinit var appApk: File
+
+    @get:InputFile
+    lateinit var testApk: File
 
     @get:Input
     lateinit var testPackage: String
@@ -62,7 +69,7 @@ open class RenderOnDeviceTask : AdbCommandTask() {
 
         //TODO sharding?
         //TODO test orchestrator?
-        val pulledOuputs = device.flatMapObservable { adb.shell(it, "am instrument -w -r -e debug false $testPackage/$testRunner") }
+        val pulledOuputs = device.flatMapObservable { adb.shell(it, "am instrument -w -r -e debug false -e annotation com.trevjonez.kontrast.KontrastTest $testPackage/$testRunner") }
                 .map(String::trim)
                 .doOnEach { logger.info("$it") }
                 .takeWhile { !it.startsWith("INSTRUMENTATION_CODE") }
@@ -79,7 +86,7 @@ open class RenderOnDeviceTask : AdbCommandTask() {
 internal fun Observable<PulledOutput>.writeExtrasToFile(outputsDir: File, adapter: JsonAdapter<Map<String, String>>, logger: Logger): Observable<PulledOutput> {
     return doOnNext { pulledOutput ->
         File(File(outputsDir, pulledOutput.output.keySubDirectory()), "extras.json").apply {
-        logger.info("writing extras file [${this.absolutePath}]")
+            logger.info("writing extras file [${this.absolutePath}]")
             if (exists()) delete()
             createNewFile()
             buffer(sink(this)).use {

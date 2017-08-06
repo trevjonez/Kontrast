@@ -16,9 +16,9 @@
 
 package com.example.tjones.myapplication
 
-import android.view.LayoutInflater
 import com.example.tjones.myapplication.databinding.DatabindingUserListItemBinding
 import com.trevjonez.kontrast.CartesianProduct
+import com.trevjonez.kontrast.KontrastTest
 import com.trevjonez.kontrast.KontrastTestBase
 import org.junit.Test
 import org.junit.runner.RunWith
@@ -36,9 +36,10 @@ class DatabindingListItemTest(val width: Int, val name: String) : KontrastTestBa
     }
 
     @Test
+    @KontrastTest
     fun databoundCard() {
-        val view = kontrastRule.processOnMainThread {
-            DatabindingUserListItemBinding.inflate(LayoutInflater.from(activity)).apply {
+        val view = kontrastRule.inflateOnMainThread { inflater ->
+            DatabindingUserListItemBinding.inflate(inflater).apply {
                 username.text = name
             }
         }.root

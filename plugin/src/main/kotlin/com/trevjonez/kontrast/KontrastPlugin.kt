@@ -188,6 +188,8 @@ class KontrastPlugin : Plugin<Project> {
             testPackage = "${variant.applicationId}.test"
             outputsDir = File(project.buildDir, "Kontrast${File.separator}${variant.name}")
             extrasAdapter = moshi.adapter(Types.newParameterizedType(Map::class.java, String::class.java, String::class.java))
+            appApk = variant.apk
+            testApk = variant.testApk
         }
     }
 

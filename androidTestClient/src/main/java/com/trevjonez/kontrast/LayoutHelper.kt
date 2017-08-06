@@ -19,6 +19,7 @@ package com.trevjonez.kontrast
 import android.annotation.SuppressLint
 import android.graphics.Bitmap
 import android.graphics.Canvas
+import android.util.Log
 import android.util.TypedValue
 import android.view.View
 import android.view.View.MeasureSpec.EXACTLY
@@ -91,7 +92,9 @@ class LayoutHelper(val view: View,
     @SuppressLint("SetWorldReadable")
     fun capture() {
         val snapshot = layout().draw()
-        outputDirectory.mkdirs()
+        if(!outputDirectory.mkdirs() && !outputDirectory.exists()) {
+            Log.e("LayoutHelper", "Unable to create output dir(s) ${outputDirectory.absolutePath}")
+        }
         File(outputDirectory, "image.png").apply {
             createNewFile()
             outputStream().use {

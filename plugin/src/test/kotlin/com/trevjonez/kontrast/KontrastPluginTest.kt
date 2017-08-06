@@ -19,18 +19,16 @@ package com.trevjonez.kontrast
 import org.apache.commons.io.FileUtils.copyDirectory
 import org.assertj.core.api.Assertions.assertThat
 import org.gradle.testkit.runner.GradleRunner
-import org.junit.Rule
 import org.junit.Test
-import org.junit.rules.TemporaryFolder
 import java.io.File
 
 class KontrastPluginTest {
-    @Rule @JvmField val tempDirRule = TemporaryFolder()
-
     @Test
     fun renderAndCaptureTestKey() {
         val kontrastVersion = System.getProperty("KontrastVersion")
-        val projectDir = tempDirRule.root.apply {
+        val projectDir = File("build/pluginTestProjects/renderAndCaptureTestKey").apply {
+            deleteRecursively()
+            mkdirs()
             copyDirectory(File(".", "../app"), File(this, "app"))
             File(this, "local.properties").writeText("sdk.dir=${System.getenv("HOME")}/Library/Android/sdk")
             File(this, "settings.gradle").writeText("include ':app'")
@@ -77,7 +75,7 @@ dependencies {
                 .withProjectDir(projectDir)
                 .withDebug(true)
                 .forwardOutput()
-                .withArguments("app:tasks", "app:captureDebugTestKeys", "--stacktrace")
+                .withArguments("app:tasks", "app:captureDebugTestKeys", "--stacktrace", "--info")
                 .build()
 
         assertThat(File(projectDir, "app/Kontrast/debug/com.trevjonez.kontrast.app.CardLayoutKontrastTest")).isDirectory().satisfies {
@@ -94,14 +92,14 @@ dependencies {
                 assertThat(File(it, "extras.json")).exists()
             }
         }
-
-        copyDirectory(projectDir, File("build/pluginTestProjects/renderAndCaptureTestKey"))
     }
 
     @Test
     fun compareRenderWithTestKeys() {
         val kontrastVersion = System.getProperty("KontrastVersion")
-        val projectDir = tempDirRule.root.apply {
+        val projectDir = File("build/pluginTestProjects/compareRenderWithTestKeys").apply {
+            deleteRecursively()
+            mkdirs()
             copyDirectory(File(".", "../app"), File(this, "app"))
             copyDirectory(File(javaClass.getResource("/Kontrast").path), File(this, "app/Kontrast"))
             File(this, "local.properties").writeText("sdk.dir=${System.getenv("HOME")}/Library/Android/sdk")
@@ -149,9 +147,7 @@ dependencies {
                 .withProjectDir(projectDir)
                 .withDebug(true)
                 .forwardOutput()
-                .withArguments("app:testDebugKontrastTest", "--stacktrace")
+                .withArguments("app:testDebugKontrastTest", "--stacktrace", "--info")
                 .buildAndFail()
-
-        copyDirectory(projectDir, File("build/pluginTestProjects/compareRenderWithTestKeys"))
     }
 }

@@ -68,6 +68,10 @@ class ReportIndexCss(val outputDir: File) : ReportFile {
                 marginTop = 90.px
             }
 
+            ".success-title" {
+                color = 0x1B5E20
+            }
+
             ".skipped-title" {
                 color = 0xF57F17
             }

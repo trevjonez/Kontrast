@@ -19,15 +19,31 @@ package com.trevjonez.kontrast
 import android.annotation.SuppressLint
 import android.os.Bundle
 import android.support.test.InstrumentationRegistry
+import android.support.test.internal.runner.junit4.statement.UiThreadStatement
 import android.support.test.rule.ActivityTestRule
+import android.view.LayoutInflater
 import android.view.View
 import org.junit.rules.TestRule
 import org.junit.runner.Description
 import org.junit.runners.model.Statement
 
-abstract class KontrastRule : TestRule {
+class KontrastAndroidTestRule(val activityTestRule: ActivityTestRule<*>) : TestRule {
+    companion object {
+        const val KONTRAST_SIGNAL_CODE = 42
+        const val CLASS_NAME = "ClassName"
+        const val METHOD_NAME = "MethodName"
+        const val TEST_KEY = "TestKey"
+        const val EXTRAS = "Extras"
+        const val DESCRIPTION = "Description"
+        const val OUTPUT_DIR = "OutputDir"
+        const val KONTRAST = "Kontrast"
+    }
+
     lateinit var className: String
     lateinit var methodName: String
+
+    val layoutInflater: LayoutInflater
+        get() = LayoutInflater.from(activityTestRule.activity)
 
     override fun apply(base: Statement, description: Description): Statement {
         className = description.className
@@ -45,23 +61,8 @@ abstract class KontrastRule : TestRule {
         return ofView(view, methodName)
     }
 
-    abstract fun ofView(view: View, testKey: String): LayoutHelper
-}
-
-class KontrastAndroidTestRule(val activityRule: ActivityTestRule<*>) : KontrastRule() {
-    companion object {
-        const val KONTRAST_SIGNAL_CODE = 42
-        const val CLASS_NAME = "ClassName"
-        const val METHOD_NAME = "MethodName"
-        const val TEST_KEY = "TestKey"
-        const val EXTRAS = "Extras"
-        const val DESCRIPTION = "Description"
-        const val OUTPUT_DIR = "OutputDir"
-        const val KONTRAST = "Kontrast"
-    }
-
     @SuppressLint("NewApi")
-    override fun ofView(view: View, testKey: String): LayoutHelper {
+    fun ofView(view: View, testKey: String): LayoutHelper {
         return LayoutHelper(view, className, methodName, testKey.removeWhiteSpace()) { helper ->
             val data = Bundle().apply {
                 putString("$KONTRAST:$CLASS_NAME", helper.className)
@@ -73,22 +74,13 @@ class KontrastAndroidTestRule(val activityRule: ActivityTestRule<*>) : KontrastR
             }
 
             InstrumentationRegistry.getInstrumentation().sendStatus(KONTRAST_SIGNAL_CODE, data)
-            /*
-INSTRUMENTATION_STATUS: Kontrast:TestKey=johnDoeCard
-INSTRUMENTATION_STATUS: Kontrast:MethodName=johnDoeCard
-INSTRUMENTATION_STATUS: Kontrast:Description=null
-INSTRUMENTATION_STATUS: Kontrast:ClassName=com.trevjonez.kontrast.CardLayoutKontrastTest
-INSTRUMENTATION_STATUS: Kontrast:Extras=[]
-INSTRUMENTATION_STATUS: Kontrast:OutputDir=/storage/emulated/0/Android/data/com.trevjonez.kontrast.app/files/Kontrast/com.trevjonez.kontrast.CardLayoutKontrastTest/johnDoeCard/johnDoeCard
-INSTRUMENTATION_STATUS_CODE: 42
-            */
         }
     }
 
-    fun <T> processOnMainThread(processor: () -> T): T {
+    fun <T> inflateOnMainThread(inflationBlock: (inflater: LayoutInflater) -> T): T {
         var result: T? = null
-        activityRule.runOnUiThread {
-            result = processor()
+        UiThreadStatement.runOnUiThread {
+            result = inflationBlock(layoutInflater)
         }
         return result ?: throw NullPointerException("Didn't receive anything from work on main thread")
     }

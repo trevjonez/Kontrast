@@ -16,7 +16,6 @@
 
 package com.example.tjones.myapplication
 
-import android.view.LayoutInflater
 import com.trevjonez.kontrast.CartesianProduct
 import com.trevjonez.kontrast.KontrastTest
 import com.trevjonez.kontrast.KontrastTestBase
@@ -33,14 +32,14 @@ class PlainListItemTest(val width: Int, val name: String) : KontrastTestBase() {
         @JvmStatic
         @Parameters
         fun params(): Collection<Array<Any>> {
-            return CartesianProduct.create(listOf(240, 320), listOf("John Doe", "Jane Doe", "Josh Doe"))
+            return CartesianProduct.create(listOf(240, 320, 1024), listOf("John Doe", "Jane Doe", "Josh Doe"))
         }
     }
 
     @Test
     @KontrastTest
     fun typicalCard() {
-        val view = LayoutInflater.from(activity).inflate(R.layout.plain_user_list_item, null).apply {
+        val view = kontrastRule.layoutInflater.inflate(R.layout.plain_user_list_item, null).apply {
             username.text = name
         }
 

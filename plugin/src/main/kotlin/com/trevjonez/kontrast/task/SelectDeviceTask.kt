@@ -27,6 +27,8 @@ open class SelectDeviceTask : AdbCommandTask() {
     @TaskAction
     fun invoke() {
         //TODO provide optional dsl to override this selection
-        adb.devices().map { it.first() }.subscribe(resultSubject::onNext)
+        adb.devices().map { it.first() }.subscribe(resultSubject::onNext) {
+            throw IllegalStateException("No devices found", it)
+        }
     }
 }
