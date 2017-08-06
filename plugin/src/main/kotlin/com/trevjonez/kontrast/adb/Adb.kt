@@ -120,7 +120,7 @@ interface Adb {
                 if (result != 0) {
                     val builder = StringBuilder()
                     process.inputStream.bufferedReader().forEachLine { builder.append(it) }
-                    throw RuntimeException("directory delete failed with code: $result\n$builder")
+                    throw RuntimeException("directory(${directory.absolutePath}) delete failed with code: $result\n$builder")
                 }
             }
         }

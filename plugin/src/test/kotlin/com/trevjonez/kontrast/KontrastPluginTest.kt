@@ -70,7 +70,6 @@ apply plugin: 'kontrast'
 
 dependencies {
     debugCompile group: 'com.github.trevjonez.Kontrast', name: 'appClient', version: '$kontrastVersion'
-    androidTestCompile group: 'com.github.trevjonez.Kontrast', name: 'androidTestClient', version: '$kontrastVersion'
 }
 """)
 
@@ -143,7 +142,6 @@ apply plugin: 'kontrast'
 
 dependencies {
     debugCompile group: 'com.github.trevjonez.Kontrast', name: 'appClient', version: '$kontrastVersion'
-    androidTestCompile group: 'com.github.trevjonez.Kontrast', name: 'androidTestClient', version: '$kontrastVersion'
 }
 """)
 

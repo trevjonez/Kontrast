@@ -17,6 +17,7 @@
 package com.trevjonez.kontrast.report
 
 import kotlinx.html.ScriptType
+import kotlinx.html.Tag
 import kotlinx.html.a
 import kotlinx.html.body
 import kotlinx.html.div
@@ -39,8 +40,7 @@ import kotlinx.html.title
 import org.gradle.api.tasks.testing.TestResult
 import java.io.File
 
-class ReportIndexPage(val outputDir: File, val variantName: String, val testCases: List<TestCaseData>) : ReportPage {
-
+class ReportIndexHtml(val outputDir: File, val variantName: String, val testCases: List<TestCaseData>) : ReportFile {
     override fun write() {
         require(outputDir.exists()) { "Invalid output dir, must be pre-existing. ${outputDir.absolutePath}" }
 
@@ -57,7 +57,7 @@ class ReportIndexPage(val outputDir: File, val variantName: String, val testCase
                         title("Kontrast Report: $variantName")
                         link {
                             rel = "stylesheet"
-                            href = "https://unpkg.com/material-components-web@latest/dist/material-components-web.min.css"
+                            href = "css/material-components-web.min.css"
                         }
                         link {
                             rel = "stylesheet"
@@ -101,7 +101,7 @@ class ReportIndexPage(val outputDir: File, val variantName: String, val testCase
                                 section("mdc-card__media") {
                                     if (testCase.inputImage.exists()) {
                                         section("mdc-card__supporting-text") {
-                                            text("Input Image:")
+                                            text("Actual:")
                                         }
                                         "images${File.separator}${testCase.subDirectory()}${File.separator}input.png".let { imgPath ->
                                             a(imgPath) { img("input", imgPath, "test-image") }
@@ -110,13 +110,13 @@ class ReportIndexPage(val outputDir: File, val variantName: String, val testCase
 
                                     if (testCase.inputExtras.isNotEmpty()) {
                                         section("mdc-card__supporting-text") {
-                                            text("Input Extras: ${testCase.inputExtras}")
+                                            text("Extras: ${testCase.inputExtras.prettyPrint()}")
                                         }
                                     }
 
                                     if (testCase.keyImage.exists()) {
                                         section("mdc-card__supporting-text") {
-                                            text("Key Image:")
+                                            text("Expected:")
                                         }
                                         "images${File.separator}${testCase.subDirectory()}${File.separator}key.png".let { imgPath ->
                                             a(imgPath) { img("key", imgPath, "test-image") }
@@ -125,13 +125,13 @@ class ReportIndexPage(val outputDir: File, val variantName: String, val testCase
 
                                     if (testCase.keyExtras.isNotEmpty()) {
                                         section("mdc-card__supporting-text") {
-                                            text("Key Extras: ${testCase.keyExtras}")
+                                            text("Extras: ${testCase.keyExtras.prettyPrint()}")
                                         }
                                     }
 
                                     if (testCase.diffImage.exists()) {
                                         section("mdc-card__supporting-text") {
-                                            text("Diff Image:")
+                                            text("Difference:")
                                         }
                                         "images${File.separator}${testCase.subDirectory()}${File.separator}diff.png".let { imgPath ->
                                             a(imgPath) { img("diff", imgPath, "test-image") }
@@ -139,14 +139,14 @@ class ReportIndexPage(val outputDir: File, val variantName: String, val testCase
 
                                         val diffExtras = mapDiff(testCase.inputExtras, testCase.keyExtras)
                                         section("mdc-card__supporting-text ${if (diffExtras.isNotEmpty()) "extras-diff" else ""}") {
-                                            text("Extras Diff: $diffExtras")
+                                            text("Extras Difference: ${diffExtras.prettyPrint()}")
                                         }
                                     }
                                 }
                             }
                         }
 
-                        script { src = "https://unpkg.com/material-components-web@latest/dist/material-components-web.js" }
+                        script { src = "js/material-components-web.min.js" }
                         script(type = ScriptType.textJavaScript) { text("window.mdc.autoInit();") }
                         script { src = "js/kotlin.js" }
                         script { src = "js/kontrast.js" }
@@ -158,8 +158,12 @@ class ReportIndexPage(val outputDir: File, val variantName: String, val testCase
 
     private fun String?.diffWrap(): String {
         return this?.let {
-            """"$this""""
+            """$this"""
         } ?: "null"
+    }
+
+    private fun Map<String, String>.prettyPrint(): String {
+        return this.entries.joinToString(prefix = "{", postfix = "}", separator = ",\n") { """"${it.key}":"${it.value}"""" }
     }
 
     private fun mapDiff(inputSet: Map<String, String>, keySet: Map<String, String>): Map<String, String> {
@@ -173,7 +177,7 @@ class ReportIndexPage(val outputDir: File, val variantName: String, val testCase
         keySet.entries.forEach { (keyKey, keyVal) ->
             val inVal = inputSet[keyKey]
             if (inVal != keyVal) {
-                differentPairs.put(keyKey, "${inVal.diffWrap()}:${keyVal.diffWrap()}")
+                differentPairs.put(keyKey, "${inVal.diffWrap()} : ${keyVal.diffWrap()}")
             }
         }
         return differentPairs
@@ -216,9 +220,11 @@ class ReportIndexPage(val outputDir: File, val variantName: String, val testCase
         }
     }
 
+    private fun File.doesNotExist(): Boolean {
+        return !this.exists()
+    }
 
-}
-
-private fun File.doesNotExist(): Boolean {
-    return !this.exists()
+    private fun Tag.autoInit(className: String) {
+        attributes.put("data-mdc-auto-init", className)
+    }
 }

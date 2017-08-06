@@ -16,8 +16,6 @@
 
 package com.trevjonez.kontrast.report
 
-import kotlinx.html.Tag
-
-fun Tag.autoInit(className: String) {
-    attributes.put("data-mdc-auto-init", className)
+interface ReportFile {
+    fun write()
 }

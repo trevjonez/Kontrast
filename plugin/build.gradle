@@ -35,6 +35,7 @@ dependencies {
     compile group: 'org.jetbrains.kotlinx', name: 'kotlinx-html-jvm', version: kotlinx_html_version
     compile group: 'com.android.tools.build', name: 'gradle', version: '2.3.3'
     compile group: 'io.reactivex.rxjava2', name: 'rxjava', version: '2.1.1'
+    compile group: 'azadev.kotlin', name: 'aza-kotlin-css', version: '1.0'
     compile group: 'com.squareup.moshi', name:'moshi', version: '1.5.0'
 }
 
@@ -52,11 +53,29 @@ dependencies {
     reportResources project(':reportJs')
 }
 
+def mdcVersion = '0.16.0'
+
+task downloadMdcCss(type: DownloadFile) {
+    url="https://unpkg.com/material-components-web@$mdcVersion/dist/material-components-web.min.css"
+    target = file("$buildDir/material-components-web.min.css")
+    group = "Download Resources"
+    description = "Downloads MDC css file"
+}
+
+task downloadMdcJs(type: DownloadFile) {
+    url="https://unpkg.com/material-components-web@$mdcVersion/dist/material-components-web.min.js"
+    target = file("$buildDir/material-components-web.min.js")
+    group = "Download Resources"
+    description = "Downloads MDC js file"
+}
+
 processResources {
     dependsOn(':reportJs:jar')
     configurations.reportResources.each { File file ->
         from zipTree(file.absolutePath)
     }
+    from downloadMdcCss
+    from downloadMdcJs
 }
 
 test {
@@ -99,4 +118,15 @@ install {
             }
         }
     }
+}
+
+class DownloadFile extends DefaultTask {
+    @Input
+    String url
+
+    @OutputFile
+    File target
+
+    @TaskAction
+    void download() { ant.get(src: url, dest: target) }
 }

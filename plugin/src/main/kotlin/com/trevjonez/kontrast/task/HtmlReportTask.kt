@@ -16,12 +16,11 @@
 
 package com.trevjonez.kontrast.task
 
-import com.trevjonez.kontrast.report.ReportIndexPage
+import com.trevjonez.kontrast.report.ReportIndex
 import com.trevjonez.kontrast.report.TestCaseOutput
 import com.trevjonez.kontrast.report.TestCaseReportInput
 import io.reactivex.Single
 import org.apache.commons.io.FileUtils
-import org.apache.commons.io.IOUtils
 import org.gradle.api.DefaultTask
 import org.gradle.api.tasks.OutputDirectory
 import org.gradle.api.tasks.TaskAction
@@ -61,19 +60,8 @@ open class HtmlReportTask : DefaultTask() {
                         }
             }
         }
-                .map { ReportIndexPage(outputDir, variantName, it) }
+                .map { ReportIndex(outputDir, variantName, it) }
                 .blockingGet()
                 .write()
-
-        copyFileFromResources("kotlin.js", "kotlin.js", File(outputDir, "js"))
-        copyFileFromResources("reportJs_main.js", "kontrast.js", File(outputDir, "js"))
-        copyFileFromResources("kontrast.css", "kontrast.css", File(outputDir, "css"))
     }
-}
-
-fun copyFileFromResources(resName: String, destFileName: String, outputDir: File) {
-    if (!outputDir.exists()) outputDir.mkdirs()
-    val resource = Thread.currentThread().contextClassLoader.getResourceAsStream(resName)
-    val dest = File(outputDir, destFileName)
-    IOUtils.copy(resource, dest.outputStream())
 }

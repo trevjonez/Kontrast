@@ -16,7 +16,6 @@
 
 package com.trevjonez.kontrast.report
 
-import com.trevjonez.kontrast.task.copyFileFromResources
 import org.apache.commons.io.FileUtils
 import org.gradle.api.tasks.testing.TestResult
 import org.junit.Test
@@ -30,43 +29,42 @@ class ReportIndexPageTest {
 
         copyDirectoryFromResources("images", outputDir)
 
-        val jack = TestCaseReportInput("com.trevjonez.kontrast.app.CardLayoutKontrastTest",
-                                       "jackDoeCard",
-                                       "jackDoeCard",
-                                       mapOf("Width" to "320dp", "Height" to "wrap_content", "Username" to "Jack Doe"),
-                                       mapOf(),
-                                       TestResult.ResultType.SKIPPED, //Due to missing test key
-                                       File(outputDir, "images"))
+        val jack = TestCaseReportInput(className = "com.trevjonez.kontrast.app.CardLayoutKontrastTest",
+                                       methodName = "jackDoeCard",
+                                       testKey = "jackDoeCard",
+                                       inputExtras = mapOf("Width" to "320dp", "Height" to "wrap_content", "Username" to "Jack Doe"),
+                                       keyExtras = mapOf(),
+                                       status = TestResult.ResultType.SKIPPED, //Due to missing test key
+                                       reportImageDir = File(outputDir, "images"))
 
-        val jane = TestCaseReportInput("com.trevjonez.kontrast.app.CardLayoutKontrastTest",
-                                       "janeDoeCard",
-                                       "janeDoeCard",
-                                       mapOf("Width" to "320dp", "Height" to "wrap_content", "Username" to "Jane Doe"),
-                                       mapOf("Width" to "320dp", "Height" to "wrap_content", "Username" to "Jane Doe"),
-                                       TestResult.ResultType.SUCCESS,
-                                       File(outputDir, "images"))
+        val jane = TestCaseReportInput(className = "com.trevjonez.kontrast.app.CardLayoutKontrastTest",
+                                       methodName = "janeDoeCard",
+                                       testKey = "janeDoeCard",
+                                       inputExtras = mapOf("Width" to "320dp", "Height" to "wrap_content", "Username" to "Jane Doe"),
+                                       keyExtras = mapOf("Width" to "320dp", "Height" to "wrap_content", "Username" to "Jane Doe"),
+                                       status = TestResult.ResultType.SUCCESS,
+                                       reportImageDir = File(outputDir, "images"))
 
-        val john = TestCaseReportInput("com.trevjonez.kontrast.app.CardLayoutKontrastTest",
-                                       "johnDoeCard",
-                                       "johnDoeCard",
-                                       mapOf("Width" to "320dp", "Height" to "wrap_content", "Username" to "John Doe"),
-                                       mapOf("Width" to "320dp", "Height" to "wrap_content", "Username" to "Johnny Doe", "Something" to "Different"),
-                                       TestResult.ResultType.FAILURE, //Key and input variance
-                                       File(outputDir, "images"))
+        val john = TestCaseReportInput(className = "com.trevjonez.kontrast.app.CardLayoutKontrastTest",
+                                       methodName = "johnDoeCard",
+                                       testKey = "johnDoeCard",
+                                       inputExtras = mapOf("Width" to "320dp", "Height" to "wrap_content", "Username" to "John Doe"),
+                                       keyExtras = mapOf("Width" to "320dp", "Height" to "wrap_content", "Username" to "John Doe",
+                                                         "Something" to "Different",
+                                                         "anotherLongWindedThing" to "so that it wraps lines",
+                                                         "yet another" to "long extra"),
+                                       status = TestResult.ResultType.FAILURE, //Key and input variance
+                                       reportImageDir = File(outputDir, "images"))
 
-        val josh = TestCaseReportInput("com.trevjonez.kontrast.app.CardLayoutKontrastTest",
-                                       "joshDoeCard",
-                                       "joshDoeCard",
-                                       mapOf(),
-                                       mapOf("Width" to "320dp", "Height" to "wrap_content", "Username" to "John Doe"),
-                                       TestResult.ResultType.SKIPPED, //Missing input
-                                       File(outputDir, "images"))
+        val josh = TestCaseReportInput(className = "com.trevjonez.kontrast.app.CardLayoutKontrastTest",
+                                       methodName = "joshDoeCard",
+                                       testKey = "joshDoeCard",
+                                       inputExtras = mapOf(),
+                                       keyExtras = mapOf("Width" to "320dp", "Height" to "wrap_content", "Username" to "John Doe"),
+                                       status = TestResult.ResultType.SKIPPED, //Missing input
+                                       reportImageDir = File(outputDir, "images"))
 
-        ReportIndexPage(outputDir, "Index page render test", listOf(jack, jane, john, josh)).write()
-
-        copyFileFromResources("kotlin.js", "kotlin.js", File(outputDir, "js"))
-        copyFileFromResources("reportJs_main.js", "kontrast.js", File(outputDir, "js"))
-        copyFileFromResources("kontrast.css", "kontrast.css", File(outputDir, "css"))
+        ReportIndex(outputDir, "Index page render test", listOf(jack, jane, john, josh)).write()
     }
 
     private fun copyDirectoryFromResources(resourceDirName: String, outputDir: File) {

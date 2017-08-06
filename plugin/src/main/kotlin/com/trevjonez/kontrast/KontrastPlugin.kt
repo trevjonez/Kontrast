@@ -69,18 +69,20 @@ class KontrastPlugin : Plugin<Project> {
     companion object {
         const val KONTRAST_CONFIG = "kontrast"
         const val GROUP = "Kontrast"
+        const val VERSION = "0.1.0"
     }
 
     internal lateinit var adb: Adb
     internal lateinit var moshi: Moshi
 
     override fun apply(project: Project) {
-        //TODO configuration DSL?
-        val kontrastVersion = ClassLoader.getSystemResourceAsStream("version").use { it.reader().readText() }
+
         if (project.configurations.findByName(KONTRAST_CONFIG) == null) {
             project.configurations.create(KONTRAST_CONFIG)
-            project.dependencies.add(KONTRAST_CONFIG, "com.github.trevjonez.Kontrast:unitTestClient:$kontrastVersion")
+            project.dependencies.add(KONTRAST_CONFIG, "com.github.trevjonez.Kontrast:unitTestClient:$VERSION")
         }
+
+        project.dependencies.add("androidTestCompile", "com.github.trevjonez.Kontrast:androidTestClient:$VERSION")
 
         moshi = Moshi.Builder().build()
 

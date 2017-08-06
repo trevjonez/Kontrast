@@ -20,12 +20,12 @@ object CartesianProduct {
     /**
      * Create a cartesian product of items. Intended for creating permutation as test input
      */
-    @JvmStatic fun create(vararg items: List<Any>): List<List<Any>> {
+    @JvmStatic fun create(vararg items: List<Any>): List<Array<Any>> {
         require(items.size >= 2)
         return items.toList()
                 .drop(2)
                 .fold(items[0] * items[1]) { cp, ls -> cp * ls }
-                .map { flattenList(it) }
+                .map { flattenList(it).toTypedArray() }
     }
 
     private operator fun List<Any>.times(other: List<Any>): List<List<Any>> {
