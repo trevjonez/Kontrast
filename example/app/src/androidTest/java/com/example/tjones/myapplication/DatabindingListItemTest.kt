@@ -31,7 +31,7 @@ class DatabindingListItemTest(val width: Int, val name: String) : KontrastTestBa
         @JvmStatic
         @Parameters
         fun params(): Collection<Array<Any>> {
-            return CartesianProduct.create(listOf(240, 320), listOf("Josh Doe", "Jerry Doe", "Jake Doe"))
+            return CartesianProduct.create(listOf(320), listOf("Josh Doe", "Jerry Doe", "Jake Doe"))
         }
     }
 

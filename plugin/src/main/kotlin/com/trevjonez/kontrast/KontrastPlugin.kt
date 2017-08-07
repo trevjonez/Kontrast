@@ -145,6 +145,7 @@ class KontrastPlugin : Plugin<Project> {
             testClassesDirs = SimpleFileCollection(unziptestTask.destinationDir)
             keyTask.finalizedBy(this)
             setFinalizedBy(listOf(reportTask))
+            outputs.upToDateWhen { false }
 
             val adapter = moshi.adapter<Map<String, String>>(Types.newParameterizedType(Map::class.java, String::class.java, String::class.java))
             reportTask.testCases = testEvents().map { (descriptor, result) ->
@@ -176,6 +177,7 @@ class KontrastPlugin : Plugin<Project> {
                                   dependsOn = listOf(renderTask)).apply {
             pulledOutputs = renderTask.resultSubject.firstOrError()
             outputsDir = File(project.projectDir, "Kontrast${File.separator}${variant.name}")
+            outputs.upToDateWhen { false }
         }
     }
 
@@ -191,6 +193,7 @@ class KontrastPlugin : Plugin<Project> {
             extrasAdapter = moshi.adapter(Types.newParameterizedType(Map::class.java, String::class.java, String::class.java))
             appApk = variant.apk
             testApk = variant.testApk
+            outputs.upToDateWhen { false }
         }
     }
 

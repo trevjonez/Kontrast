@@ -37,7 +37,7 @@ open class CaptureTestKeyTask : DefaultTask() {
         pulledOutputs.blockingGet().forEach {
             logger.info("localOutputDir: ${it.localOutputDir.absolutePath}")
             logger.info("Capturing test outputs: ${it.output.methodSubDirectory()}")
-            it.localOutputDir.copyRecursively(File(outputsDir, it.output.methodSubDirectory()))
+            it.localOutputDir.copyRecursively(File(outputsDir, it.output.methodSubDirectory()), true)
         }
     }
 }

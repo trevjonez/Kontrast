@@ -32,7 +32,7 @@ class PlainListItemTest(val width: Int, val name: String) : KontrastTestBase() {
         @JvmStatic
         @Parameters
         fun params(): Collection<Array<Any>> {
-            return CartesianProduct.create(listOf(240, 320, 1024), listOf("John Doe", "Jane Doe", "Josh Doe"))
+            return CartesianProduct.create(listOf(320, 1024), listOf("John Doe", "Jane Doe", "Josh Doe"))
         }
     }
 
