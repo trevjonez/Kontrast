@@ -118,7 +118,8 @@ class KontrastPlugin : Plugin<Project> {
             val render = createRenderTask(project, variant, selectTask, mainInstall, testInstall)
             val keyCapture = createKeyCaptureTask(project, variant, render)
             val report = createReportTask(project, variant)
-            val test = createTestTask(project, variant, render, keyCapture, unziptestTask, report)
+
+            createTestTask(project, variant, render, keyCapture, unziptestTask, report)
         }
     }
 
@@ -182,7 +183,7 @@ class KontrastPlugin : Plugin<Project> {
         return project.createTask(type = RenderOnDeviceTask::class,
                                   name = "render${variant.name.capitalize()}KontrastViews",
                                   description = "Run kontrast rendering step",
-                                  dependsOn = listOf(mainInstall, testInstall)).apply {
+                                  dependsOn = listOf(selectTask, mainInstall, testInstall)).apply {
             device = selectTask.resultSubject.firstOrError()
             testRunner = variant.testRunner
             testPackage = "${variant.applicationId}.test"

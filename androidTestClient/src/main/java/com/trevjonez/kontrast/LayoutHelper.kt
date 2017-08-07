@@ -17,8 +17,12 @@
 package com.trevjonez.kontrast
 
 import android.annotation.SuppressLint
+import android.content.Context
 import android.graphics.Bitmap
 import android.graphics.Canvas
+import android.os.Build
+import android.os.Bundle
+import android.support.test.InstrumentationRegistry
 import android.util.Log
 import android.util.TypedValue
 import android.view.View
@@ -27,13 +31,29 @@ import android.view.View.MeasureSpec.UNSPECIFIED
 import android.view.View.MeasureSpec.makeMeasureSpec
 import java.io.File
 
-class LayoutHelper(val view: View,
-                   val className: String,
-                   val methodName: String,
-                   val testKey: String,
-                   val testRunnerNotifier: (LayoutHelper) -> Unit) {
+class LayoutHelper(val view: View, val className: String, val methodName: String, val testKey: String) {
+    companion object {
+        const val KONTRAST_SIGNAL_CODE = 42
+        const val CLASS_NAME = "ClassName"
+        const val METHOD_NAME = "MethodName"
+        const val TEST_KEY = "TestKey"
+        const val EXTRAS = "Extras"
+        const val DESCRIPTION = "Description"
+        const val OUTPUT_DIR = "OutputDir"
+        const val KONTRAST = "Kontrast"
 
-    val outputDirectory: File = getOutputDirectory(view.context, "Kontrast${File.separator}$className${File.separator}$methodName${File.separator}$testKey")
+    }
+
+    val outputDirectory: File by lazy {
+        val subDirectoryPath = "Kontrast${File.separator}$className${File.separator}$methodName${File.separator}$testKey"
+        val outputRoot = "${view.context.packageName}${File.separator}$subDirectoryPath"
+
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP)
+            view.context.getExternalFilesDir(subDirectoryPath)
+        else
+            @Suppress("DEPRECATION")
+            File(view.context.getDir("Kontrast", Context.MODE_WORLD_READABLE), outputRoot)
+    }
 
     var widthSpec = makeMeasureSpec(0, UNSPECIFIED)
 
@@ -89,10 +109,10 @@ class LayoutHelper(val view: View,
         }
     }
 
-    @SuppressLint("SetWorldReadable")
+    @SuppressLint("SetWorldReadable", "NewApi")
     fun capture() {
         val snapshot = layout().draw()
-        if(!outputDirectory.mkdirs() && !outputDirectory.exists()) {
+        if (!outputDirectory.mkdirs() && !outputDirectory.exists()) {
             Log.e("LayoutHelper", "Unable to create output dir(s) ${outputDirectory.absolutePath}")
         }
         File(outputDirectory, "image.png").apply {
@@ -105,7 +125,16 @@ class LayoutHelper(val view: View,
 
         //TODO layout hierarchy //uiautomator dump [file]
 
-        testRunnerNotifier(this)
+        val data = Bundle().apply {
+            putString("$KONTRAST:$CLASS_NAME", className)
+            putString("$KONTRAST:$METHOD_NAME", methodName)
+            putString("$KONTRAST:$TEST_KEY", testKey)
+            putString("$KONTRAST:$EXTRAS", extras.map({ (k, v) -> """"$k":"$v"""" }).joinToString(prefix = "[", postfix = "]"))
+            putString("$KONTRAST:$DESCRIPTION", description)
+            putString("$KONTRAST:$OUTPUT_DIR", outputDirectory.absolutePath)
+        }
+
+        InstrumentationRegistry.getInstrumentation().sendStatus(KONTRAST_SIGNAL_CODE, data)
     }
 
     private fun Int.dp2Px(): Int {

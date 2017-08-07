@@ -24,25 +24,25 @@ import kotlin.dom.removeClass
 
 fun main(args: Array<String>) {
     window.onload = {
-        document.getElementsByClassName("AllTab")[0]?.addEventListener("click", { event ->
+        document.getElementsByClassName("AllTab")[0]?.addEventListener("click", {
             document.getElementsByClassName("skipped").showAll()
             document.getElementsByClassName("success").showAll()
             document.getElementsByClassName("failed").showAll()
         })
 
-        document.getElementsByClassName("PassedTab")[0]?.addEventListener("click", { event ->
+        document.getElementsByClassName("PassedTab")[0]?.addEventListener("click", {
             document.getElementsByClassName("skipped").hideAll()
             document.getElementsByClassName("success").showAll()
             document.getElementsByClassName("failed").hideAll()
         })
 
-        document.getElementsByClassName("FailedTab")[0]?.addEventListener("click", { event ->
+        document.getElementsByClassName("FailedTab")[0]?.addEventListener("click", {
             document.getElementsByClassName("skipped").hideAll()
             document.getElementsByClassName("success").hideAll()
             document.getElementsByClassName("failed").showAll()
         })
 
-        document.getElementsByClassName("SkippedTab")[0]?.addEventListener("click", { event ->
+        document.getElementsByClassName("SkippedTab")[0]?.addEventListener("click", {
             document.getElementsByClassName("skipped").showAll()
             document.getElementsByClassName("success").hideAll()
             document.getElementsByClassName("failed").hideAll()

@@ -23,15 +23,15 @@ class CartesianProductTest {
     @Test
     fun minimumCase() {
         Assertions.assertThat(CartesianProduct.create(listOf("A", "B"), listOf(1, 2)))
-                .containsExactly(listOf("A", 1), listOf("A", 2), listOf("B", 1), listOf("B", 2))
+                .containsExactly(arrayOf("A", 1), arrayOf("A", 2), arrayOf("B", 1), arrayOf("B", 2))
     }
 
     @Test
     fun polyCase() {
         Assertions.assertThat(CartesianProduct.create(listOf("A", "B"), listOf(1, 2), listOf("X", "Y", "Z")))
-                .containsExactly(listOf("A", 1, "X"), listOf("A", 1, "Y"), listOf("A", 1, "Z"),
-                                 listOf("A", 2, "X"), listOf("A", 2, "Y"), listOf("A", 2, "Z"),
-                                 listOf("B", 1, "X"), listOf("B", 1, "Y"), listOf("B", 1, "Z"),
-                                 listOf("B", 2, "X"), listOf("B", 2, "Y"), listOf("B", 2, "Z"))
+                .containsExactly(arrayOf("A", 1, "X"), arrayOf("A", 1, "Y"), arrayOf("A", 1, "Z"),
+                                 arrayOf("A", 2, "X"), arrayOf("A", 2, "Y"), arrayOf("A", 2, "Z"),
+                                 arrayOf("B", 1, "X"), arrayOf("B", 1, "Y"), arrayOf("B", 1, "Z"),
+                                 arrayOf("B", 2, "X"), arrayOf("B", 2, "Y"), arrayOf("B", 2, "Z"))
     }
 }

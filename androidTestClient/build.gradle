@@ -41,7 +41,6 @@ dependencies {
 }
 
 dependencies {
-    testCompile group: 'org.robolectric', name: 'robolectric', version: '3.3.2'
     testCompile group: 'org.assertj', name: 'assertj-core', version: '3.8.0'
 }
 

@@ -16,9 +16,6 @@
 
 package com.trevjonez.kontrast
 
-import android.annotation.SuppressLint
-import android.os.Bundle
-import android.support.test.InstrumentationRegistry
 import android.support.test.internal.runner.junit4.statement.UiThreadStatement
 import android.support.test.rule.ActivityTestRule
 import android.view.LayoutInflater
@@ -27,18 +24,7 @@ import org.junit.rules.TestRule
 import org.junit.runner.Description
 import org.junit.runners.model.Statement
 
-class KontrastAndroidTestRule(val activityTestRule: ActivityTestRule<*>) : TestRule {
-    companion object {
-        const val KONTRAST_SIGNAL_CODE = 42
-        const val CLASS_NAME = "ClassName"
-        const val METHOD_NAME = "MethodName"
-        const val TEST_KEY = "TestKey"
-        const val EXTRAS = "Extras"
-        const val DESCRIPTION = "Description"
-        const val OUTPUT_DIR = "OutputDir"
-        const val KONTRAST = "Kontrast"
-    }
-
+class KontrastRule(val activityTestRule: ActivityTestRule<*>) : TestRule {
     lateinit var className: String
     lateinit var methodName: String
 
@@ -61,20 +47,8 @@ class KontrastAndroidTestRule(val activityTestRule: ActivityTestRule<*>) : TestR
         return ofView(view, methodName)
     }
 
-    @SuppressLint("NewApi")
     fun ofView(view: View, testKey: String): LayoutHelper {
-        return LayoutHelper(view, className, methodName, testKey.removeWhiteSpace()) { helper ->
-            val data = Bundle().apply {
-                putString("$KONTRAST:$CLASS_NAME", helper.className)
-                putString("$KONTRAST:$METHOD_NAME", helper.methodName)
-                putString("$KONTRAST:$TEST_KEY", helper.testKey)
-                putString("$KONTRAST:$EXTRAS", helper.extras.map({ (k, v) -> """"$k":"$v"""" }).joinToString(prefix = "[", postfix = "]"))
-                putString("$KONTRAST:$DESCRIPTION", helper.description)
-                putString("$KONTRAST:$OUTPUT_DIR", helper.outputDirectory.absolutePath)
-            }
-
-            InstrumentationRegistry.getInstrumentation().sendStatus(KONTRAST_SIGNAL_CODE, data)
-        }
+        return LayoutHelper(view, className, methodName, testKey.removeWhiteSpace())
     }
 
     fun <T> inflateOnMainThread(inflationBlock: (inflater: LayoutInflater) -> T): T {
@@ -84,8 +58,8 @@ class KontrastAndroidTestRule(val activityTestRule: ActivityTestRule<*>) : TestR
         }
         return result ?: throw NullPointerException("Didn't receive anything from work on main thread")
     }
-}
 
-private fun String.removeWhiteSpace(): String {
-    return split(' ').joinToString("")
+    private fun String.removeWhiteSpace(): String {
+        return split(' ').joinToString("")
+    }
 }

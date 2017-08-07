@@ -26,56 +26,22 @@ class KontrastPluginTest {
     @Test
     fun renderAndCaptureTestKey() {
         val kontrastVersion = System.getProperty("KontrastVersion")
+
         val projectDir = File("build/pluginTestProjects/renderAndCaptureTestKey").apply {
             deleteRecursively()
             mkdirs()
             copyDirectory(File(".", "../app"), File(this, "app"))
             File(this, "local.properties").writeText("sdk.dir=${System.getenv("HOME")}/Library/Android/sdk")
             File(this, "settings.gradle").writeText("include ':app'")
-            File(this, "build.gradle").writeText("""
-buildscript {
-    ext.kotlin_version = '1.1.3-2'
-    ext.kotlinx_html_version = '0.6.3'
-    ext.android_plugin_version = '2.3.3'
-
-    repositories {
-        google()
-        jcenter()
-        mavenLocal()
-    }
-    dependencies {
-        classpath group: 'org.jetbrains.kotlin', name: 'kotlin-gradle-plugin', version: kotlin_version
-        classpath group: 'com.android.tools.build', name: 'gradle', version: android_plugin_version
-        classpath group: 'io.reactivex.rxjava2', name: 'rxjava', version: '2.1.1'
-        classpath group: 'com.squareup.moshi', name:'moshi', version: '1.5.0'
-        classpath group: 'org.jetbrains.kotlinx', name: 'kotlinx-html-jvm', version: kotlinx_html_version
-        classpath group: 'com.github.trevjonez.Kontrast', name: 'plugin', version: '$kontrastVersion'
-    }
-}
-
-allprojects {
-    repositories {
-        google()
-        jcenter()
-        mavenLocal()
-    }
-}
-""")
+            File(this, "build.gradle").writeText(rootGradleFileContents(kontrastVersion))
+            File(this, "app/kontrast.gradle").writeText(kontrastGradleContents(kontrastVersion))
         }
 
-        File(projectDir, "app/kontrast.gradle").writeText("""
-apply plugin: 'kontrast'
-
-dependencies {
-    debugCompile group: 'com.github.trevjonez.Kontrast', name: 'appClient', version: '$kontrastVersion'
-}
-""")
 
         GradleRunner.create()
                 .withProjectDir(projectDir)
-                .withDebug(true)
                 .forwardOutput()
-                .withArguments("app:tasks", "app:captureDebugTestKeys", "--stacktrace", "--info")
+                .withArguments("app:captureDebugTestKeys")
                 .build()
 
         assertThat(File(projectDir, "app/Kontrast/debug/com.trevjonez.kontrast.app.CardLayoutKontrastTest")).isDirectory().satisfies {
@@ -104,7 +70,37 @@ dependencies {
             copyDirectory(File(javaClass.getResource("/Kontrast").path), File(this, "app/Kontrast"))
             File(this, "local.properties").writeText("sdk.dir=${System.getenv("HOME")}/Library/Android/sdk")
             File(this, "settings.gradle").writeText("include ':app'")
-            File(this, "build.gradle").writeText("""
+            File(this, "build.gradle").writeText(rootGradleFileContents(kontrastVersion))
+            File(this, "app/kontrast.gradle").writeText(kontrastGradleContents(kontrastVersion))
+        }
+
+        GradleRunner.create()
+                .withProjectDir(projectDir)
+                .forwardOutput()
+                .withArguments("app:testDebugKontrastTest")
+                .buildAndFail()
+
+        assertThat(File(projectDir, "app/build/reports/Kontrast/debug/images/com.trevjonez.kontrast.app.CardLayoutKontrastTest")).isDirectory().satisfies {
+            assertThat(File(it, "jackDoeCard/jackDoeCard")).isDirectory().satisfies {
+                assertThat(File(it, "input.png")).exists()
+            }
+            assertThat(File(it, "janeDoeCard/janeDoeCard")).isDirectory().satisfies {
+                assertThat(File(it, "diff.png")).exists()
+                assertThat(File(it, "input.png")).exists()
+                assertThat(File(it, "key.png")).exists()
+            }
+            assertThat(File(it, "johnDoeCard/johnDoeCard")).isDirectory().satisfies {
+                assertThat(File(it, "diff.png")).exists()
+                assertThat(File(it, "input.png")).exists()
+                assertThat(File(it, "key.png")).exists()
+            }
+            assertThat(File(it, "joshDoeCard/joshDoeCard")).isDirectory().satisfies {
+                assertThat(File(it, "key.png")).exists()
+            }
+        }
+    }
+
+    fun rootGradleFileContents(kontrastVersion: String) = """
 buildscript {
     ext.kotlin_version = '1.1.3-2'
     ext.kotlinx_html_version = '0.6.3'
@@ -132,22 +128,13 @@ allprojects {
         mavenLocal()
     }
 }
-""")
-        }
+"""
 
-        File(projectDir, "app/kontrast.gradle").writeText("""
+    fun kontrastGradleContents(kontrastVersion: String) = """
 apply plugin: 'kontrast'
 
 dependencies {
     debugCompile group: 'com.github.trevjonez.Kontrast', name: 'appClient', version: '$kontrastVersion'
 }
-""")
-
-        GradleRunner.create()
-                .withProjectDir(projectDir)
-                .withDebug(true)
-                .forwardOutput()
-                .withArguments("app:testDebugKontrastTest", "--stacktrace", "--info")
-                .buildAndFail()
-    }
+"""
 }

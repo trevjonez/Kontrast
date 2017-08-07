@@ -35,5 +35,5 @@ abstract class KontrastTestBase(hostActivity: Class<out Activity> = KontrastTest
     }
 
     @JvmField @Rule val activityRule: ActivityTestRule<out Activity> = ActivityTestRule(hostActivity)
-    @JvmField @Rule val kontrastRule: KontrastAndroidTestRule = KontrastAndroidTestRule(activityRule)
+    @JvmField @Rule val kontrastRule: KontrastRule = KontrastRule(activityRule)
 }

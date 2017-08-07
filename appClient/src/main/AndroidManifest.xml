@@ -19,6 +19,7 @@
         xmlns:android="http://schemas.android.com/apk/res/android"
         package="com.trevjonez.kontrast">
 
+    <!--Write external required for api 16-19-->
     <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE"/>
     <application>
         <activity android:name=".KontrastActivity"/>
