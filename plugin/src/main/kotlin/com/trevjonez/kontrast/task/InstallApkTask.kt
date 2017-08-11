@@ -20,7 +20,6 @@ import com.trevjonez.kontrast.adb.AdbDevice
 import com.trevjonez.kontrast.adb.AdbInstallFlag.ALLOW_TEST_PACKAGES
 import com.trevjonez.kontrast.adb.AdbInstallFlag.REPLACE_EXISTING
 import io.reactivex.Single
-import org.gradle.api.tasks.Input
 import org.gradle.api.tasks.InputFile
 import org.gradle.api.tasks.TaskAction
 import java.io.File
@@ -30,12 +29,11 @@ open class InstallApkTask : AdbCommandTask() {
     @get:InputFile
     lateinit var apk: File
 
-    @get:Input
-    lateinit var device: Single<AdbDevice>
+    lateinit var device: AdbDevice
 
     @TaskAction
     fun invoke() {
-        device.flatMapCompletable { adb.install(it, apk, ALLOW_TEST_PACKAGES, REPLACE_EXISTING) }
+        adb.install(device, apk, ALLOW_TEST_PACKAGES, REPLACE_EXISTING)
                 .blockingAwait(60, TimeUnit.SECONDS)
     }
 }

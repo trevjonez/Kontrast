@@ -16,6 +16,14 @@
 
 package com.trevjonez.kontrast.adb
 
-data class AdbDevice(val id: String, val status: AdbStatus, val alias: String? = null) {
-    val isEmulator: Boolean = id.startsWith("emulator")
+import org.assertj.core.api.Assertions.assertThat
+import org.junit.Test
+
+class TelnetEmulatorConsoleHelpersTest {
+    @Test
+    fun getEmulatorName() {
+        val emulatorInput = AdbDevice("emulator-5554", AdbStatus.ONLINE)
+        val emulatorName = getEmulatorName(emulatorInput)
+        assertThat(emulatorName.alias).isEqualTo("Nexus_5X_API_O")
+    }
 }

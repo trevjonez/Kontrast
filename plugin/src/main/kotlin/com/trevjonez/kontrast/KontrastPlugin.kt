@@ -21,13 +21,18 @@ import com.android.build.gradle.api.ApplicationVariant
 import com.squareup.moshi.Moshi
 import com.squareup.moshi.Types
 import com.trevjonez.kontrast.adb.Adb
+import com.trevjonez.kontrast.adb.AdbDevice
+import com.trevjonez.kontrast.adb.AdbStatus
+import com.trevjonez.kontrast.adb.getEmulatorName
 import com.trevjonez.kontrast.internal.testEvents
 import com.trevjonez.kontrast.report.TestCaseOutput
 import com.trevjonez.kontrast.task.CaptureTestKeyTask
 import com.trevjonez.kontrast.task.HtmlReportTask
 import com.trevjonez.kontrast.task.InstallApkTask
 import com.trevjonez.kontrast.task.RenderOnDeviceTask
-import com.trevjonez.kontrast.task.SelectDeviceTask
+import io.reactivex.Observable
+import io.reactivex.Single
+import io.reactivex.schedulers.Schedulers
 import okio.Okio.buffer
 import okio.Okio.source
 import org.gradle.api.DefaultTask
@@ -41,30 +46,6 @@ import java.io.File
 import java.io.FileNotFoundException
 import kotlin.reflect.KClass
 
-//PTV -> Per testable variant
-
-//A: Get first connected or selected device
-
-//B: Install main apk task (PTV)
-
-//C: Install test apk task (PTV)
-
-//D: Run kontrast rendering task (PTV)
-//      Clear any previous render run data from build directory
-//      Scan the adb output and pull render outputs as produced
-//      Delete on device test outputs once they have been pulled
-
-//E: Create task to record current rendering run output as the test key (PTV)
-
-//F: Create task to perform image diffing and report gen inputs (PTV)
-//      Custom test task that gets configured via properties passed in and uses parametrized test runner
-
-//G: Create task to generate report html page (PTV)
-
-/**
- * if we move the adb reading to the configuration phase we can create install, render, record, and test tasks per variant per connected device
- * this will help with the differences in rendering when ran on different config devices
- */
 class KontrastPlugin : Plugin<Project> {
     companion object {
         const val KONTRAST_CONFIG = "kontrast"
@@ -86,10 +67,6 @@ class KontrastPlugin : Plugin<Project> {
 
         moshi = Moshi.Builder().build()
 
-        val deviceSelectTask = project.createTask(type = SelectDeviceTask::class,
-                                                  name = "selectKontrastDevice",
-                                                  description = "Get adb devices and select one for kontrast tasks to target")
-
         val unzipTestTask = project.createTask(type = Copy::class,
                                                name = "unpackageKontrastTestJar",
                                                description = "Unzips the kontrast unit test client jar to enable gradle to run a test task on the classes within")
@@ -105,44 +82,66 @@ class KontrastPlugin : Plugin<Project> {
 
             val androidExt = project.extensions.findByName("android") as AppExtension
             adb = Adb.Impl(androidExt.adbExecutable, project.logger)
-            this.observeVariants(it, deviceSelectTask, unzipTestTask, androidExt)
+            val availableDevices = adb.devices()
+                    .flatMap { devices ->
+                        Observable.fromIterable(devices)
+                                .filter { it.status == AdbStatus.ONLINE }
+                                .flatMapSingle { adbDevice ->
+                                    if (adbDevice.isEmulator) {
+                                        Single.fromCallable { getEmulatorName(adbDevice) }
+                                                .subscribeOn(Schedulers.io())
+                                    } else {
+                                        Single.just(adbDevice)
+                                    }
+                                }
+                                .doOnEach { println("$it") }
+                                .toList()
+                    }
+                    .blockingGet()
+                    .toList()
+
+            this.observeVariants(project, unzipTestTask, androidExt, availableDevices)
         }
     }
 
-    private fun observeVariants(project: Project, selectTask: SelectDeviceTask, unziptestTask: Copy, androidExt: AppExtension) {
+    private fun observeVariants(project: Project, unziptestTask: Copy,
+                                androidExt: AppExtension, availableDevices: List<AdbDevice>) {
         androidExt.applicationVariants.all { variant ->
             if (variant.testVariant == null) return@all
 
-            val mainInstall = createMainInstallTask(project, variant, selectTask)
-            val testInstall = createTestInstallTask(project, variant, selectTask)
-            val render = createRenderTask(project, variant, selectTask, mainInstall, testInstall)
-            val keyCapture = createKeyCaptureTask(project, variant, render)
-            val report = createReportTask(project, variant)
-
-            createTestTask(project, variant, render, keyCapture, unziptestTask, report)
+            availableDevices.forEach { device ->
+                val mainInstall = createMainInstallTask(project, variant, device)
+                val testInstall = createTestInstallTask(project, variant, device)
+                val render = createRenderTask(project, variant, device, mainInstall, testInstall)
+                val keyCapture = createKeyCaptureTask(project, variant, render, device)
+                val report = createReportTask(project, variant, device)
+                createTestTask(project, variant, render, keyCapture, unziptestTask, report, device)
+            }
         }
     }
 
-    private fun createReportTask(project: Project, variant: ApplicationVariant): HtmlReportTask {
+    private fun createReportTask(project: Project, variant: ApplicationVariant, targetDevice: AdbDevice): HtmlReportTask {
         return project.createTask(type = HtmlReportTask::class,
-                                  name = "generate${variant.name.capitalize()}KontrastHtmlReport",
+                                  name = "generate${variant.name.capitalize()}KontrastHtmlReport_${targetDevice.alias ?: targetDevice.id}",
                                   description = "Generate HTML test result report").apply {
-            outputDir = File(project.buildDir, "reports${File.separator}Kontrast${File.separator}${variant.name}")
+            outputDir = File(project.buildDir, "reports${File.separator}Kontrast${File.separator}${variant.name}${File.separator}${targetDevice.alias ?: targetDevice.id}")
             variantName = variant.name
         }
     }
 
-    private fun createTestTask(project: Project, variant: ApplicationVariant, renderTask: RenderOnDeviceTask, keyTask: CaptureTestKeyTask, unziptestTask: Copy, reportTask: HtmlReportTask): Test {
+    private fun createTestTask(project: Project, variant: ApplicationVariant, renderTask: RenderOnDeviceTask,
+                               keyTask: CaptureTestKeyTask, unzipTestTask: Copy, reportTask: HtmlReportTask,
+                               targetDevice: AdbDevice): Test {
         return project.createTask(type = Test::class,
-                                  name = "test${variant.name.capitalize()}KontrastTest",
+                                  name = "test${variant.name.capitalize()}KontrastTest_${targetDevice.alias ?: targetDevice.id}",
                                   description = "Compare current captured key with render results",
-                                  dependsOn = listOf(renderTask, unziptestTask)).apply {
+                                  dependsOn = listOf(renderTask, unzipTestTask)).apply {
             useJUnit()
             systemProperty("KontrastInputDir", renderTask.outputsDir.absolutePath)
             systemProperty("KontrastKeyDir", keyTask.outputsDir.absolutePath)
             val config = project.configurations.findByName(KONTRAST_CONFIG)
             classpath = config
-            testClassesDirs = SimpleFileCollection(unziptestTask.destinationDir)
+            testClassesDirs = SimpleFileCollection(unzipTestTask.destinationDir)
             keyTask.finalizedBy(this)
             setFinalizedBy(listOf(reportTask))
             outputs.upToDateWhen { false }
@@ -170,26 +169,26 @@ class KontrastPlugin : Plugin<Project> {
         }
     }
 
-    private fun createKeyCaptureTask(project: Project, variant: ApplicationVariant, renderTask: RenderOnDeviceTask): CaptureTestKeyTask {
+    private fun createKeyCaptureTask(project: Project, variant: ApplicationVariant, renderTask: RenderOnDeviceTask, targetDevice: AdbDevice): CaptureTestKeyTask {
         return project.createTask(type = CaptureTestKeyTask::class,
-                                  name = "capture${variant.name.capitalize()}TestKeys",
+                                  name = "capture${variant.name.capitalize()}TestKeys_${targetDevice.alias ?: targetDevice.id}",
                                   description = "Capture the current render outputs as new test key",
                                   dependsOn = listOf(renderTask)).apply {
             pulledOutputs = renderTask.resultSubject.firstOrError()
-            outputsDir = File(project.projectDir, "Kontrast${File.separator}${variant.name}")
+            outputsDir = File(project.projectDir, "Kontrast${File.separator}${variant.name}${File.separator}${targetDevice.alias ?: targetDevice.id}")
             outputs.upToDateWhen { false }
         }
     }
 
-    private fun createRenderTask(project: Project, variant: ApplicationVariant, selectTask: SelectDeviceTask, mainInstall: InstallApkTask, testInstall: InstallApkTask): RenderOnDeviceTask {
+    private fun createRenderTask(project: Project, variant: ApplicationVariant, targetDevice: AdbDevice, mainInstall: InstallApkTask, testInstall: InstallApkTask): RenderOnDeviceTask {
         return project.createTask(type = RenderOnDeviceTask::class,
-                                  name = "render${variant.name.capitalize()}KontrastViews",
+                                  name = "render${variant.name.capitalize()}KontrastViews_${targetDevice.alias ?: targetDevice.id}",
                                   description = "Run kontrast rendering step",
-                                  dependsOn = listOf(selectTask, mainInstall, testInstall)).apply {
-            device = selectTask.resultSubject.firstOrError()
+                                  dependsOn = listOf(mainInstall, testInstall)).apply {
+            device = targetDevice
             testRunner = variant.testRunner
             testPackage = "${variant.applicationId}.test"
-            outputsDir = File(project.buildDir, "Kontrast${File.separator}${variant.name}")
+            outputsDir = File(project.buildDir, "Kontrast${File.separator}${variant.name}${File.separator}${targetDevice.alias ?: targetDevice.id}")
             extrasAdapter = moshi.adapter(Types.newParameterizedType(Map::class.java, String::class.java, String::class.java))
             appApk = variant.apk
             testApk = variant.testApk
@@ -197,25 +196,25 @@ class KontrastPlugin : Plugin<Project> {
         }
     }
 
-    private fun createTestInstallTask(project: Project, variant: ApplicationVariant, selectTask: SelectDeviceTask): InstallApkTask {
+    private fun createTestInstallTask(project: Project, variant: ApplicationVariant, targetDevice: AdbDevice): InstallApkTask {
         val assembleTestTask = project.tasks.findByName("assemble${variant.name.capitalize()}AndroidTest")
         return project.createTask(type = InstallApkTask::class,
-                                  name = "install${variant.name.capitalize()}TestApk",
+                                  name = "install${variant.name.capitalize()}TestApk_${targetDevice.alias ?: targetDevice.id}",
                                   description = "Install test apk for variant ${variant.name}",
-                                  dependsOn = listOf(selectTask, assembleTestTask)).apply {
+                                  dependsOn = listOf(assembleTestTask)).apply {
             apk = variant.testApk
-            device = selectTask.resultSubject.firstOrError()
+            device = targetDevice
         }
     }
 
-    private fun createMainInstallTask(project: Project, it: ApplicationVariant, selectTask: SelectDeviceTask): InstallApkTask {
-        val assembleTask = project.tasks.findByName("assemble${it.name.capitalize()}")
+    private fun createMainInstallTask(project: Project, variant: ApplicationVariant, targetDevice: AdbDevice): InstallApkTask {
+        val assembleTask = project.tasks.findByName("assemble${variant.name.capitalize()}")
         return project.createTask(type = InstallApkTask::class,
-                                  name = "install${it.name.capitalize()}Apk",
-                                  description = "Install main apk for variant ${it.name}",
-                                  dependsOn = listOf(selectTask, assembleTask)).apply {
-            apk = it.apk
-            device = selectTask.resultSubject.firstOrError()
+                                  name = "install${variant.name.capitalize()}Apk_${targetDevice.alias ?: targetDevice.id}",
+                                  description = "Install main apk for variant ${variant.name}",
+                                  dependsOn = listOf(assembleTask)).apply {
+            apk = variant.apk
+            device = targetDevice
         }
     }
 

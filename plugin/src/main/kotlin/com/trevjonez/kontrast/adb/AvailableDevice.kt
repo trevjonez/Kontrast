@@ -14,23 +14,6 @@
  *    limitations under the License.
  */
 
-package com.trevjonez.kontrast.task
+package com.trevjonez.kontrast.adb
 
-import com.trevjonez.kontrast.adb.AdbDevice
-import io.reactivex.subjects.BehaviorSubject
-import org.gradle.api.tasks.TaskAction
-
-open class SelectDeviceTask : AdbCommandTask() {
-
-    internal val resultSubject: BehaviorSubject<AdbDevice> = BehaviorSubject.create()
-
-    @TaskAction
-    fun invoke() {
-        //TODO provide optional dsl to override this selection
-        adb.devices()
-                .map { it.first() }
-                .subscribe(resultSubject::onNext) {
-            throw IllegalStateException("No devices found", it)
-        }
-    }
-}
+data class AvailableDevice(val device: AdbDevice, val width: String, val height: String, val density: String, val dpi: String)

@@ -17,7 +17,6 @@
 package com.trevjonez.kontrast
 
 import android.annotation.SuppressLint
-import android.content.Context
 import android.graphics.Bitmap
 import android.graphics.Canvas
 import android.os.Build
@@ -46,13 +45,7 @@ class LayoutHelper(val view: View, val className: String, val methodName: String
 
     val outputDirectory: File by lazy {
         val subDirectoryPath = "Kontrast${File.separator}$className${File.separator}$methodName${File.separator}$testKey"
-        val outputRoot = "${view.context.packageName}${File.separator}$subDirectoryPath"
-
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP)
-            view.context.getExternalFilesDir(subDirectoryPath)
-        else
-            @Suppress("DEPRECATION")
-            File(view.context.getDir("Kontrast", Context.MODE_WORLD_READABLE), outputRoot)
+        view.context.getExternalFilesDir(subDirectoryPath)
     }
 
     var widthSpec = makeMeasureSpec(0, UNSPECIFIED)
@@ -109,7 +102,7 @@ class LayoutHelper(val view: View, val className: String, val methodName: String
         }
     }
 
-    @SuppressLint("SetWorldReadable", "NewApi")
+    @SuppressLint("SetWorldReadable", "NewApi", "SdCardPath")
     fun capture() {
         val snapshot = layout().draw()
         if (!outputDirectory.mkdirs() && !outputDirectory.exists()) {
@@ -125,13 +118,18 @@ class LayoutHelper(val view: View, val className: String, val methodName: String
 
         //TODO layout hierarchy //uiautomator dump [file]
 
+        val outputPath = if (Build.VERSION.SDK_INT < Build.VERSION_CODES.LOLLIPOP)
+            "/sdcard" + outputDirectory.absolutePath.removePrefix("/storage/emulated/0")
+        else
+            outputDirectory.absolutePath
+
         val data = Bundle().apply {
             putString("$KONTRAST:$CLASS_NAME", className)
             putString("$KONTRAST:$METHOD_NAME", methodName)
             putString("$KONTRAST:$TEST_KEY", testKey)
             putString("$KONTRAST:$EXTRAS", extras.map({ (k, v) -> """"$k":"$v"""" }).joinToString(prefix = "[", postfix = "]"))
             putString("$KONTRAST:$DESCRIPTION", description)
-            putString("$KONTRAST:$OUTPUT_DIR", outputDirectory.absolutePath)
+            putString("$KONTRAST:$OUTPUT_DIR", outputPath)
         }
 
         InstrumentationRegistry.getInstrumentation().sendStatus(KONTRAST_SIGNAL_CODE, data)

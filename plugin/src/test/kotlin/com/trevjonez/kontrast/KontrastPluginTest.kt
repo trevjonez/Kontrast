@@ -41,10 +41,10 @@ class KontrastPluginTest {
         GradleRunner.create()
                 .withProjectDir(projectDir)
                 .forwardOutput()
-                .withArguments("app:captureDebugTestKeys")
+                .withArguments("app:captureDebugTestKeys_Nexus_5X_API_O")
                 .build()
 
-        assertThat(File(projectDir, "app/Kontrast/debug/com.trevjonez.kontrast.app.CardLayoutKontrastTest")).isDirectory().satisfies {
+        assertThat(File(projectDir, "app/Kontrast/debug/Nexus_5X_API_O/com.trevjonez.kontrast.app.CardLayoutKontrastTest")).isDirectory().satisfies {
             assertThat(File(it, "janeDoeCard/janeDoeCard")).isDirectory().satisfies {
                 assertThat(File(it, "image.png")).exists()
                 assertThat(File(it, "extras.json")).exists()
@@ -77,10 +77,10 @@ class KontrastPluginTest {
         GradleRunner.create()
                 .withProjectDir(projectDir)
                 .forwardOutput()
-                .withArguments("app:testDebugKontrastTest")
+                .withArguments("app:testDebugKontrastTest_Nexus_5X_API_O")
                 .buildAndFail()
 
-        assertThat(File(projectDir, "app/build/reports/Kontrast/debug/images/com.trevjonez.kontrast.app.CardLayoutKontrastTest")).isDirectory().satisfies {
+        assertThat(File(projectDir, "app/build/reports/Kontrast/debug/Nexus_5X_API_O/images/com.trevjonez.kontrast.app.CardLayoutKontrastTest")).isDirectory().satisfies {
             assertThat(File(it, "jackDoeCard/jackDoeCard")).isDirectory().satisfies {
                 assertThat(File(it, "input.png")).exists()
             }

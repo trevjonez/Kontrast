@@ -24,7 +24,6 @@ import com.trevjonez.kontrast.internal.PulledOutput
 import com.trevjonez.kontrast.internal.TestOutput
 import com.trevjonez.kontrast.internal.andThenEmit
 import io.reactivex.Observable
-import io.reactivex.Single
 import io.reactivex.schedulers.Schedulers
 import io.reactivex.subjects.BehaviorSubject
 import okio.Okio.buffer
@@ -38,11 +37,11 @@ import java.io.File
 
 open class RenderOnDeviceTask : AdbCommandTask() {
 
+    internal val resultSubject: BehaviorSubject<Set<PulledOutput>> = BehaviorSubject.create()
+
     lateinit var extrasAdapter: JsonAdapter<Map<String, String>>
 
-    lateinit var device: Single<AdbDevice>
-
-    internal val resultSubject: BehaviorSubject<Set<PulledOutput>> = BehaviorSubject.create()
+    lateinit var device: AdbDevice
 
     @get:InputFile
     lateinit var appApk: File
@@ -67,9 +66,7 @@ open class RenderOnDeviceTask : AdbCommandTask() {
         if (!outputsDir.mkdirs())
             throw IllegalStateException("Unable to create output directory: ${outputsDir.absolutePath}")
 
-        //TODO sharding?
-        //TODO test orchestrator?
-        val pulledOuputs = device.flatMapObservable { adb.shell(it, "am instrument -w -r -e debug false -e annotation com.trevjonez.kontrast.KontrastTest $testPackage/$testRunner") }
+        val pulledOutputs = adb.shell(device, "am instrument -w -r -e debug false -e annotation com.trevjonez.kontrast.KontrastTest $testPackage/$testRunner")
                 .map(String::trim)
                 .doOnEach { logger.info("$it") }
                 .takeWhile { !it.startsWith("INSTRUMENTATION_CODE") }
@@ -79,7 +76,7 @@ open class RenderOnDeviceTask : AdbCommandTask() {
                 .collectInto(mutableSetOf<PulledOutput>()) { set, output -> set.add(output) }
                 .blockingGet()
 
-        resultSubject.onNext(pulledOuputs)
+        resultSubject.onNext(pulledOutputs)
     }
 }
 
@@ -96,17 +93,16 @@ internal fun Observable<PulledOutput>.writeExtrasToFile(outputsDir: File, adapte
     }
 }
 
-internal fun Observable<TestOutput>.pullOutputsAndDeleteFromDevice(deviceSelection: Single<AdbDevice>, outputsDir: File, adb: Adb, logger: Logger): Observable<PulledOutput> {
+internal fun Observable<TestOutput>.pullOutputsAndDeleteFromDevice(device: AdbDevice, outputsDir: File, adb: Adb, logger: Logger): Observable<PulledOutput> {
     return flatMap { testOutput ->
         //don't use sub directory here because the adb pull will copy the leaf directory down
         val localOutputDir = File(outputsDir, testOutput.methodSubDirectory())
-        deviceSelection.flatMapObservable { device ->
-            logger.info("attempting to pull and delete [${testOutput.outputDirectory.absolutePath}]")
-            adb.pull(device, testOutput.outputDirectory, localOutputDir, true)
-                    .subscribeOn(Schedulers.io())
-                    .andThen(adb.deleteDir(device, testOutput.outputDirectory).subscribeOn(Schedulers.io()))
-                    .andThenEmit(PulledOutput(localOutputDir, testOutput))
-        }
+
+        logger.info("attempting to pull and delete [${testOutput.outputDirectory.absolutePath}]")
+        adb.pull(device, testOutput.outputDirectory, localOutputDir, true)
+                .subscribeOn(Schedulers.io())
+                .andThen(adb.deleteDir(device, testOutput.outputDirectory).subscribeOn(Schedulers.io()))
+                .andThenEmit(PulledOutput(localOutputDir, testOutput))
     }
 }
 
