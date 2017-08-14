@@ -5,13 +5,13 @@ apply plugin: 'kotlin-kapt'
 apply plugin: 'kontrast'
 
 android {
-    compileSdkVersion 25
-    buildToolsVersion "25.0.3"
+    compileSdkVersion 26
+    buildToolsVersion "26.0.1"
 
     defaultConfig {
         applicationId "com.example.tjones.myapplication"
         minSdkVersion 19
-        targetSdkVersion 25
+        targetSdkVersion 26
         versionCode 1
         versionName "1.0"
         testInstrumentationRunner "android.support.test.runner.AndroidJUnitRunner"
@@ -22,9 +22,11 @@ android {
     }
 }
 
+def supportLibVer = '26.0.1'
+
 dependencies {
     compile "org.jetbrains.kotlin:kotlin-stdlib-jre7:$kotlin_version"
-    compile 'com.android.support:appcompat-v7:25.4.0'
+    compile "com.android.support:appcompat-v7:$supportLibVer"
     compile 'com.android.support.constraint:constraint-layout:1.0.2'
     kapt 'com.android.databinding:compiler:2.3.3'
 
@@ -33,6 +35,12 @@ dependencies {
     androidTestCompile 'junit:junit:4.12'
     androidTestCompile 'com.android.support.test:runner:1.0.0'
     androidTestCompile 'com.android.support.test.espresso:espresso-core:3.0.0'
+}
+
+configurations.all {
+    resolutionStrategy {
+        force "com.android.support:appcompat-v7:$supportLibVer"
+    }
 }
 
 Kontrast {
