@@ -76,21 +76,27 @@ class KontrastPlugin : Plugin<Project> {
                                                description = "Unzips the kontrast unit test client jar to enable gradle to run a test task on the classes within")
 
         project.afterEvaluate {
-            val kontrastConfig = project.configurations.findByName(KONTRAST_CONFIG)
-            val unitTestClientJar = kontrastConfig.files.find { it.name.contains("unitTestClient") }
-            unzipTestTask.apply {
-                from(project.zipTree(unitTestClientJar))
-                into(File(project.buildDir, "unpackedKontrastJar"))
-                dependsOn(kontrastConfig)
-            }
+            configureUnzipTask(project, unzipTestTask)
 
             val androidExt = project.extensions.findByName("android") as AppExtension
+
             adb = Adb.Impl(androidExt.adbExecutable, project.logger)
+
             val availableDevices = collectConnectedDevicesWithAliasesCalculated()
 
-            ensureNoOverlappingAliases(availableDevices)
-
             this.observeVariants(project, unzipTestTask, androidExt, availableDevices)
+        }
+    }
+
+    private fun configureUnzipTask(project: Project, unzipTestTask: Copy) {
+        val kontrastConfig = project.configurations.findByName(KONTRAST_CONFIG)
+
+        val unitTestClientJar = kontrastConfig.files.find { it.name.contains("unitTestClient") }
+
+        unzipTestTask.apply {
+            from(project.zipTree(unitTestClientJar))
+            into(File(project.buildDir, "unpackedKontrastJar"))
+            dependsOn(kontrastConfig)
         }
     }
 
@@ -113,6 +119,7 @@ class KontrastPlugin : Plugin<Project> {
                 }
                 .blockingGet()
                 .toList()
+                .also { ensureNoOverlappingAliases(it) }
     }
 
     private fun ensureNoOverlappingAliases(availableDevices: List<AdbDevice>) {
