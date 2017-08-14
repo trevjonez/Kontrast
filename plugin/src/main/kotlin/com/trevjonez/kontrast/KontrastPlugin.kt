@@ -24,6 +24,7 @@ import com.trevjonez.kontrast.adb.Adb
 import com.trevjonez.kontrast.adb.AdbDevice
 import com.trevjonez.kontrast.adb.AdbStatus
 import com.trevjonez.kontrast.adb.getEmulatorName
+import com.trevjonez.kontrast.dsl.KontrastExtension
 import com.trevjonez.kontrast.internal.testEvents
 import com.trevjonez.kontrast.report.TestCaseOutput
 import com.trevjonez.kontrast.task.CaptureTestKeyTask
@@ -55,8 +56,12 @@ class KontrastPlugin : Plugin<Project> {
 
     internal lateinit var adb: Adb
     internal lateinit var moshi: Moshi
+    internal lateinit var kontrastDsl: KontrastExtension
 
     override fun apply(project: Project) {
+
+        moshi = Moshi.Builder().build()
+        kontrastDsl = project.extensions.create("Kontrast", KontrastExtension::class.java, project)
 
         if (project.configurations.findByName(KONTRAST_CONFIG) == null) {
             project.configurations.create(KONTRAST_CONFIG)
@@ -65,7 +70,6 @@ class KontrastPlugin : Plugin<Project> {
 
         project.dependencies.add("androidTestCompile", "com.github.trevjonez.Kontrast:androidTestClient:$VERSION")
 
-        moshi = Moshi.Builder().build()
 
         val unzipTestTask = project.createTask(type = Copy::class,
                                                name = "unpackageKontrastTestJar",
@@ -82,25 +86,44 @@ class KontrastPlugin : Plugin<Project> {
 
             val androidExt = project.extensions.findByName("android") as AppExtension
             adb = Adb.Impl(androidExt.adbExecutable, project.logger)
-            val availableDevices = adb.devices()
-                    .flatMap { devices ->
-                        Observable.fromIterable(devices)
-                                .filter { it.status == AdbStatus.ONLINE }
-                                .flatMapSingle { adbDevice ->
-                                    if (adbDevice.isEmulator) {
-                                        Single.fromCallable { getEmulatorName(adbDevice) }
-                                                .subscribeOn(Schedulers.io())
-                                    } else {
-                                        Single.just(adbDevice)
-                                    }
-                                }
-                                .doOnEach { println("$it") }
-                                .toList()
-                    }
-                    .blockingGet()
-                    .toList()
+            val availableDevices = collectConnectedDevicesWithAliasesCalculated()
+
+            ensureNoOverlappingAliases(availableDevices)
 
             this.observeVariants(project, unzipTestTask, androidExt, availableDevices)
+        }
+    }
+
+    private fun collectConnectedDevicesWithAliasesCalculated(): List<AdbDevice> {
+        return adb.devices()
+                .flatMap { devices ->
+                    Observable.fromIterable(devices)
+                            .filter { it.status == AdbStatus.ONLINE }
+                            .flatMapSingle { adbDevice ->
+                                if (adbDevice.isEmulator) {
+                                    Single.fromCallable { getEmulatorName(adbDevice) }
+                                            .subscribeOn(Schedulers.io())
+                                } else {
+                                    kontrastDsl.deviceAliases[adbDevice.id]?.let { alias: String ->
+                                        Single.just(adbDevice.copy(alias = alias))
+                                    } ?: Single.just(adbDevice)
+                                }
+                            }
+                            .toList()
+                }
+                .blockingGet()
+                .toList()
+    }
+
+    private fun ensureNoOverlappingAliases(availableDevices: List<AdbDevice>) {
+        val aliasedDevices = availableDevices.filter { it.alias != null }
+
+        val uniqueAliases = aliasedDevices.fold(mutableSetOf<String>()) { acc, device ->
+            acc.apply { add(device.alias!!) }
+        }
+
+        if (uniqueAliases.size < aliasedDevices.size) {
+            throw IllegalStateException("More than one connected devices share the same alias or AVD name. Disconnect one of the two colliding devices.")
         }
     }
 
@@ -175,7 +198,7 @@ class KontrastPlugin : Plugin<Project> {
                                   description = "Capture the current render outputs as new test key",
                                   dependsOn = listOf(renderTask)).apply {
             pulledOutputs = renderTask.resultSubject.firstOrError()
-            outputsDir = File(project.projectDir, "Kontrast${File.separator}${variant.name}${File.separator}${targetDevice.alias ?: targetDevice.id}")
+            outputsDir = File(kontrastDsl.testKeyRoot, "${variant.name}${File.separator}${targetDevice.alias ?: targetDevice.id}")
             outputs.upToDateWhen { false }
         }
     }

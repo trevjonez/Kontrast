@@ -34,3 +34,7 @@ dependencies {
     androidTestCompile 'com.android.support.test:runner:1.0.0'
     androidTestCompile 'com.android.support.test.espresso:espresso-core:3.0.0'
 }
+
+Kontrast {
+    deviceAlias("8XV5T15A29007713", "TJones_Nexus_6P")
+}
