@@ -69,6 +69,7 @@ class KontrastPlugin : Plugin<Project> {
         }
 
         project.dependencies.add("androidTestCompile", "com.github.trevjonez.Kontrast:androidTestClient:$VERSION")
+//        project.dependencies.add("androidTestImplementation", "com.github.trevjonez.Kontrast:androidTestClient:$VERSION")
 
 
         val unzipTestTask = project.createTask(type = Copy::class,
@@ -250,6 +251,7 @@ class KontrastPlugin : Plugin<Project> {
 
     private val ApplicationVariant.apk: File
         get() = this.outputs.map { it.mainOutputFile }.single().outputFile
+    //get() = this.outputs.single().outputFile //3.0.0-beta2
 
     private val ApplicationVariant.testApk: File
         get() = this.testVariant.outputs.single().outputFile
