@@ -19,7 +19,6 @@ package com.trevjonez.kontrast.task
 import com.trevjonez.kontrast.adb.AdbDevice
 import com.trevjonez.kontrast.adb.AdbInstallFlag.ALLOW_TEST_PACKAGES
 import com.trevjonez.kontrast.adb.AdbInstallFlag.REPLACE_EXISTING
-import io.reactivex.Single
 import org.gradle.api.tasks.InputFile
 import org.gradle.api.tasks.TaskAction
 import java.io.File

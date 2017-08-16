@@ -21,6 +21,7 @@ import io.reactivex.Single
 import org.gradle.api.DefaultTask
 import org.gradle.api.tasks.TaskAction
 import java.io.File
+import java.util.concurrent.TimeUnit
 
 open class CaptureTestKeyTask : DefaultTask() {
     internal lateinit var pulledOutputs: Single<Set<PulledOutput>>
@@ -34,10 +35,13 @@ open class CaptureTestKeyTask : DefaultTask() {
         if (!outputsDir.mkdirs())
             throw IllegalStateException("Unable to create output directory: ${outputsDir.absolutePath}")
 
-        pulledOutputs.blockingGet().forEach {
-            logger.info("localOutputDir: ${it.localOutputDir.absolutePath}")
-            logger.info("Capturing test outputs: ${it.output.methodSubDirectory()}")
-            it.localOutputDir.copyRecursively(File(outputsDir, it.output.methodSubDirectory()), true)
-        }
+        pulledOutputs.timeout(10, TimeUnit.MILLISECONDS)
+                .onErrorResumeNext { Single.error(IllegalStateException("Failed to get pulled outputs for capture task. Did the render task run?", it)) }
+                .blockingGet()
+                .forEach {
+                    logger.info("localOutputDir: ${it.localOutputDir.absolutePath}")
+                    logger.info("Capturing test outputs: ${it.output.methodSubDirectory()}")
+                    it.localOutputDir.copyRecursively(File(outputsDir, it.output.methodSubDirectory()), true)
+                }
     }
 }

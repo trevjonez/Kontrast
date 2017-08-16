@@ -30,7 +30,7 @@ internal data class Collector(val chunk: String = "", val closed: Boolean = fals
                                                           chunk.substringBetween("$INST_STAT: Kontrast:OutputDir=", INST_STAT).trim().toFile())
     }
 
-    fun String.substringBetween(first: String, second: String): String {
+    private fun String.substringBetween(first: String, second: String): String {
         val indexOfFirst = indexOf(first)
         if (indexOfFirst < 0) {
             return ""
@@ -42,7 +42,7 @@ internal data class Collector(val chunk: String = "", val closed: Boolean = fals
         return substring(startIndex, endIndex)
     }
 
-    fun String.parseToMap(): Map<String, String> {
+    private fun String.parseToMap(): Map<String, String> {
         return removeSurrounding("[", "]")
                 .split(", ")
                 .map { it.split(":") }
@@ -51,5 +51,5 @@ internal data class Collector(val chunk: String = "", val closed: Boolean = fals
                 .toMap()
     }
 
-    fun String.toFile() = File(this)
+    private fun String.toFile() = File(this)
 }
