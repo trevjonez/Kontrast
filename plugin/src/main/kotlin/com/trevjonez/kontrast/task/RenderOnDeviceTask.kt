@@ -76,6 +76,19 @@ open class RenderOnDeviceTask : AdbCommandTask() {
                 .collectInto(mutableSetOf<PulledOutput>()) { set, output -> set.add(output) }
                 .blockingGet()
 
+        val ambiguousCases = mutableListOf<String>()
+
+        val outputByKeySubDir = mutableMapOf<String, PulledOutput>()
+
+        pulledOutputs.forEach {
+            outputByKeySubDir.put(it.output.keySubDirectory(), it)?.let {
+                ambiguousCases.add(it.output.keySubDirectory())
+            }
+        }
+
+        if(ambiguousCases.isNotEmpty())
+            throw IllegalStateException("There where ambiguous test outputs, use kontrastRule.ofView(View, String) to disambiguate.${ambiguousCases.joinToString(",\n", "\n")}")
+
         resultSubject.onNext(pulledOutputs)
     }
 }

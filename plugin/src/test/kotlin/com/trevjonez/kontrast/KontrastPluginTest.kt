@@ -105,6 +105,10 @@ buildscript {
     ext.kotlin_version = '1.1.3-2'
     ext.kotlinx_html_version = '0.6.3'
     ext.android_plugin_version = '2.3.3'
+    ext.build_tools_version = '26.0.1'
+    ext.support_lib_version = '26.0.1'
+    ext.min_sdk = 16
+    ext.target_sdk = 26
 
     repositories {
         google()

@@ -18,7 +18,8 @@ package com.trevjonez.kontrast
 
 object CartesianProduct {
     /**
-     * Create a cartesian product of items. Intended for creating permutation as test input
+     * Create a cartesian product of items.
+     * Intended for creating permutations for parameterized test input.
      */
     @JvmStatic fun create(vararg items: List<Any>): List<Array<Any>> {
         require(items.size >= 2)

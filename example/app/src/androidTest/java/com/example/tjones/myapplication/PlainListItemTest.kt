@@ -39,7 +39,7 @@ class PlainListItemTest(val width: Int, val name: String) : KontrastTestBase() {
     @Test
     @KontrastTest
     fun typicalCard() {
-        val view = kontrastRule.layoutInflater.inflate(R.layout.plain_user_list_item, null).apply {
+        val view = layoutInflater.inflate(R.layout.plain_user_list_item, null).apply {
             username.text = name
         }
 

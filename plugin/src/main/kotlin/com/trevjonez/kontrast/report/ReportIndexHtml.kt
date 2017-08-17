@@ -75,10 +75,16 @@ class ReportIndexHtml(val outputDir: File, val variantName: String, val testCase
                                 section("mdc-toolbar__section mdc-toolbar__section--align-end") {
                                     nav("mdc-tab-bar") {
                                         autoInit("MDCTabBar")
-                                        span(classes = "mdc-tab mdc-tab--active AllTab") { text("All") }
-                                        span(classes = "mdc-tab PassedTab") { text("Passed") }
-                                        span(classes = "mdc-tab FailedTab") { text("Failed") }
-                                        span(classes = "mdc-tab SkippedTab") { text("skipped") }
+                                        span(classes = "mdc-tab mdc-tab--active AllTab") { text("All: ${testCases.size}") }
+
+                                        val passedCount = testCases.filter { it.status == TestResult.ResultType.SUCCESS }.size
+                                        span(classes = "mdc-tab PassedTab") { text("Passed: $passedCount") }
+
+                                        val failedCount = testCases.filter { it.status == TestResult.ResultType.FAILURE }.size
+                                        span(classes = "mdc-tab FailedTab") { text("Failed: $failedCount") }
+
+                                        val skippedCount = testCases.filter { it.status == TestResult.ResultType.FAILURE }.size
+                                        span(classes = "mdc-tab SkippedTab") { text("Skipped: $skippedCount") }
                                         span("mdc-tab-bar__indicator")
                                     }
                                 }

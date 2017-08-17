@@ -30,7 +30,7 @@ class CardLayoutKontrastTest : KontrastTestBase() {
     @Test
     @KontrastTest
     fun johnDoeCard() {
-        val view = kontrastRule.inflateOnMainThread { inflater ->
+        val view = inflateOnMainThread { inflater ->
             FrameLayout(inflater.context).also {
                 CardLayoutBinding.inflate(inflater, it, true).apply {
                     username.text = "John Doe"
@@ -47,7 +47,7 @@ class CardLayoutKontrastTest : KontrastTestBase() {
     @Test
     @KontrastTest
     fun janeDoeCard() {
-        val view = kontrastRule.inflateOnMainThread { inflater ->
+        val view = inflateOnMainThread { inflater ->
             FrameLayout(inflater.context).also {
                 CardLayoutBinding.inflate(inflater, it, true).apply {
                     username.text = "Jane Doe"
@@ -65,7 +65,7 @@ class CardLayoutKontrastTest : KontrastTestBase() {
     @Test
     @KontrastTest
     fun jackDoeCard() {
-        val view = kontrastRule.inflateOnMainThread { inflater ->
+        val view = inflateOnMainThread { inflater ->
             FrameLayout(inflater.context).also {
                 CardLayoutBinding.inflate(inflater, it, true).apply {
                     username.text = "Jack Doe"

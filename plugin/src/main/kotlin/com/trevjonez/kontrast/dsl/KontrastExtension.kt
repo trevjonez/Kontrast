@@ -23,6 +23,10 @@ open class KontrastExtension(val project: Project) {
 
     var testKeyRoot = File(project.projectDir, "Kontrast")
 
+    fun testKeyRoot(file: File) {
+        testKeyRoot = file
+    }
+
     val deviceAliases = mutableMapOf<String, String>()
 
     fun deviceAlias(deviceId: String, alias: String) {

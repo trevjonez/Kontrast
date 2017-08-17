@@ -17,7 +17,10 @@
 package com.trevjonez.kontrast
 
 import android.app.Activity
+import android.support.test.internal.runner.junit4.statement.UiThreadStatement
 import android.support.test.rule.ActivityTestRule
+import android.view.LayoutInflater
+import android.view.View
 import org.junit.Rule
 
 
@@ -35,5 +38,19 @@ abstract class KontrastTestBase(hostActivity: Class<out Activity> = KontrastTest
     }
 
     @JvmField @Rule val activityRule: ActivityTestRule<out Activity> = ActivityTestRule(hostActivity)
-    @JvmField @Rule val kontrastRule: KontrastRule = KontrastRule(activityRule)
+    @JvmField @Rule val kontrastRule: KontrastRule = KontrastRule()
+
+    val layoutInflater: LayoutInflater
+        get() = LayoutInflater.from(activityRule.activity)
+
+    fun <T> inflateOnMainThread(inflationBlock: (inflater: LayoutInflater) -> T): T {
+        var result: T? = null
+        UiThreadStatement.runOnUiThread {
+            result = inflationBlock(layoutInflater)
+        }
+        return result ?: throw NullPointerException("Didn't receive anything from work on main thread")
+    }
+
+    fun View.toKontrastHelper() = kontrastRule.ofView(this)
+    fun View.toKontrastHelper(testKey: String) = kontrastRule.ofView(this, testKey)
 }

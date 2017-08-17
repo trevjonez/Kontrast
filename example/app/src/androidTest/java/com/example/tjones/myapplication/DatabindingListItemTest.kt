@@ -38,7 +38,7 @@ class DatabindingListItemTest(val width: Int, val name: String) : KontrastTestBa
     @Test
     @KontrastTest
     fun databoundCard() {
-        val view = kontrastRule.inflateOnMainThread { inflater ->
+        val view = inflateOnMainThread { inflater ->
             DatabindingUserListItemBinding.inflate(inflater).apply {
                 username.text = name
             }

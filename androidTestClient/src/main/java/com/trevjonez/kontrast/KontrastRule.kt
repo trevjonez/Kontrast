@@ -16,25 +16,18 @@
 
 package com.trevjonez.kontrast
 
-import android.support.test.internal.runner.junit4.statement.UiThreadStatement
-import android.support.test.rule.ActivityTestRule
-import android.view.LayoutInflater
 import android.view.View
 import org.junit.rules.TestRule
 import org.junit.runner.Description
 import org.junit.runners.model.Statement
 
-class KontrastRule(val activityTestRule: ActivityTestRule<*>) : TestRule {
+class KontrastRule : TestRule {
     lateinit var className: String
     lateinit var methodName: String
-
-    val layoutInflater: LayoutInflater
-        get() = LayoutInflater.from(activityTestRule.activity)
 
     override fun apply(base: Statement, description: Description): Statement {
         className = description.className
         methodName = description.methodName.let {
-            //language=RegExp
             if (it.endsWith(']')) {
                 val start = it.indexOf('[')
                 it.removeRange(start, it.length)
@@ -49,14 +42,6 @@ class KontrastRule(val activityTestRule: ActivityTestRule<*>) : TestRule {
 
     fun ofView(view: View, testKey: String): LayoutHelper {
         return LayoutHelper(view, className, methodName, testKey.removeWhiteSpace())
-    }
-
-    fun <T> inflateOnMainThread(inflationBlock: (inflater: LayoutInflater) -> T): T {
-        var result: T? = null
-        UiThreadStatement.runOnUiThread {
-            result = inflationBlock(layoutInflater)
-        }
-        return result ?: throw NullPointerException("Didn't receive anything from work on main thread")
     }
 
     private fun String.removeWhiteSpace(): String {

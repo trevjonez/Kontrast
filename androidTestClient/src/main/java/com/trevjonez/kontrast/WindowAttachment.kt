@@ -21,7 +21,7 @@ import android.view.ViewGroup
 import java.io.Closeable
 import java.util.WeakHashMap
 
-object WindowAttachment {
+internal object WindowAttachment {
 
     val attachmentSet = WeakHashMap<View, Unit>()
 

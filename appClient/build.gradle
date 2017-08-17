@@ -22,12 +22,12 @@ group = rootProject.group
 version = rootProject.version
 
 android {
-    compileSdkVersion 25
-    buildToolsVersion '25.0.3'
+    compileSdkVersion target_sdk
+    buildToolsVersion build_tools_version
 
     defaultConfig {
-        minSdkVersion 16
-        targetSdkVersion 25
+        minSdkVersion min_sdk
+        targetSdkVersion target_sdk
         versionCode 1
         versionName project.version != null ? project.version : 'unspecified'
     }
@@ -35,7 +35,7 @@ android {
 
 dependencies {
     compile group: 'org.jetbrains.kotlin', name: 'kotlin-stdlib', version: kotlin_version
-    compile group: 'com.android.support', name: 'appcompat-v7', version: '25.4.0'
+    compile group: 'com.android.support', name: 'appcompat-v7', version: support_lib_version
 }
 
 task sourcesJar(type: Jar) {
