@@ -87,16 +87,16 @@ An example of this can be found in the [example project databinding test](https:
 For each connected device there will be six gradle tasks created. 
 You will typically only invoke one of two tasks from the six created per device. 
 They are as follows:
-  0. `test{VariantName}KontrastTest_{DeviceAlias}`
-  1. `capture{VariantName}TestKeys_{DeviceAlias}`
+  1. `test{VariantName}KontrastTest_{DeviceAlias}`
+  2. `capture{VariantName}TestKeys_{DeviceAlias}`
 
 The total list of tasks created per testable variant per connected device is as follows:
-  0. `install{VariantName}Apk_{DeviceAlias}`
-  1. `install{VariantName}TestApk_{DeviceAlias}`
-  2. `render{VariantName}KontrastViews_{DeviceAlias}`
-  3. `capture{VariantName}TestKeys_{DeviceAlias}`
-  4. `test{VariantName}KontrastTest_{DeviceAlias}`
-  5. `generate{VariantName}KontrastHtmlReport_{DeviceAlias}`
+  1. `install{VariantName}Apk_{DeviceAlias}`
+  2. `install{VariantName}TestApk_{DeviceAlias}`
+  3. `render{VariantName}KontrastViews_{DeviceAlias}`
+  4. `capture{VariantName}TestKeys_{DeviceAlias}`
+  5. `test{VariantName}KontrastTest_{DeviceAlias}`
+  6. `generate{VariantName}KontrastHtmlReport_{DeviceAlias}`
   
   Any time the capture task is run it will also finalize that task by running the test task.
   
