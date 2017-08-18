@@ -157,6 +157,7 @@ class KontrastPlugin : Plugin<Project> {
             outputDir = File(project.buildDir, "reports${File.separator}Kontrast${File.separator}${variant.name}${File.separator}${targetDevice.alias ?: targetDevice.id}")
             variantName = variant.name
             deviceAlias = targetDevice.alias ?: targetDevice.id
+            outputs.upToDateWhen { false }
         }
     }
 
