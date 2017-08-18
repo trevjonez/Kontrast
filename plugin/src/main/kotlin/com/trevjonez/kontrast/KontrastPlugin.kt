@@ -140,6 +140,10 @@ class KontrastPlugin : Plugin<Project> {
         androidExt.applicationVariants.all { variant ->
             if (variant.testVariant == null) return@all
 
+            kontrastDsl.deviceAliases.let {
+                if (it.isNotEmpty() && !it.contains(variant.name)) return@all
+            }
+
             availableDevices.forEach { device ->
                 val mainInstall = createMainInstallTask(project, variant, device)
                 val testInstall = createTestInstallTask(project, variant, device)
@@ -187,12 +191,12 @@ class KontrastPlugin : Plugin<Project> {
 
                 val inputExtras = try {
                     adapter.fromJson(buffer(source(File(renderTask.outputsDir, "${names.joinToString(File.separator)}${File.separator}extras.json")))) ?: mapOf()
-                } catch(ignore: FileNotFoundException) {
+                } catch (ignore: FileNotFoundException) {
                     mapOf<String, String>()
                 }
                 val keyExtras = try {
                     adapter.fromJson(buffer(source(File(keyTask.outputsDir, "${names.joinToString(File.separator)}${File.separator}extras.json")))) ?: mapOf()
-                } catch(ignore: FileNotFoundException) {
+                } catch (ignore: FileNotFoundException) {
                     mapOf<String, String>()
                 }
 

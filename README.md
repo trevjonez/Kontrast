@@ -56,6 +56,13 @@ Kontrast {
     testKeyRoot file("...") //default is file(projectDir, "Kontrast")
 }
 ```
+
+ 7. Specify target variants (Optional)
+```groovy
+Kontrast {
+    targetVariant "ciDebug" //Only create tasks for ciDebug variant. can be called multiple times to create tasks for multiple variants.
+}
+```
  
 #### Write your test cases
 
