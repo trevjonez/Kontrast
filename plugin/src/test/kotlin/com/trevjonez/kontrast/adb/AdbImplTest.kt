@@ -28,7 +28,7 @@ class AdbImplTest {
 
     @Test
     fun devices() {
-        assertThat(adb.devices().blockingGet()).containsExactly(AdbDevice("emulator-5554", AdbStatus.ONLINE))
+        assertThat(adb.devices().blockingGet()).contains(AdbDevice("emulator-5554", AdbStatus.ONLINE))
     }
 
     @Test

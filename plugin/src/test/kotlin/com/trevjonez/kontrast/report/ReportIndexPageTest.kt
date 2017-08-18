@@ -64,7 +64,7 @@ class ReportIndexPageTest {
                                        status = TestResult.ResultType.SKIPPED, //Missing input
                                        reportImageDir = File(outputDir, "images"))
 
-        ReportIndex(outputDir, "Index page render test", listOf(jack, jane, john, josh)).write()
+        ReportIndex(outputDir, "Index page render test", "Not on a device", listOf(jack, jane, john, josh)).write()
     }
 
     private fun copyDirectoryFromResources(resourceDirName: String, outputDir: File) {

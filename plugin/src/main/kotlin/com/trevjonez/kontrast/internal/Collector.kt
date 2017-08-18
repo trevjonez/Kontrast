@@ -22,12 +22,12 @@ internal data class Collector(val chunk: String = "", val closed: Boolean = fals
     fun toOutput(): TestOutput {
         val INST_STAT = "INSTRUMENTATION_STATUS"
         return TestOutput(chunk.substringBetween("$INST_STAT: Kontrast:TestKey=", INST_STAT).trim(),
-                                                          chunk.substringBetween("$INST_STAT: Kontrast:MethodName=", INST_STAT).trim(),
-                                                          chunk.substringBetween("$INST_STAT: Kontrast:Description=", INST_STAT).trim()
-                                                                  .let { if (it == "null") null else it },
-                                                          chunk.substringBetween("$INST_STAT: Kontrast:ClassName=", INST_STAT).trim(),
-                                                          chunk.substringBetween("$INST_STAT: Kontrast:Extras=", INST_STAT).trim().parseToMap(),
-                                                          chunk.substringBetween("$INST_STAT: Kontrast:OutputDir=", INST_STAT).trim().toFile())
+                          chunk.substringBetween("$INST_STAT: Kontrast:MethodName=", INST_STAT).trim(),
+                          chunk.substringBetween("$INST_STAT: Kontrast:Description=", INST_STAT).trim()
+                                  .let { if (it == "null") null else it },
+                          chunk.substringBetween("$INST_STAT: Kontrast:ClassName=", INST_STAT).trim(),
+                          chunk.substringBetween("$INST_STAT: Kontrast:Extras=", INST_STAT).trim().parseToMap(),
+                          chunk.substringBetween("$INST_STAT: Kontrast:OutputDir=", INST_STAT).trim().toFile())
     }
 
     private fun String.substringBetween(first: String, second: String): String {
@@ -51,5 +51,13 @@ internal data class Collector(val chunk: String = "", val closed: Boolean = fals
                 .toMap()
     }
 
-    private fun String.toFile() = File(this)
+    /**
+     * File pull issues on api 19 require some hackery on the file path
+     */
+    private fun String.toFile(): File {
+        return if (startsWith("/sdcard/storage/sdcard/Android/data"))
+            File(removePrefix("/sdcard/storage"))
+        else
+            File(this)
+    }
 }

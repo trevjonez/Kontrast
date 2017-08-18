@@ -35,6 +35,8 @@ open class HtmlReportTask : DefaultTask() {
 
     lateinit var variantName: String
 
+    lateinit var deviceAlias: String
+
     @TaskAction
     fun invoke() {
         if(project.gradle.startParameter.taskNames.contains(name))
@@ -63,7 +65,7 @@ open class HtmlReportTask : DefaultTask() {
                         }
             }
         }
-                .map { ReportIndex(outputDir, variantName, it) }
+                .map { ReportIndex(outputDir, variantName, deviceAlias, it) }
                 .blockingGet()
                 .write()
     }

@@ -40,7 +40,7 @@ import kotlinx.html.title
 import org.gradle.api.tasks.testing.TestResult
 import java.io.File
 
-class ReportIndexHtml(val outputDir: File, val variantName: String, val testCases: List<TestCaseData>) : ReportFile {
+class ReportIndexHtml(val outputDir: File, val variantName: String, val deviceAlias: String, val testCases: List<TestCaseData>) : ReportFile {
     override fun write() {
         require(outputDir.exists()) { "Invalid output dir, must be pre-existing. ${outputDir.absolutePath}" }
 
@@ -70,7 +70,7 @@ class ReportIndexHtml(val outputDir: File, val variantName: String, val testCase
                             autoInit("MDCToolbar")
                             div("mdc-toolbar__row toolbar-row") {
                                 section("mdc-toolbar__section mdc-toolbar__section--align-start") {
-                                    span("mdc-toolbar__title") { text("Kontrast Test Report: $variantName") }
+                                    span("mdc-toolbar__title") { text("Kontrast Test Report: $variantName - $deviceAlias") }
                                 }
                                 section("mdc-toolbar__section mdc-toolbar__section--align-end") {
                                     nav("mdc-tab-bar") {

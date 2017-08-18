@@ -88,13 +88,6 @@ interface Adb {
                     throw RuntimeException("pull file failed with code: $result\n$builder")
                 }
             }
-//                    .onErrorResumeNext {
-//                        if (remote.absolutePath.startsWith("/storage/emulated/0")) {
-//                            val path = remote.absolutePath.removePrefix("/storage/emulated/0")
-//                            val newRemote = File("/sdcard$path")
-//                            pull(device, newRemote, local, preserveTimestamps)
-//                        } else Completable.error(it)
-//                    }
         }
 
         override fun shell(device: AdbDevice, command: String): Observable<String> {

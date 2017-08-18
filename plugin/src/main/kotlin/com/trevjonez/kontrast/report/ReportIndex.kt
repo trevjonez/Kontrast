@@ -19,9 +19,9 @@ package com.trevjonez.kontrast.report
 import org.apache.commons.io.IOUtils
 import java.io.File
 
-class ReportIndex(val outputDir: File, val variantName: String, val testCases: List<TestCaseData>) : ReportFile {
+class ReportIndex(val outputDir: File, val variantName: String, val deviceAlias: String, val testCases: List<TestCaseData>) : ReportFile {
     override fun write() {
-        ReportIndexHtml(outputDir, variantName, testCases).write()
+        ReportIndexHtml(outputDir, variantName, deviceAlias, testCases).write()
         ReportIndexCss(File(outputDir, "css")).write()
         copyFileFromResources("material-components-web.min.css", "material-components-web.min.css", File(outputDir, "css"))
         copyFileFromResources("kotlin.js", "kotlin.js", File(outputDir, "js"))

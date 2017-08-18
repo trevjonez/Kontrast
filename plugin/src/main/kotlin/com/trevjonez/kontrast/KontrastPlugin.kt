@@ -157,6 +157,7 @@ class KontrastPlugin : Plugin<Project> {
                                   description = "Generate HTML test result report").apply {
             outputDir = File(project.buildDir, "reports${File.separator}Kontrast${File.separator}${variant.name}${File.separator}${targetDevice.alias ?: targetDevice.id}")
             variantName = variant.name
+            deviceAlias = targetDevice.alias ?: targetDevice.id
         }
     }
 
