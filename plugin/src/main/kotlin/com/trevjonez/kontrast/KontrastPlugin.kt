@@ -68,8 +68,7 @@ class KontrastPlugin : Plugin<Project> {
             project.dependencies.add(KONTRAST_CONFIG, "com.github.trevjonez.Kontrast:unitTestClient:$VERSION")
         }
 
-        project.dependencies.add("androidTestCompile", "com.github.trevjonez.Kontrast:androidTestClient:$VERSION")
-//        project.dependencies.add("androidTestImplementation", "com.github.trevjonez.Kontrast:androidTestClient:$VERSION")
+        project.dependencies.add("androidTestImplementation", "com.github.trevjonez.Kontrast:androidTestClient:$VERSION")
 
 
         val unzipTestTask = project.createTask(type = Copy::class,
@@ -187,12 +186,12 @@ class KontrastPlugin : Plugin<Project> {
 
                 val inputExtras = try {
                     adapter.fromJson(buffer(source(File(renderTask.outputsDir, "${names.joinToString(File.separator)}${File.separator}extras.json")))) ?: mapOf()
-                } catch(ignore: FileNotFoundException) {
+                } catch (ignore: FileNotFoundException) {
                     mapOf<String, String>()
                 }
                 val keyExtras = try {
                     adapter.fromJson(buffer(source(File(keyTask.outputsDir, "${names.joinToString(File.separator)}${File.separator}extras.json")))) ?: mapOf()
-                } catch(ignore: FileNotFoundException) {
+                } catch (ignore: FileNotFoundException) {
                     mapOf<String, String>()
                 }
 
@@ -250,9 +249,11 @@ class KontrastPlugin : Plugin<Project> {
         }
     }
 
+    /**
+     * TODO: what will this do in an apk split situation
+     */
     private val ApplicationVariant.apk: File
-        get() = this.outputs.map { it.mainOutputFile }.single().outputFile
-    //get() = this.outputs.single().outputFile //3.0.0-beta2
+        get() = this.outputs.single().outputFile
 
     private val ApplicationVariant.testApk: File
         get() = this.testVariant.outputs.single().outputFile

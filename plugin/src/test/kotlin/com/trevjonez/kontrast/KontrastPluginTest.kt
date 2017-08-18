@@ -41,7 +41,7 @@ class KontrastPluginTest {
         GradleRunner.create()
                 .withProjectDir(projectDir)
                 .forwardOutput()
-                .withArguments("app:captureDebugTestKeys_Nexus_5X_API_O")
+                .withArguments("app:captureDebugTestKeys_Nexus_5X_API_O", "--stacktrace")
                 .build()
 
         assertThat(File(projectDir, "app/Kontrast/debug/Nexus_5X_API_O/com.trevjonez.kontrast.app.CardLayoutKontrastTest")).isDirectory().satisfies {
@@ -104,7 +104,7 @@ class KontrastPluginTest {
 buildscript {
     ext.kotlin_version = '1.1.3-2'
     ext.kotlinx_html_version = '0.6.3'
-    ext.android_plugin_version = '2.3.3'
+    ext.android_plugin_version = '3.0.0-beta2'
     ext.build_tools_version = '26.0.1'
     ext.support_lib_version = '26.0.1'
     ext.min_sdk = 16
@@ -138,7 +138,7 @@ allprojects {
 apply plugin: 'kontrast'
 
 dependencies {
-    debugCompile group: 'com.github.trevjonez.Kontrast', name: 'appClient', version: '$kontrastVersion'
+    debugApi group: 'com.github.trevjonez.Kontrast', name: 'appClient', version: '$kontrastVersion'
 }
 """
 }
