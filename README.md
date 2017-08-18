@@ -20,19 +20,28 @@ buildscript {
 }
 ```
 
- 2. Apply the plugin
+ 2. Add the jitpack maven repository to your project repo config
+ ```groovy
+allprojects {
+    repositories {
+        maven { url "https://jitpack.io" }
+    }
+}
+```
+
+ 3. Apply the plugin
 ```groovy
 apply plugin: 'kontrast'
 ```
 
- 3. Add the app client dependency (Optional, Recommended)
+ 4. Add the app client dependency (Optional, Recommended)
 ```groovy
 dependencies {
     debugCompile "com.github.trevjonez.Kontrast:appClient:$kontrast_version"
 }
 ```
 
-4. Alias your devices (Optional, Recommended)
+ 5. Alias your devices (Optional, Recommended)
 ```groovy
 Kontrast {
     deviceAlias("8XV5T15A29007713", "TJones_Nexus_6P")
@@ -41,7 +50,7 @@ Kontrast {
 Emulators are automatically aliased to the name provided by the emulator console, however hardware devices are listed in adb by their ID.
 The ID is sufficient but not human friendly so you can alias the device id for easier consumption.
 
-5. Specify the test key root directory (Optional)
+ 6. Specify the test key root directory (Optional)
 ```groovy
 Kontrast {
     testKeyRoot file("...") //default is file(projectDir, "Kontrast")
