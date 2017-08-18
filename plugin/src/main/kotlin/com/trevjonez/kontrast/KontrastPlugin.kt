@@ -140,7 +140,7 @@ class KontrastPlugin : Plugin<Project> {
         androidExt.applicationVariants.all { variant ->
             if (variant.testVariant == null) return@all
 
-            kontrastDsl.deviceAliases.let {
+            kontrastDsl.targetVariants.let {
                 if (it.isNotEmpty() && !it.contains(variant.name)) return@all
             }
 
