@@ -19,7 +19,7 @@ package com.trevjonez.kontrast.dsl
 import org.gradle.api.Project
 import java.io.File
 
-open class KontrastExtension(val project: Project) {
+open class KontrastExtension(project: Project) {
 
     var testKeyRoot = File(project.projectDir, "Kontrast")
 
@@ -35,5 +35,15 @@ open class KontrastExtension(val project: Project) {
 
     fun deviceAlias(aliasPair: Pair<String, String>) {
         deviceAliases.put(aliasPair.first, aliasPair.second)
+    }
+
+    val targetVariants = mutableListOf<String>()
+
+    fun targetVariants(variantNames: List<String>) {
+        targetVariants.addAll(variantNames)
+    }
+
+    fun targetVariant(variantName: String) {
+        targetVariants.add(variantName)
     }
 }
