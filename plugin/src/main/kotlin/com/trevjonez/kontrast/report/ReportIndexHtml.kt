@@ -83,7 +83,7 @@ class ReportIndexHtml(val outputDir: File, val variantName: String, val deviceAl
                                         val failedCount = testCases.filter { it.status == TestResult.ResultType.FAILURE }.size
                                         span(classes = "mdc-tab FailedTab") { text("Failed: $failedCount") }
 
-                                        val skippedCount = testCases.filter { it.status == TestResult.ResultType.FAILURE }.size
+                                        val skippedCount = testCases.filter { it.status == TestResult.ResultType.SKIPPED }.size
                                         span(classes = "mdc-tab SkippedTab") { text("Skipped: $skippedCount") }
                                         span("mdc-tab-bar__indicator")
                                     }
