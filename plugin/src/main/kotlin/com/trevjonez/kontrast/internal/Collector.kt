@@ -44,7 +44,7 @@ internal data class Collector(val chunk: String = "", val closed: Boolean = fals
 
     private fun String.parseToMap(): Map<String, String> {
         return removeSurrounding("[", "]")
-                .split(", ")
+                .split("EXTRA_DELIMITER")
                 .map { it.split(":") }
                 .filter { it.size == 2 }
                 .map { it[0].removeSurrounding("\"") to it[1].removeSurrounding("\"") }
