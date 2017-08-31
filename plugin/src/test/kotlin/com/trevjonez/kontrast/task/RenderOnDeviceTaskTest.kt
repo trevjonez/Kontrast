@@ -47,7 +47,7 @@ INSTRUMENTATION_STATUS: Kontrast:TestKey=johnDoeCard
 INSTRUMENTATION_STATUS: Kontrast:MethodName=johnDoeCard
 INSTRUMENTATION_STATUS: Kontrast:Description=null
 INSTRUMENTATION_STATUS: Kontrast:ClassName=com.trevjonez.kontrast.CardLayoutKontrastTest
-INSTRUMENTATION_STATUS: Kontrast:Extras=[]
+INSTRUMENTATION_STATUS: Kontrast:Extras=["something":"with{"nested"="comma space", "will"="break_the_parser"}"EXTRA_DELIMITER"this":"needs fixed"]
 INSTRUMENTATION_STATUS: Kontrast:OutputDir=/storage/emulated/0/Android/data/com.trevjonez.kontrast.app/files/Kontrast/com.trevjonez.kontrast.CardLayoutKontrastTest/johnDoeCard/johnDoeCard
 INSTRUMENTATION_STATUS_CODE: 42
 INSTRUMENTATION_RESULT: stream=
@@ -65,7 +65,7 @@ INSTRUMENTATION_CODE: -1
                                                              "johnDoeCard",
                                                              null,
                                                              "com.trevjonez.kontrast.CardLayoutKontrastTest",
-                                                             mapOf(),
+                                                             mapOf("something" to """with{"nested"="comma space", "will"="break_the_parser"}""", "this" to "needs fixed"),
                                                              File("/storage/emulated/0/Android/data/com.trevjonez.kontrast.app/files/Kontrast/com.trevjonez.kontrast.CardLayoutKontrastTest/johnDoeCard/johnDoeCard")))
     }
 }
