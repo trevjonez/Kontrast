@@ -127,7 +127,7 @@ class LayoutHelper(val view: View, val className: String, val methodName: String
             putString("$KONTRAST:$CLASS_NAME", className)
             putString("$KONTRAST:$METHOD_NAME", methodName)
             putString("$KONTRAST:$TEST_KEY", testKey)
-            putString("$KONTRAST:$EXTRAS", extras.map({ (k, v) -> """"$k":"$v"""" }).joinToString(prefix = "[", postfix = "]", separator = "EXTRA_DELIMITER"))
+            putString("$KONTRAST:$EXTRAS", extras.map({ (k, v) -> """"$k"KVP_DELIMITER"$v"""" }).joinToString(prefix = "[", postfix = "]", separator = "EXTRA_DELIMITER"))
             putString("$KONTRAST:$DESCRIPTION", description)
             putString("$KONTRAST:$OUTPUT_DIR", outputPath)
         }
