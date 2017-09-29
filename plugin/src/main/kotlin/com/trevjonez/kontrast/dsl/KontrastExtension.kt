@@ -46,4 +46,10 @@ open class KontrastExtension(project: Project) {
     fun targetVariant(variantName: String) {
         targetVariants.add(variantName)
     }
+
+    var telnetPath = project.properties["kontrast.telnetPath"] as? String ?: "telnet"
+
+    fun telnetPath(path: String) {
+        telnetPath = path
+    }
 }

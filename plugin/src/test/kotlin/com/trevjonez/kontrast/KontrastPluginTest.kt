@@ -41,7 +41,7 @@ class KontrastPluginTest {
         GradleRunner.create()
                 .withProjectDir(projectDir)
                 .forwardOutput()
-                .withArguments("app:captureDebugTestKeys_Nexus_5X_API_O")
+                .withArguments("app:captureDebugTestKeys_Nexus_5X_API_O", "-Pkontrast.telnetPath=/usr/local/bin/telnet")
                 .build()
 
         assertThat(File(projectDir, "app/Kontrast/debug/Nexus_5X_API_O/com.trevjonez.kontrast.app.CardLayoutKontrastTest")).isDirectory().satisfies {
@@ -77,7 +77,7 @@ class KontrastPluginTest {
         GradleRunner.create()
                 .withProjectDir(projectDir)
                 .forwardOutput()
-                .withArguments("app:testDebugKontrastTest_Nexus_5X_API_O")
+                .withArguments("app:testDebugKontrastTest_Nexus_5X_API_O", "-Pkontrast.telnetPath=/usr/local/bin/telnet")
                 .buildAndFail()
 
         assertThat(File(projectDir, "app/build/reports/Kontrast/debug/Nexus_5X_API_O/images/com.trevjonez.kontrast.app.CardLayoutKontrastTest")).isDirectory().satisfies {
