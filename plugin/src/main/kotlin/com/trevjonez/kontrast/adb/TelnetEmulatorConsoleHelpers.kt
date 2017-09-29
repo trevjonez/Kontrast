@@ -19,8 +19,8 @@ package com.trevjonez.kontrast.adb
 import java.io.File
 import java.util.stream.Collectors
 
-fun getEmulatorName(adbDevice: AdbDevice): AdbDevice {
-    val telnet = ProcessBuilder("telnet", "localhost", adbDevice.id.removePrefix("emulator-")).start()
+fun getEmulatorName(adbDevice: AdbDevice, telnetPath: String): AdbDevice {
+    val telnet = ProcessBuilder(telnetPath, "localhost", adbDevice.id.removePrefix("emulator-")).start()
     val home = System.getProperty("user.home")
     val authToken = File(home, ".emulator_console_auth_token").readText()
     telnet.outputStream.bufferedWriter().apply {

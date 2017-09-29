@@ -107,7 +107,7 @@ class KontrastPlugin : Plugin<Project> {
                             .filter { it.status == AdbStatus.ONLINE }
                             .flatMapSingle { adbDevice ->
                                 if (adbDevice.isEmulator) {
-                                    Single.fromCallable { getEmulatorName(adbDevice) }
+                                    Single.fromCallable { getEmulatorName(adbDevice, kontrastDsl.telnetPath) }
                                             .subscribeOn(Schedulers.io())
                                 } else {
                                     kontrastDsl.deviceAliases[adbDevice.id]?.let { alias: String ->
