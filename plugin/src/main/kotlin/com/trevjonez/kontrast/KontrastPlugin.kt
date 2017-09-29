@@ -51,7 +51,7 @@ class KontrastPlugin : Plugin<Project> {
     companion object {
         const val KONTRAST_CONFIG = "kontrast"
         const val GROUP = "Kontrast"
-        const val VERSION = "0.1.1"
+        const val VERSION = "0.1.2"
     }
 
     internal lateinit var adb: Adb
