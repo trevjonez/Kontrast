@@ -47,4 +47,4 @@ task clean(type: Delete) {
 }
 
 group = 'com.github.trevjonez.Kontrast'
-version = '0.1.1'
+version = '0.1.2'
