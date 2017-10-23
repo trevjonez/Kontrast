@@ -51,7 +51,7 @@ class KontrastPlugin : Plugin<Project> {
     companion object {
         const val KONTRAST_CONFIG = "kontrast"
         const val GROUP = "Kontrast"
-        const val VERSION = "AGP-3.0.0-SNAPSHOT"
+        const val VERSION = "0.2.0"
     }
 
     internal lateinit var adb: Adb
@@ -107,7 +107,7 @@ class KontrastPlugin : Plugin<Project> {
                             .filter { it.status == AdbStatus.ONLINE }
                             .flatMapSingle { adbDevice ->
                                 if (adbDevice.isEmulator) {
-                                    Single.fromCallable { getEmulatorName(adbDevice, kontrastDsl.telnetPath) }
+                                    Single.fromCallable { getEmulatorName(adbDevice) }
                                             .subscribeOn(Schedulers.io())
                                 } else {
                                     kontrastDsl.deviceAliases[adbDevice.id]?.let { alias: String ->
