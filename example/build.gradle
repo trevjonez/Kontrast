@@ -1,5 +1,6 @@
 buildscript {
-    ext.kotlin_version = '1.1.4'
+    ext.kotlin_version = '1.1.4-2'
+    ext.kontrast_version = 'AGP-3.0.0-SNAPSHOT'
     repositories {
         google()
         jcenter()
@@ -7,9 +8,9 @@ buildscript {
         maven { url 'https://jitpack.io' }
     }
     dependencies {
-        classpath 'com.android.tools.build:gradle:2.3.3'
+        classpath 'com.android.tools.build:gradle:3.0.0-beta6'
         classpath "org.jetbrains.kotlin:kotlin-gradle-plugin:$kotlin_version"
-        classpath "com.github.trevjonez.Kontrast:plugin:0.1.1"
+        classpath "com.github.trevjonez.Kontrast:plugin:$kontrast_version"
     }
 }
 

@@ -33,7 +33,7 @@ gradlePlugin {
 
 dependencies {
     compile group: 'org.jetbrains.kotlinx', name: 'kotlinx-html-jvm', version: kotlinx_html_version
-    compile group: 'com.android.tools.build', name: 'gradle', version: '2.3.3'
+    compile group: 'com.android.tools.build', name: 'gradle', version: android_plugin_version
     compile group: 'io.reactivex.rxjava2', name: 'rxjava', version: '2.1.1'
     compile group: 'azadev.kotlin', name: 'aza-kotlin-css', version: '1.0'
     compile group: 'com.squareup.moshi', name:'moshi', version: '1.5.0'

@@ -23,7 +23,7 @@ class TelnetEmulatorConsoleHelpersTest {
     @Test
     fun getEmulatorName() {
         val emulatorInput = AdbDevice("emulator-5554", AdbStatus.ONLINE)
-        val emulatorName = getEmulatorName(emulatorInput , "/usr/local/bin/telnet")
+        val emulatorName = getEmulatorName(emulatorInput)
         assertThat(emulatorName.alias).isEqualTo("Nexus_5X_API_O")
     }
 }

@@ -26,7 +26,7 @@ class ReportIndex(val outputDir: File, val variantName: String, val deviceAlias:
         copyFileFromResources("material-components-web.min.css", "material-components-web.min.css", File(outputDir, "css"))
         copyFileFromResources("kotlin.js", "kotlin.js", File(outputDir, "js"))
         copyFileFromResources("material-components-web.min.js", "material-components-web.min.js", File(outputDir, "js"))
-        copyFileFromResources("reportJs_main.js", "kontrast.js", File(outputDir, "js"))
+        copyFileFromResources("reportJs.js", "kontrast.js", File(outputDir, "js"))
 
         println("Kontrast report: file://${outputDir.absolutePath}/index.html")
     }

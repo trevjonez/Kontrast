@@ -51,7 +51,7 @@ class KontrastPlugin : Plugin<Project> {
     companion object {
         const val KONTRAST_CONFIG = "kontrast"
         const val GROUP = "Kontrast"
-        const val VERSION = "0.1.2"
+        const val VERSION = "0.2.0"
     }
 
     internal lateinit var adb: Adb
@@ -68,7 +68,8 @@ class KontrastPlugin : Plugin<Project> {
             project.dependencies.add(KONTRAST_CONFIG, "com.github.trevjonez.Kontrast:unitTestClient:$VERSION")
         }
 
-        project.dependencies.add("androidTestCompile", "com.github.trevjonez.Kontrast:androidTestClient:$VERSION")
+        project.dependencies.add("androidTestImplementation", "com.github.trevjonez.Kontrast:androidTestClient:$VERSION")
+
 
         val unzipTestTask = project.createTask(type = Copy::class,
                                                name = "unpackageKontrastTestJar",
@@ -106,7 +107,7 @@ class KontrastPlugin : Plugin<Project> {
                             .filter { it.status == AdbStatus.ONLINE }
                             .flatMapSingle { adbDevice ->
                                 if (adbDevice.isEmulator) {
-                                    Single.fromCallable { getEmulatorName(adbDevice, kontrastDsl.telnetPath) }
+                                    Single.fromCallable { getEmulatorName(adbDevice) }
                                             .subscribeOn(Schedulers.io())
                                 } else {
                                     kontrastDsl.deviceAliases[adbDevice.id]?.let { alias: String ->
@@ -253,8 +254,11 @@ class KontrastPlugin : Plugin<Project> {
         }
     }
 
+    /**
+     * TODO: what will this do in an apk split situation
+     */
     private val ApplicationVariant.apk: File
-        get() = this.outputs.map { it.mainOutputFile }.single().outputFile
+        get() = this.outputs.single().outputFile
 
     private val ApplicationVariant.testApk: File
         get() = this.testVariant.outputs.single().outputFile

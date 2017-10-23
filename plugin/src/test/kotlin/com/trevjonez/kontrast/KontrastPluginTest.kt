@@ -41,7 +41,7 @@ class KontrastPluginTest {
         GradleRunner.create()
                 .withProjectDir(projectDir)
                 .forwardOutput()
-                .withArguments("app:captureDebugTestKeys_Nexus_5X_API_O", "-Pkontrast.telnetPath=/usr/local/bin/telnet")
+                .withArguments("app:captureDebugTestKeys_Nexus_5X_API_O")
                 .build()
 
         assertThat(File(projectDir, "app/Kontrast/debug/Nexus_5X_API_O/com.trevjonez.kontrast.app.CardLayoutKontrastTest")).isDirectory().satisfies {
@@ -77,7 +77,7 @@ class KontrastPluginTest {
         GradleRunner.create()
                 .withProjectDir(projectDir)
                 .forwardOutput()
-                .withArguments("app:testDebugKontrastTest_Nexus_5X_API_O", "-Pkontrast.telnetPath=/usr/local/bin/telnet")
+                .withArguments("app:testDebugKontrastTest_Nexus_5X_API_O")
                 .buildAndFail()
 
         assertThat(File(projectDir, "app/build/reports/Kontrast/debug/Nexus_5X_API_O/images/com.trevjonez.kontrast.app.CardLayoutKontrastTest")).isDirectory().satisfies {
@@ -102,11 +102,10 @@ class KontrastPluginTest {
 
     fun rootGradleFileContents(kontrastVersion: String) = """
 buildscript {
-    ext.kotlin_version = '1.1.3-2'
-    ext.kotlinx_html_version = '0.6.3'
-    ext.android_plugin_version = '2.3.3'
-    ext.build_tools_version = '26.0.1'
-    ext.support_lib_version = '26.0.1'
+    ext.kotlin_version = '1.1.51'
+    ext.android_plugin_version = '3.0.0-rc2'
+    ext.build_tools_version = '26.0.2'
+    ext.support_lib_version = '26.1.0'
     ext.min_sdk = 16
     ext.target_sdk = 26
 
@@ -118,9 +117,6 @@ buildscript {
     dependencies {
         classpath group: 'org.jetbrains.kotlin', name: 'kotlin-gradle-plugin', version: kotlin_version
         classpath group: 'com.android.tools.build', name: 'gradle', version: android_plugin_version
-        classpath group: 'io.reactivex.rxjava2', name: 'rxjava', version: '2.1.1'
-        classpath group: 'com.squareup.moshi', name:'moshi', version: '1.5.0'
-        classpath group: 'org.jetbrains.kotlinx', name: 'kotlinx-html-jvm', version: kotlinx_html_version
         classpath group: 'com.github.trevjonez.Kontrast', name: 'plugin', version: '$kontrastVersion'
     }
 }
@@ -138,7 +134,7 @@ allprojects {
 apply plugin: 'kontrast'
 
 dependencies {
-    debugCompile group: 'com.github.trevjonez.Kontrast', name: 'appClient', version: '$kontrastVersion'
+    debugApi group: 'com.github.trevjonez.Kontrast', name: 'appClient', version: '$kontrastVersion'
 }
 """
 }

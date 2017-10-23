@@ -18,4 +18,9 @@ package com.trevjonez.kontrast.adb
 
 data class AdbDevice(val id: String, val status: AdbStatus, val alias: String? = null) {
     val isEmulator: Boolean = id.startsWith("emulator")
+    val portNumber: Int
+        get() {
+            require(isEmulator) { "attempting to read port number from physical device" }
+            return id.removePrefix("emulator-").toInt()
+        }
 }

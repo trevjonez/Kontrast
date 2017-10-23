@@ -11,7 +11,7 @@ In the appropriate `build.gradle` file(s):
  1. Add the jitpack maven repository and classpath dependency. 
 ```groovy
 buildscript {
-    ext.kontrast_version = '0.1.1'
+    ext.kontrast_version = '0.2.0'
     repositories {
         maven { url "https://jitpack.io" }
     }
@@ -64,22 +64,6 @@ Kontrast {
     targetVariant "ciDebug" //Only create tasks for ciDebug variant. can be called multiple times to create tasks for multiple variants.
 }
 ```
-
- 8. Specify telnet path (Environment dependant)
- 
- In your `gradle.properties` file:
- ```properties
- kontrast.telnetPath=/usr/local/bin/telnet
- ```
- You can also specify it via the kontrast dsl although the properties mechanism is usually more appropriate.
- ```groovy
-Kontrast {
-    telnetPath '/usr/local/bin/telnet'
-}
-```
-You might be asking at this point "why telnet?". 
-The answer is, it is used to lookup the name of the running emulators. 
-If you know a better way please let me know by filing an issue.
  
 #### Write your test cases
 

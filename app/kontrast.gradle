@@ -15,6 +15,6 @@
  */
 
 dependencies {
-    debugCompile project(':appClient')
-    androidTestCompile project(':androidTestClient')
+    debugApi project(':appClient')
+    androidTestImplementation project(':androidTestClient')
 }
