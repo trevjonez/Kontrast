@@ -15,6 +15,7 @@
  */
 
 apply plugin: 'kotlin2js'
+apply plugin: 'kotlin-dce-js'
 
 dependencies {
     compile group: 'org.jetbrains.kotlin', name: 'kotlin-stdlib-js', version: kotlin_version
@@ -24,13 +25,15 @@ compileKotlin2Js {
     kotlinOptions.sourceMap = true
 }
 
-afterEvaluate {
+classes.finalizedBy(runDceKotlinJs)
+
+runDceKotlinJs.doLast {
     jar {
-        configurations.compile.each { File file ->
-            from zipTree(file.absolutePath)
+        runDceKotlinJs.getOutputs().getFiles().each { File file ->
+            from file
             include { fileTreeElement ->
                 def path = fileTreeElement.path
-                path.endsWith(".js") || path.endsWith(".map")
+                path.endsWith(".js") && !path.contains(".meta.")
             }
         }
     }

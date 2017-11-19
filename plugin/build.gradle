@@ -17,6 +17,8 @@
 apply plugin: 'nebula.kotlin'
 apply plugin: 'java-gradle-plugin'
 apply plugin: 'maven'
+apply plugin: 'de.undercouch.download'
+apply plugin: 'AVD'
 
 group = rootProject.group
 version = rootProject.version
@@ -34,9 +36,9 @@ gradlePlugin {
 dependencies {
     compile group: 'org.jetbrains.kotlinx', name: 'kotlinx-html-jvm', version: kotlinx_html_version
     compile group: 'com.android.tools.build', name: 'gradle', version: android_plugin_version
-    compile group: 'io.reactivex.rxjava2', name: 'rxjava', version: '2.1.1'
+    compile group: 'io.reactivex.rxjava2', name: 'rxjava', version: '2.1.5'
     compile group: 'azadev.kotlin', name: 'aza-kotlin-css', version: '1.0'
-    compile group: 'com.squareup.moshi', name:'moshi', version: '1.5.0'
+    compile group: 'com.squareup.moshi', name: 'moshi', version: '1.5.0'
 }
 
 dependencies {
@@ -53,26 +55,32 @@ dependencies {
     reportResources project(':reportJs')
 }
 
-def mdcVersion = '0.16.0'
+import de.undercouch.gradle.tasks.download.Download
 
-task downloadMdcCss(type: DownloadFile) {
-    url="https://unpkg.com/material-components-web@$mdcVersion/dist/material-components-web.min.css"
-    target = file("$buildDir/material-components-web.min.css")
+def mdcVersion = '0.25.0'
+
+task downloadMdcCss(type: Download) {
+    src "https://unpkg.com/material-components-web@$mdcVersion/dist/material-components-web.min.css"
+    dest file("$buildDir/material-components-web.min.css")
     group = "Download Resources"
     description = "Downloads MDC css file"
+    onlyIfModified true
 }
 
-task downloadMdcJs(type: DownloadFile) {
-    url="https://unpkg.com/material-components-web@$mdcVersion/dist/material-components-web.min.js"
-    target = file("$buildDir/material-components-web.min.js")
+task downloadMdcJs(type: Download) {
+    src "https://unpkg.com/material-components-web@$mdcVersion/dist/material-components-web.min.js"
+    dest file("$buildDir/material-components-web.min.js")
     group = "Download Resources"
     description = "Downloads MDC js file"
+    onlyIfModified true
 }
 
 processResources {
     dependsOn(':reportJs:jar')
     configurations.reportResources.each { File file ->
-        from zipTree(file.absolutePath)
+        if (file.name == "reportJs.jar") {
+            from zipTree(file.absolutePath)
+        }
     }
     from downloadMdcCss
     from downloadMdcJs
@@ -88,6 +96,8 @@ tasks.findByPath('test').dependsOn(':plugin:install')
 tasks.findByPath('test').dependsOn(':unitTestClient:install')
 tasks.findByPath('test').dependsOn(':androidTestClient:install')
 tasks.findByPath('test').dependsOn(':appClient:install')
+tasks.findByPath('test').dependsOn(':plugin:startAvd_Nexus_5X_API_O')
+tasks.findByPath('test').finalizedBy(':plugin:stopAvd_Nexus_5X_API_O')
 
 task sourcesJar(type: Jar, dependsOn: classes) {
     classifier 'sources'
@@ -120,13 +130,19 @@ install {
     }
 }
 
-class DownloadFile extends DefaultTask {
-    @Input
-    String url
+AVD {
+    acceptAndroidSdkLicense true
+    acceptAndroidSdkPreviewLicense true
 
-    @OutputFile
-    File target
-
-    @TaskAction
-    void download() { ant.get(src: url, dest: target) }
+    configs {
+        'Nexus 5X API O' {
+            avd {
+                abi 'x86'
+                api 26
+                type 'google_apis'
+                deviceId 'Nexus 5X'
+            }
+            launchOption("-wipe-data")
+        }
+    }
 }

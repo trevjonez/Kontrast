@@ -23,7 +23,6 @@ version = rootProject.version
 
 android {
     compileSdkVersion target_sdk
-    buildToolsVersion build_tools_version
 
     defaultConfig {
         minSdkVersion min_sdk

@@ -23,7 +23,6 @@ version = rootProject.version
 
 android {
     compileSdkVersion target_sdk
-    buildToolsVersion build_tools_version
 
     defaultConfig {
         minSdkVersion min_sdk
@@ -37,7 +36,7 @@ dependencies {
     compile group: 'junit', name: 'junit', version: '4.12'
     compile group: 'org.jetbrains.kotlin', name: 'kotlin-stdlib', version: kotlin_version
     compile group: 'com.android.support', name: 'appcompat-v7', version: support_lib_version
-    compile group: 'com.android.support.test', name: 'rules', version: '1.0.0'
+    compile group: 'com.android.support.test', name: 'rules', version: '1.0.1'
 }
 
 dependencies {
