@@ -20,12 +20,13 @@ import com.trevjonez.kontrast.internal.doOnFirst
 import com.trevjonez.kontrast.internal.toObservable
 import io.reactivex.schedulers.Schedulers
 import io.reactivex.subjects.PublishSubject
+import org.slf4j.Logger
 import java.net.Socket
 
-fun getEmulatorName(adbDevice: AdbDevice): AdbDevice {
+fun getEmulatorName(adbDevice: AdbDevice, logger: Logger): AdbDevice {
     val sendSubject = PublishSubject.create<String>()
     val emulatorName = Socket("localhost", adbDevice.portNumber)
-            .toObservable(sendSubject)
+            .toObservable(sendSubject, logger)
             .subscribeOn(Schedulers.io())
             .skipWhile { it.trim() != "OK" }
             .doOnFirst { sendSubject.onNext("avd name") }

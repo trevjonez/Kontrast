@@ -90,6 +90,7 @@ test {
     testLogging.showStandardStreams = true
     testLogging.exceptionFormat = 'full'
     systemProperty("KontrastVersion", version)
+    environment("ANDROID_HOME", androidHome())
 }
 
 tasks.findByPath('test').dependsOn(':plugin:install')
@@ -145,4 +146,21 @@ AVD {
             launchOption("-wipe-data")
         }
     }
+}
+
+String androidHome() {
+    String envVar = System.getenv("ANDROID_HOME")
+    if (envVar != null) return envVar
+
+    Properties localProperties = new Properties()
+    File localPropFile = new File(project.rootProject.projectDir, "local.properties")
+    if (localPropFile.exists()) {
+        localProperties.load(new FileInputStream(localPropFile))
+    } else throw IllegalStateException("Can't find android sdk via ANDROID_HOME and local.properties does not exist in root project")
+
+
+    String sdkDir = localProperties.getProperty("sdk.dir")
+    if(sdkDir != null) return sdkDir
+
+    throw IllegalStateException("Can't find android sdk as ANDROID_HOME env var or as sdk.dir in rootProject local.properties")
 }

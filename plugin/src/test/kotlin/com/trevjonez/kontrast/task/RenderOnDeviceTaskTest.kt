@@ -20,10 +20,13 @@ import com.trevjonez.kontrast.internal.TestOutput
 import io.reactivex.Observable
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.Test
+import org.slf4j.LoggerFactory
 import java.io.File
 
 
 class RenderOnDeviceTaskTest {
+
+    private val logger = LoggerFactory.getLogger(RenderOnDeviceTaskTest::class.java)
 
     @Test
     fun testParsingIntegrationCheck() {
@@ -59,7 +62,7 @@ OK (1 test)
 
 INSTRUMENTATION_CODE: -1
 """
-        val testSub = Observable.fromIterable(basicInput.split('\n')).parseTestCases().test()
+        val testSub = Observable.fromIterable(basicInput.split('\n')).parseTestCases(logger).test()
 
         assertThat(testSub.values()[0]).isEqualTo(TestOutput("johnDoeCard",
                                                              "johnDoeCard",

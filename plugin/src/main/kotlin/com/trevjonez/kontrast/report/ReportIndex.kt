@@ -34,6 +34,8 @@ class ReportIndex(val outputDir: File, val variantName: String, val deviceAlias:
     private fun copyFileFromResources(resName: String, destFileName: String, outputDir: File) {
         if (!outputDir.exists()) outputDir.mkdirs()
         val resource = javaClass.classLoader.getResourceAsStream(resName)
+                       ?: throw NullPointerException("res file didn't exist: $resName")
+
         val dest = File(outputDir, destFileName)
         IOUtils.copy(resource, dest.outputStream())
     }

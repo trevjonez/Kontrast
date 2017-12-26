@@ -18,12 +18,15 @@ package com.trevjonez.kontrast.adb
 
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.Test
+import org.slf4j.LoggerFactory
 
-class TelnetEmulatorConsoleHelpersTest {
+class EmulatorNameLookupTest {
+    private val logger = LoggerFactory.getLogger(EmulatorNameLookupTest::class.java)
+
     @Test
     fun getEmulatorName() {
         val emulatorInput = AdbDevice("emulator-5554", AdbStatus.ONLINE)
-        val emulatorName = getEmulatorName(emulatorInput)
+        val emulatorName = getEmulatorName(emulatorInput, logger)
         assertThat(emulatorName.alias).isEqualTo("Nexus_5X_API_O")
     }
 }

@@ -28,12 +28,22 @@ compileKotlin2Js {
 classes.finalizedBy(runDceKotlinJs)
 
 runDceKotlinJs.doLast {
+    configurations.archives.artifacts.with { archives ->
+        archives.each {
+            if (it.file =~ 'jar') {
+                remove(it)
+            }
+        }
+    }
+
     jar {
         runDceKotlinJs.getOutputs().getFiles().each { File file ->
+            println file.path
             from file
             include { fileTreeElement ->
-                def path = fileTreeElement.path
-                path.endsWith(".js") && !path.contains(".meta.")
+                def elementFile = fileTreeElement.file
+                println elementFile.path
+                elementFile.path.endsWith("min${File.separator}kotlin.js") || elementFile.path.endsWith("min${File.separator}reportJs.js")
             }
         }
     }

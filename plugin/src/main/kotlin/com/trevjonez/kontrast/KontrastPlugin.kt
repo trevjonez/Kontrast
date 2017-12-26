@@ -82,7 +82,7 @@ class KontrastPlugin : Plugin<Project> {
 
             adb = Adb.Impl(androidExt.adbExecutable, project.logger)
 
-            val availableDevices = collectConnectedDevicesWithAliasesCalculated()
+            val availableDevices = collectConnectedDevicesWithAliasesCalculated(project)
 
             this.observeVariants(project, unzipTestTask, androidExt, availableDevices)
         }
@@ -100,14 +100,14 @@ class KontrastPlugin : Plugin<Project> {
         }
     }
 
-    private fun collectConnectedDevicesWithAliasesCalculated(): List<AdbDevice> {
+    private fun collectConnectedDevicesWithAliasesCalculated(project: Project): List<AdbDevice> {
         return adb.devices()
                 .flatMap { devices ->
                     Observable.fromIterable(devices)
                             .filter { it.status == AdbStatus.ONLINE }
                             .flatMapSingle { adbDevice ->
                                 if (adbDevice.isEmulator) {
-                                    Single.fromCallable { getEmulatorName(adbDevice) }
+                                    Single.fromCallable { getEmulatorName(adbDevice, project.logger) }
                                             .subscribeOn(Schedulers.io())
                                 } else {
                                     kontrastDsl.deviceAliases[adbDevice.id]?.let { alias: String ->

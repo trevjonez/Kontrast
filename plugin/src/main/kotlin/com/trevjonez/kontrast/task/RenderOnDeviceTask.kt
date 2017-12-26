@@ -70,7 +70,7 @@ open class RenderOnDeviceTask : AdbCommandTask() {
                 .map(String::trim)
                 .doOnEach { logger.info("$it") }
                 .takeWhile { !it.startsWith("INSTRUMENTATION_CODE") }
-                .parseTestCases()
+                .parseTestCases(logger)
                 .pullOutputsAndDeleteFromDevice(device, outputsDir, adb, logger)
                 .writeExtrasToFile(outputsDir, extrasAdapter, logger)
                 .collectInto(mutableSetOf<PulledOutput>()) { set, output -> set.add(output) }
@@ -86,7 +86,7 @@ open class RenderOnDeviceTask : AdbCommandTask() {
             }
         }
 
-        if(ambiguousCases.isNotEmpty())
+        if (ambiguousCases.isNotEmpty())
             throw IllegalStateException("There where ambiguous test outputs, use kontrastRule.ofView(View, String) to disambiguate.${ambiguousCases.joinToString(",\n", "\n")}")
 
         resultSubject.onNext(pulledOutputs)
@@ -119,11 +119,13 @@ internal fun Observable<TestOutput>.pullOutputsAndDeleteFromDevice(device: AdbDe
     }
 }
 
-internal fun Observable<String>.parseTestCases(): Observable<TestOutput> {
-    val INST_STAT_CODE = "INSTRUMENTATION_STATUS_CODE"
-    return scan(Collector()) { (chunk, closed), next ->
-        Collector(if (closed) next else "$chunk${System.lineSeparator()}$next", next.startsWith(INST_STAT_CODE))
-    }
+private const val INST_STAT_CODE = "INSTRUMENTATION_STATUS_CODE"
+
+internal fun Observable<String>.parseTestCases(logger: Logger): Observable<TestOutput> {
+    return doOnNext { logger.info("InstrumentationOutput: $it") }
+            .scan(Collector()) { (chunk, closed), next ->
+                Collector(if (closed) next else "$chunk${System.lineSeparator()}$next", next.startsWith(INST_STAT_CODE))
+            }
             .filter(Collector::closed)
             .filter { it.chunk.contains("$INST_STAT_CODE: 42") }
             .map(Collector::toOutput)

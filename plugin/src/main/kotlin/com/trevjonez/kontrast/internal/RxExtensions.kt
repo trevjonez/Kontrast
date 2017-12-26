@@ -26,6 +26,8 @@ import io.reactivex.schedulers.Schedulers
 import okio.BufferedSource
 import okio.Okio.buffer
 import okio.Okio.source
+import org.slf4j.Logger
+import java.io.BufferedWriter
 import java.net.Socket
 
 internal fun <T> Completable.andThenEmit(value: T) = andThenObserve { Observable.just(value) }
@@ -33,23 +35,26 @@ internal fun <T> Completable.andThenEmit(value: T) = andThenObserve { Observable
 internal inline fun <T> Completable.andThenObserve(crossinline func: () -> Observable<T>): Observable<T> =
         andThen(Observable.unsafeCreate { func().subscribe(it::onNext, it::onError, it::onComplete) })
 
-fun Socket.toObservable(input: Observable<String>): Observable<String> {
+fun Socket.toObservable(input: Observable<String>, logger: Logger): Observable<String> {
     return Observable.create { emitter ->
         try {
             val disposable = CompositeDisposable()
             emitter.setDisposable(disposable)
 
             val out = getOutputStream().bufferedWriter()
-            input.observeOn(Schedulers.io()).subscribe {
-                out.write(it)
-                out.newLine()
-                out.flush()
-            } addTo disposable
+            input.observeOn(Schedulers.io())
+                    .subscribe({ out.writeAndFlush(it) }, { error ->
+                        logger.info("Socket sending threw. Attempting onError", error)
+                        if (!emitter.isDisposed) emitter.onError(error)
+                    }) addTo disposable
 
             buffer(source(getInputStream()))
                     .readLines()
                     .subscribeOn(Schedulers.io())
-                    .subscribe { emitter.onNext(it) } addTo disposable
+                    .subscribe({ emitter.onNext(it) }, { error ->
+                        logger.info("Socket reading threw. Attempting onError", error)
+                        if (!emitter.isDisposed) emitter.onError(error)
+                    }) addTo disposable
 
             object : Disposable {
                 override fun isDisposed(): Boolean {
@@ -57,13 +62,22 @@ fun Socket.toObservable(input: Observable<String>): Observable<String> {
                 }
 
                 override fun dispose() {
+                    logger.info("Disposing socket observable")
                     close()
                 }
             } addTo disposable
+
         } catch (error: Throwable) {
+            logger.info("Socket setup threw. Attempting onError", error)
             if (!emitter.isDisposed) emitter.onError(error)
         }
     }
+}
+
+private fun BufferedWriter.writeAndFlush(value: String) {
+    write(value)
+    newLine()
+    flush()
 }
 
 inline infix fun Disposable.addTo(compositeDisposable: CompositeDisposable) = apply {
