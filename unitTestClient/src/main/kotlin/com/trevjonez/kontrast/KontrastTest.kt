@@ -20,6 +20,13 @@ import ar.com.hjg.pngj.ImageInfo
 import ar.com.hjg.pngj.ImageLineInt
 import ar.com.hjg.pngj.PngReader
 import ar.com.hjg.pngj.PngWriter
+import com.squareup.moshi.Moshi
+import com.squareup.moshi.Types
+import com.trevjonez.kontrast.jvm.FileAdapter
+import com.trevjonez.kontrast.jvm.InstrumentationTestStatus
+import com.trevjonez.kontrast.jvm.PulledOutput
+import okio.Okio.buffer
+import okio.Okio.source
 import org.junit.Assert
 import org.junit.Assume.assumeTrue
 import org.junit.Test
@@ -32,6 +39,7 @@ import java.lang.Math.max
 @RunWith(Parameterized::class)
 class KontrastTest(val case: KontrastCase) {
     companion object {
+
         @JvmStatic
         @Parameters(name = "{0}")
         fun params(): Iterable<Any> {
@@ -44,15 +52,18 @@ class KontrastTest(val case: KontrastCase) {
                 childDirectories(keyRoot) //classDirs
                         .flatMap(this::childDirectories) //methodDirs
                         .flatMap(this::childDirectories) //testDirs
-                        .map { KontrastCase(it, File(inputRoot, "${it.parentFile.parentFile.name}${File.separator}${it.parentFile.name}${File.separator}${it.name}")) }
+                        .map { KontrastCase(it, File(inputRoot, "${it.parentFile.parentFile.name}${File.separator}${it.parentFile.name}${File.separator}${it.name}"), null) }
             else emptyList()
 
-            val inputCases = if (inputRoot.exists())
-                childDirectories(inputRoot) //classDirs
-                        .flatMap(this::childDirectories) //methodDirs
-                        .flatMap(this::childDirectories)
-                        .map { KontrastCase(File(keyRoot, "${it.parentFile.parentFile.name}${File.separator}${it.parentFile.name}${File.separator}${it.name}"), it) }
-            else emptyList()
+            val moshi = Moshi.Builder().add(FileAdapter()).build()
+            val testCaseSetAdapter = moshi.adapter<Set<PulledOutput>>(Types.newParameterizedType(Set::class.java, PulledOutput::class.java))
+            val inputCasesRaw = buffer(source(File(inputRoot, "test-cases.json"))).use {
+                testCaseSetAdapter.fromJson(it)
+            } ?: throw NullPointerException("can't run test cases without any input.")
+
+            val inputCases = inputCasesRaw.map {
+                KontrastCase(File(keyRoot, it.output.keySubDirectory()), File(inputRoot, it.output.keySubDirectory()), it)
+            }
 
             return keyCases.mergeWith(inputCases)
         }
@@ -63,7 +74,7 @@ class KontrastTest(val case: KontrastCase) {
             val result = associateBy { it.toString() }.toMutableMap()
 
             other.forEach {
-                result.putIfAbsent(it.toString(), it)
+                result[it.toString()] = result[it.toString()]?.copy(pulledOutput = it.pulledOutput!!) ?: it
             }
 
             return result.map { it.value }
@@ -72,6 +83,11 @@ class KontrastTest(val case: KontrastCase) {
 
     @Test
     fun kontrastCase() {
+        val testStatus = case.pulledOutput?.output?.testStatus
+        if(testStatus != null && testStatus != InstrumentationTestStatus.OK) {
+            assumeTrue("On device portion of test run failed with status: $testStatus", false)
+        }
+
         assumeTrue("Input missing for case with test key", case.inputDir.exists())
         assumeTrue("Key missing for case with input", case.keyDir.exists())
 

@@ -16,4 +16,4 @@
 
 rootProject.name = 'Kontrast'
 
-include ':plugin', ':androidTestClient', ':appClient', ':app', ':unitTestClient', ':reportJs'
+include ':plugin', ':androidTestClient', ':appClient', ':app', ':unitTestClient', ':reportJs', 'jvmCommon'

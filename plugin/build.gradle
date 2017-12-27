@@ -38,21 +38,18 @@ dependencies {
     compile group: 'com.android.tools.build', name: 'gradle', version: android_plugin_version
     compile group: 'io.reactivex.rxjava2', name: 'rxjava', version: '2.1.5'
     compile group: 'azadev.kotlin', name: 'aza-kotlin-css', version: '1.0'
-    compile group: 'com.squareup.moshi', name: 'moshi', version: '1.5.0'
+    compile project(':jvmCommon')
 }
 
 dependencies {
     testCompile group: 'junit', name: 'junit', version: '4.12'
     testCompile group: 'org.assertj', name: 'assertj-core', version: '3.8.0'
     testCompile group: 'commons-io', name: 'commons-io', version: '2.5'
+    testCompile group: 'org.slf4j', name: 'slf4j-simple', version: '1.7.25'
 }
 
 configurations {
     reportResources
-}
-
-dependencies {
-    reportResources project(':reportJs')
 }
 
 import de.undercouch.gradle.tasks.download.Download
@@ -76,12 +73,9 @@ task downloadMdcJs(type: Download) {
 }
 
 processResources {
-    dependsOn(':reportJs:jar')
-    configurations.reportResources.each { File file ->
-        if (file.name == "reportJs.jar") {
-            from zipTree(file.absolutePath)
-        }
-    }
+    dependsOn(':reportJs:runDceKotlinJs')
+    from file("${rootProject.project(":reportJs").buildDir.path}/classes/kotlin/main/min/kotlin.js")
+    from file("${rootProject.project(":reportJs").buildDir.path}/classes/kotlin/main/min/reportJs.js")
     from downloadMdcCss
     from downloadMdcJs
 }
@@ -91,12 +85,14 @@ test {
     testLogging.exceptionFormat = 'full'
     systemProperty("KontrastVersion", version)
     environment("ANDROID_HOME", androidHome())
+    outputs.upToDateWhen { false }
 }
 
 tasks.findByPath('test').dependsOn(':plugin:install')
 tasks.findByPath('test').dependsOn(':unitTestClient:install')
 tasks.findByPath('test').dependsOn(':androidTestClient:install')
 tasks.findByPath('test').dependsOn(':appClient:install')
+tasks.findByPath('test').dependsOn(':jvmCommon:install')
 tasks.findByPath('test').dependsOn(':plugin:startAvd_Nexus_5X_API_O')
 tasks.findByPath('test').finalizedBy(':plugin:stopAvd_Nexus_5X_API_O')
 

@@ -39,6 +39,10 @@ import kotlinx.html.style
 import kotlinx.html.title
 import org.gradle.api.tasks.testing.TestResult
 import java.io.File
+import com.trevjonez.kontrast.jvm.InstrumentationTestStatus.ERROR as ON_DEVICE_ERROR
+import com.trevjonez.kontrast.jvm.InstrumentationTestStatus.FAILED_ASSUMPTION as ON_DEVICE_FAILED_ASSUMPTION
+import com.trevjonez.kontrast.jvm.InstrumentationTestStatus.FAILURE as ON_DEVICE_FAILURE
+import com.trevjonez.kontrast.jvm.InstrumentationTestStatus.IGNORED as ON_DEVICE_IGNORED
 
 class ReportIndexHtml(val outputDir: File, val variantName: String, val deviceAlias: String, val testCases: List<TestCaseData>) : ReportFile {
     override fun write() {
@@ -76,15 +80,9 @@ class ReportIndexHtml(val outputDir: File, val variantName: String, val deviceAl
                                     nav("mdc-tab-bar") {
                                         autoInit("MDCTabBar")
                                         span(classes = "mdc-tab mdc-tab--active AllTab") { text("All: ${testCases.size}") }
-
-                                        val passedCount = testCases.filter { it.status == TestResult.ResultType.SUCCESS }.size
-                                        span(classes = "mdc-tab PassedTab") { text("Passed: $passedCount") }
-
-                                        val failedCount = testCases.filter { it.status == TestResult.ResultType.FAILURE }.size
-                                        span(classes = "mdc-tab FailedTab") { text("Failed: $failedCount") }
-
-                                        val skippedCount = testCases.filter { it.status == TestResult.ResultType.SKIPPED }.size
-                                        span(classes = "mdc-tab SkippedTab") { text("Skipped: $skippedCount") }
+                                        span(classes = "mdc-tab PassedTab") { text("Passed: ${testCases.passed().size}") }
+                                        span(classes = "mdc-tab FailedTab") { text("Failed: ${testCases.failed().size}") }
+                                        span(classes = "mdc-tab SkippedTab") { text("Skipped: ${testCases.skipped().size}") }
                                         span("mdc-tab-bar__indicator")
                                     }
                                 }
@@ -94,9 +92,9 @@ class ReportIndexHtml(val outputDir: File, val variantName: String, val deviceAl
                         h3("mdc-typography--headline mdc-toolbar-fixed-adjust report-body-content") { text("Test Cases") }
 
                         testCases.forEach { testCase ->
-                            div("mdc-card report-card report-body-content ${cardClass(testCase.status)}") {
+                            div("mdc-card report-card report-body-content ${testCase.cardClass()}") {
                                 section("mdc-card__primary") {
-                                    h1("mdc-card__title mdc-card__title--large ${titleClass(testCase.status)}") {
+                                    h1("mdc-card__title mdc-card__title--large ${testCase.titleClass()}") {
                                         text(testCase.testKey)
                                     }
                                     h2("mdc-card__subtitle") { text("${testCase.className}#${testCase.methodName}") }
@@ -189,25 +187,37 @@ class ReportIndexHtml(val outputDir: File, val variantName: String, val deviceAl
         return differentPairs
     }
 
-    private fun cardClass(status: TestResult.ResultType): String {
-        return when (status) {
-            TestResult.ResultType.SKIPPED -> "skipped"
-            TestResult.ResultType.SUCCESS -> "success"
-            TestResult.ResultType.FAILURE -> "failed"
+    private fun TestCaseData.cardClass(): String {
+        return when {
+            wasSkipped() -> "skipped"
+            didPass()    -> "success"
+            didFail()    -> "failed"
+            else         -> throw IllegalStateException("unhandled condition $this")
         }
     }
 
-    private fun titleClass(status: TestResult.ResultType): String {
-        return when (status) {
-            TestResult.ResultType.SKIPPED -> "skipped-title"
-            TestResult.ResultType.SUCCESS -> "success-title"
-            TestResult.ResultType.FAILURE -> "failed-title"
+    private fun TestCaseData.titleClass(): String {
+        return when {
+            wasSkipped() -> "skipped-title"
+            didPass()    -> "success-title"
+            didFail()    -> "failed-title"
+            else         -> throw IllegalStateException("unhandled condition $this")
         }
     }
 
     private fun TestCaseData.cardBodyMessage(): String {
         return when (status) {
-            TestResult.ResultType.SKIPPED -> testSkipCauseMessage()
+            TestResult.ResultType.SKIPPED -> {
+                deviceDiagnostics?.let {
+                    when (it.status) {
+                        ON_DEVICE_FAILURE           -> "Instrumentation portion of test had a failure, inspect logcat for details"
+                        ON_DEVICE_ERROR             -> "Instrumentation portion of test had an error, inspect logcat for details"
+                        ON_DEVICE_IGNORED           -> "Instrumentation portion of test was ignored"
+                        ON_DEVICE_FAILED_ASSUMPTION -> "Instrumentation portion of test had a failed assumption"
+                        else                        -> null
+                    }
+                } ?: testSkipCauseMessage()
+            }
             TestResult.ResultType.SUCCESS -> ""
             TestResult.ResultType.FAILURE -> "Test failed due to variant pixels"
         }
@@ -233,4 +243,32 @@ class ReportIndexHtml(val outputDir: File, val variantName: String, val deviceAl
     private fun Tag.autoInit(className: String) {
         attributes.put("data-mdc-auto-init", className)
     }
+}
+
+private fun List<TestCaseData>.passed(): List<TestCaseData> {
+    return filter { it.didPass() }
+}
+
+private fun List<TestCaseData>.failed(): List<TestCaseData> {
+    return filter { it.didFail() }
+}
+
+private fun List<TestCaseData>.skipped(): List<TestCaseData> {
+    return filter { it.wasSkipped() }
+}
+
+private fun TestCaseData.didPass(): Boolean {
+    return status == TestResult.ResultType.SUCCESS
+}
+
+private fun TestCaseData.didFail(): Boolean {
+    return status == TestResult.ResultType.FAILURE ||
+           (status == TestResult.ResultType.SKIPPED &&
+            ((deviceDiagnostics?.status == ON_DEVICE_FAILURE) || (deviceDiagnostics?.status == ON_DEVICE_ERROR)))
+}
+
+private fun TestCaseData.wasSkipped(): Boolean {
+    return status == TestResult.ResultType.SKIPPED &&
+           !(((deviceDiagnostics?.status == ON_DEVICE_FAILURE) == true) ||
+             ((deviceDiagnostics?.status == ON_DEVICE_ERROR) == true))
 }

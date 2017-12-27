@@ -41,7 +41,7 @@ class KontrastPluginTest {
         GradleRunner.create()
                 .withProjectDir(projectDir)
                 .forwardOutput()
-                .withArguments("app:captureDebugTestKeys_Nexus_5X_API_O", "--info", "--stacktrace")
+                .withArguments("app:captureDebugTestKeys_Nexus_5X_API_O")
                 .build()
 
         assertThat(File(projectDir, "app/Kontrast/debug/Nexus_5X_API_O/com.trevjonez.kontrast.app.CardLayoutKontrastTest")).isDirectory().satisfies {
@@ -77,7 +77,7 @@ class KontrastPluginTest {
         GradleRunner.create()
                 .withProjectDir(projectDir)
                 .forwardOutput()
-                .withArguments("app:testDebugKontrastTest_Nexus_5X_API_O", "--info", "--stacktrace")
+                .withArguments("app:testDebugKontrastTest_Nexus_5X_API_O")
                 .buildAndFail()
 
         assertThat(File(projectDir, "app/build/reports/Kontrast/debug/Nexus_5X_API_O/images/com.trevjonez.kontrast.app.CardLayoutKontrastTest")).isDirectory().satisfies {
@@ -99,6 +99,55 @@ class KontrastPluginTest {
             }
         }
     }
+
+    @Test
+    fun runWithKnownBadTestsOnDevice() {
+        val kontrastVersion = System.getProperty("KontrastVersion")
+        val projectDir = File("build/pluginTestProjects/runWithKnownBadTestsOnDevice").apply {
+            deleteRecursively()
+            mkdirs()
+            copyDirectory(File(".", "../app"), File(this, "app"))
+            copyDirectory(File(javaClass.getResource("/Kontrast").path), File(this, "app/Kontrast"))
+            File(this, "local.properties").writeText("sdk.dir=${System.getenv("HOME")}/Library/Android/sdk")
+            File(this, "settings.gradle").writeText("include ':app'")
+            File(this, "build.gradle").writeText(rootGradleFileContents(kontrastVersion))
+            File(this, "app/kontrast.gradle").writeText(kontrastGradleContents(kontrastVersion))
+            File(this, "app/src/androidTest/java/com/trevjonez/kontrast/app/CardLayoutKontrastTest.kt").apply {
+                val lines = readLines()
+                val keep = lines.subList(0, lines.size - 1)
+                delete()
+                keep.forEach { appendText(it + System.lineSeparator()) }
+                appendText(extraFailingTests)
+                appendText("}")
+            }
+        }
+
+        GradleRunner.create()
+                .withProjectDir(projectDir)
+                .forwardOutput()
+                .withArguments("app:testDebugKontrastTest_Nexus_5X_API_O", "--info", "--stacktrace")
+                .buildAndFail()
+    }
+
+    val extraFailingTests = """
+    @Test
+    @KontrastTest
+    fun failingAssertOnDeviceTest() {
+        org.junit.Assert.fail("Failed assertion test")
+    }
+
+    @Test
+    @KontrastTest
+    fun failAssumeOnDeviceTest() {
+        org.junit.Assume.assumeTrue("Failed assumption test", false)
+    }
+
+    @Test
+    @KontrastTest
+    fun errorOnDeviceTest() {
+        requireNotNull(null)
+    }
+    """
 
     fun rootGradleFileContents(kontrastVersion: String) = """
 buildscript {

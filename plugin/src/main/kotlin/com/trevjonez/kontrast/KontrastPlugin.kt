@@ -26,6 +26,9 @@ import com.trevjonez.kontrast.adb.AdbStatus
 import com.trevjonez.kontrast.adb.getEmulatorName
 import com.trevjonez.kontrast.dsl.KontrastExtension
 import com.trevjonez.kontrast.internal.testEvents
+import com.trevjonez.kontrast.jvm.FileAdapter
+import com.trevjonez.kontrast.jvm.PulledOutput
+import com.trevjonez.kontrast.report.DeviceTestDiagnostics
 import com.trevjonez.kontrast.report.TestCaseOutput
 import com.trevjonez.kontrast.task.CaptureTestKeyTask
 import com.trevjonez.kontrast.task.HtmlReportTask
@@ -33,6 +36,7 @@ import com.trevjonez.kontrast.task.InstallApkTask
 import com.trevjonez.kontrast.task.RenderOnDeviceTask
 import io.reactivex.Observable
 import io.reactivex.Single
+import io.reactivex.functions.BiFunction
 import io.reactivex.schedulers.Schedulers
 import okio.Okio.buffer
 import okio.Okio.source
@@ -43,6 +47,8 @@ import org.gradle.api.Task
 import org.gradle.api.internal.file.collections.SimpleFileCollection
 import org.gradle.api.tasks.Copy
 import org.gradle.api.tasks.testing.Test
+import org.gradle.api.tasks.testing.TestDescriptor
+import org.gradle.api.tasks.testing.TestResult
 import java.io.File
 import java.io.FileNotFoundException
 import kotlin.reflect.KClass
@@ -60,7 +66,9 @@ class KontrastPlugin : Plugin<Project> {
 
     override fun apply(project: Project) {
 
-        moshi = Moshi.Builder().build()
+        moshi = Moshi.Builder()
+                .add(FileAdapter())
+                .build()
         kontrastDsl = project.extensions.create("Kontrast", KontrastExtension::class.java, project)
 
         if (project.configurations.findByName(KONTRAST_CONFIG) == null) {
@@ -183,25 +191,30 @@ class KontrastPlugin : Plugin<Project> {
             outputs.upToDateWhen { false }
 
             val adapter = moshi.adapter<Map<String, String>>(Types.newParameterizedType(Map::class.java, String::class.java, String::class.java))
-            reportTask.testCases = testEvents().map { (descriptor, result) ->
-                val names = descriptor.name
-                        .removePrefix("kontrastCase[")
-                        .removeSuffix("]")
-                        .split("$$")
+            reportTask.testCases = testEvents()
+                    .withLatestFrom(renderTask.resultSubject.map { it.associateBy { it.output.testKey } }, BiFunction { testEvent: Pair<TestDescriptor, TestResult>, pulledOutputs: Map<String, PulledOutput> ->
+                        val (descriptor, result) = testEvent
+                        val names = descriptor.name
+                                .removePrefix("kontrastCase[")
+                                .removeSuffix("]")
+                                .split("$$")
 
-                val inputExtras = try {
-                    adapter.fromJson(buffer(source(File(renderTask.outputsDir, "${names.joinToString(File.separator)}${File.separator}extras.json")))) ?: mapOf()
-                } catch (ignore: FileNotFoundException) {
-                    mapOf<String, String>()
-                }
-                val keyExtras = try {
-                    adapter.fromJson(buffer(source(File(keyTask.outputsDir, "${names.joinToString(File.separator)}${File.separator}extras.json")))) ?: mapOf()
-                } catch (ignore: FileNotFoundException) {
-                    mapOf<String, String>()
-                }
+                        val inputExtras = try {
+                            adapter.fromJson(buffer(source(File(renderTask.outputsDir, "${names.joinToString(File.separator)}${File.separator}extras.json")))) ?: mapOf()
+                        } catch (ignore: FileNotFoundException) {
+                            mapOf<String, String>()
+                        }
+                        val keyExtras = try {
+                            adapter.fromJson(buffer(source(File(keyTask.outputsDir, "${names.joinToString(File.separator)}${File.separator}extras.json")))) ?: mapOf()
+                        } catch (ignore: FileNotFoundException) {
+                            mapOf<String, String>()
+                        }
 
-                TestCaseOutput(names[0], names[1], names[2], inputExtras, keyExtras, result.resultType, renderTask.outputsDir, keyTask.outputsDir)
-            }.toList()
+                        val deviceDiagnostics = pulledOutputs[names[2]]?.output?.testStatus?.let {
+                            DeviceTestDiagnostics(it, "TODO('logcat goes here')")
+                        }
+                        TestCaseOutput(names[0], names[1], names[2], inputExtras, keyExtras, result.resultType, deviceDiagnostics, renderTask.outputsDir, keyTask.outputsDir)
+                    }).toList()
         }
     }
 
@@ -226,6 +239,7 @@ class KontrastPlugin : Plugin<Project> {
             testPackage = "${variant.applicationId}.test"
             outputsDir = File(project.buildDir, "Kontrast${File.separator}${variant.name}${File.separator}${targetDevice.alias ?: targetDevice.id}")
             extrasAdapter = moshi.adapter(Types.newParameterizedType(Map::class.java, String::class.java, String::class.java))
+            outputSetAdapter = moshi.adapter(Types.newParameterizedType(Set::class.java, PulledOutput::class.java))
             appApk = variant.apk
             testApk = variant.testApk
             outputs.upToDateWhen { false }

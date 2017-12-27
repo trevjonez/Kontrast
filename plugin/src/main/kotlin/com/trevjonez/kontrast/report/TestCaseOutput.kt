@@ -26,6 +26,7 @@ data class TestCaseOutput(
         override val inputExtras: Map<String, String>,
         override val keyExtras: Map<String, String>,
         override val status: TestResult.ResultType,
+        override val deviceDiagnostics: DeviceTestDiagnostics?,
         val inputRoot: File,
         val keyRoot: File) : TestCaseData {
     override val inputImage = File(inputRoot, "${subDirectory()}${File.separator}image.png")

@@ -16,9 +16,10 @@
 
 package com.trevjonez.kontrast
 
+import com.trevjonez.kontrast.jvm.PulledOutput
 import java.io.File
 
-class KontrastCase(val keyDir: File, val inputDir: File) {
+data class KontrastCase(val keyDir: File, val inputDir: File, val pulledOutput: PulledOutput?) {
     override fun toString(): String {
         val className: String = keyDir.parentFile.parentFile.name
         val methodName: String = keyDir.parentFile.name

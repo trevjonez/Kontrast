@@ -20,12 +20,15 @@ import com.squareup.moshi.JsonAdapter
 import com.trevjonez.kontrast.adb.Adb
 import com.trevjonez.kontrast.adb.AdbDevice
 import com.trevjonez.kontrast.internal.Collector
-import com.trevjonez.kontrast.internal.PulledOutput
-import com.trevjonez.kontrast.internal.TestOutput
 import com.trevjonez.kontrast.internal.andThenEmit
+import com.trevjonez.kontrast.jvm.InstrumentationTestStatus
+import com.trevjonez.kontrast.jvm.PulledOutput
+import com.trevjonez.kontrast.jvm.TestOutput
+import io.reactivex.Completable
 import io.reactivex.Observable
 import io.reactivex.schedulers.Schedulers
 import io.reactivex.subjects.BehaviorSubject
+import okio.Okio
 import okio.Okio.buffer
 import okio.Okio.sink
 import org.gradle.api.tasks.Input
@@ -40,6 +43,8 @@ open class RenderOnDeviceTask : AdbCommandTask() {
     internal val resultSubject: BehaviorSubject<Set<PulledOutput>> = BehaviorSubject.create()
 
     lateinit var extrasAdapter: JsonAdapter<Map<String, String>>
+
+    internal lateinit var outputSetAdapter: JsonAdapter<Set<PulledOutput>>
 
     lateinit var device: AdbDevice
 
@@ -68,7 +73,6 @@ open class RenderOnDeviceTask : AdbCommandTask() {
 
         val pulledOutputs = adb.shell(device, "am instrument -w -r -e debug false -e annotation com.trevjonez.kontrast.KontrastTest $testPackage/$testRunner")
                 .map(String::trim)
-                .doOnEach { logger.info("$it") }
                 .takeWhile { !it.startsWith("INSTRUMENTATION_CODE") }
                 .parseTestCases(logger)
                 .pullOutputsAndDeleteFromDevice(device, outputsDir, adb, logger)
@@ -81,26 +85,36 @@ open class RenderOnDeviceTask : AdbCommandTask() {
         val outputByKeySubDir = mutableMapOf<String, PulledOutput>()
 
         pulledOutputs.forEach {
-            outputByKeySubDir.put(it.output.keySubDirectory(), it)?.let {
-                ambiguousCases.add(it.output.keySubDirectory())
+            if (it.output.testStatus == InstrumentationTestStatus.OK) {
+                outputByKeySubDir.put(it.output.keySubDirectory(), it)?.let {
+                    ambiguousCases.add(it.output.keySubDirectory())
+                }
             }
         }
 
         if (ambiguousCases.isNotEmpty())
             throw IllegalStateException("There where ambiguous test outputs, use kontrastRule.ofView(View, String) to disambiguate.${ambiguousCases.joinToString(",\n", "\n")}")
 
+        val testCaseListingFile = File(outputsDir, "test-cases.json")
+        val buffer = Okio.buffer(Okio.sink(testCaseListingFile))
+        outputSetAdapter.toJson(buffer, pulledOutputs)
+        buffer.close()
+
+        logger.info("found results from ${pulledOutputs.size} kontrast tests")
         resultSubject.onNext(pulledOutputs)
     }
 }
 
 internal fun Observable<PulledOutput>.writeExtrasToFile(outputsDir: File, adapter: JsonAdapter<Map<String, String>>, logger: Logger): Observable<PulledOutput> {
     return doOnNext { pulledOutput ->
-        File(File(outputsDir, pulledOutput.output.keySubDirectory()), "extras.json").apply {
-            logger.info("writing extras file [${this.absolutePath}]")
-            if (exists()) delete()
-            createNewFile()
-            buffer(sink(this)).use {
-                adapter.toJson(it, pulledOutput.output.extras)
+        if (pulledOutput.output.testStatus == InstrumentationTestStatus.OK) {
+            File(File(outputsDir, pulledOutput.output.keySubDirectory()), "extras.json").apply {
+                logger.info("writing extras file [${this.absolutePath}]")
+                if (exists()) delete()
+                createNewFile()
+                buffer(sink(this)).use {
+                    adapter.toJson(it, pulledOutput.output.extras)
+                }
             }
         }
     }
@@ -111,10 +125,17 @@ internal fun Observable<TestOutput>.pullOutputsAndDeleteFromDevice(device: AdbDe
         //don't use sub directory here because the adb pull will copy the leaf directory down
         val localOutputDir = File(outputsDir, testOutput.methodSubDirectory())
 
-        logger.info("attempting to pull and delete [${testOutput.outputDirectory.absolutePath}]")
-        adb.pull(device, testOutput.outputDirectory, localOutputDir, true)
-                .subscribeOn(Schedulers.io())
-                .andThen(adb.deleteDir(device, testOutput.outputDirectory).subscribeOn(Schedulers.io()))
+        val testOutputDir = testOutput.outputDirectory
+        if (testOutputDir != null) {
+            logger.info("attempting to pull and delete [${testOutputDir.absolutePath}]")
+            adb.pull(device, testOutputDir, localOutputDir, true)
+                    .subscribeOn(Schedulers.io())
+                    .andThen(adb.deleteDir(device, testOutputDir)
+                                     .subscribeOn(Schedulers.io()))
+        } else {
+            logger.info("nothing to pull/delete")
+            Completable.complete()
+        }
                 .andThenEmit(PulledOutput(localOutputDir, testOutput))
     }
 }
@@ -122,11 +143,36 @@ internal fun Observable<TestOutput>.pullOutputsAndDeleteFromDevice(device: AdbDe
 private const val INST_STAT_CODE = "INSTRUMENTATION_STATUS_CODE"
 
 internal fun Observable<String>.parseTestCases(logger: Logger): Observable<TestOutput> {
-    return doOnNext { logger.info("InstrumentationOutput: $it") }
-            .scan(Collector()) { (chunk, closed), next ->
-                Collector(if (closed) next else "$chunk${System.lineSeparator()}$next", next.startsWith(INST_STAT_CODE))
+    return scan(Collector()) { (chunk, closed, latestCode, read42), next ->
+        var code42Hit = read42
+        val statusCode = when {
+            closed                          -> {
+                logger.info("Collector closed, resetting status code scan. next line: $next")
+                code42Hit = false
+                1
             }
+            next.startsWith(INST_STAT_CODE) -> {
+                val code = next.removePrefix("$INST_STAT_CODE: ").trim().toInt()
+                logger.info("Read code: $code: $next")
+                if (code == 42) code42Hit = true
+                if (code != 42 && code != 1) code else latestCode
+            }
+            else                            -> {
+                logger.info("no status code update for this line: $next")
+                latestCode
+            }
+        }
+
+        logger.info("Retaining latest code: $statusCode")
+
+        Collector(if (closed) next else "$chunk${System.lineSeparator()}$next",
+                  statusCode == 0 && code42Hit || statusCode.isOneOf(-1, -2, -3, -4),
+                  statusCode, code42Hit)
+    }
             .filter(Collector::closed)
-            .filter { it.chunk.contains("$INST_STAT_CODE: 42") }
-            .map(Collector::toOutput)
+            .map({ collector -> collector.toOutput(logger) })
+}
+
+private fun Int.isOneOf(vararg values: Int): Boolean {
+    return values.contains(this)
 }
