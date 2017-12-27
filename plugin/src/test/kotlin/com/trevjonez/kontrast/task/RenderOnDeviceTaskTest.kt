@@ -16,17 +16,18 @@
 
 package com.trevjonez.kontrast.task
 
-import com.trevjonez.kontrast.internal.TestOutput
+import com.trevjonez.kontrast.jvm.InstrumentationTestStatus
+import com.trevjonez.kontrast.jvm.TestOutput
 import io.reactivex.Observable
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.Test
-import org.slf4j.LoggerFactory
+import org.slf4j.impl.SimpleLoggerFactory
 import java.io.File
 
 
 class RenderOnDeviceTaskTest {
 
-    private val logger = LoggerFactory.getLogger(RenderOnDeviceTaskTest::class.java)
+    private val logger = SimpleLoggerFactory().getLogger(RenderOnDeviceTaskTest::class.java.simpleName)
 
     @Test
     fun testParsingIntegrationCheck() {
@@ -64,11 +65,13 @@ INSTRUMENTATION_CODE: -1
 """
         val testSub = Observable.fromIterable(basicInput.split('\n')).parseTestCases(logger).test()
 
+        testSub.assertNoErrors()
         assertThat(testSub.values()[0]).isEqualTo(TestOutput("johnDoeCard",
                                                              "johnDoeCard",
                                                              null,
                                                              "com.trevjonez.kontrast.CardLayoutKontrastTest",
                                                              mapOf("something" to """with{"nested"="comma space or colon:", "will"="break_the_parser"}""", "this" to "needs fixed"),
-                                                             File("/storage/emulated/0/Android/data/com.trevjonez.kontrast.app/files/Kontrast/com.trevjonez.kontrast.CardLayoutKontrastTest/johnDoeCard/johnDoeCard")))
+                                                             File("/storage/emulated/0/Android/data/com.trevjonez.kontrast.app/files/Kontrast/com.trevjonez.kontrast.CardLayoutKontrastTest/johnDoeCard/johnDoeCard"),
+                                                             InstrumentationTestStatus.OK))
     }
 }

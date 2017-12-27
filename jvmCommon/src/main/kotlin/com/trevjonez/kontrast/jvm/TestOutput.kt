@@ -14,16 +14,17 @@
  *    limitations under the License.
  */
 
-package com.trevjonez.kontrast.internal
+package com.trevjonez.kontrast.jvm
 
 import java.io.File
 
-internal data class TestOutput(val testKey: String,
+data class TestOutput(val testKey: String,
                       val methodName: String,
                       val description: String?,
                       val className: String,
                       val extras: Map<String, String>,
-                      val outputDirectory: File) {
+                      val outputDirectory: File?,
+                      val testStatus: InstrumentationTestStatus) {
 
     fun keySubDirectory(): String {
         return className + File.separator + methodName + File.separator + testKey

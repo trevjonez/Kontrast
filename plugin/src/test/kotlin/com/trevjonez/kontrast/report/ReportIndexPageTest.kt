@@ -16,6 +16,7 @@
 
 package com.trevjonez.kontrast.report
 
+import com.trevjonez.kontrast.jvm.InstrumentationTestStatus.OK
 import org.apache.commons.io.FileUtils
 import org.gradle.api.tasks.testing.TestResult
 import org.junit.Test
@@ -35,7 +36,8 @@ class ReportIndexPageTest {
                                        inputExtras = mapOf("Width" to "320dp", "Height" to "wrap_content", "Username" to "Jack Doe"),
                                        keyExtras = mapOf(),
                                        status = TestResult.ResultType.SKIPPED, //Due to missing test key
-                                       reportImageDir = File(outputDir, "images"))
+                                       reportImageDir = File(outputDir, "images"),
+                                       deviceDiagnostics = DeviceTestDiagnostics(OK, "some logcat here"))
 
         val jane = TestCaseReportInput(className = "com.trevjonez.kontrast.app.CardLayoutKontrastTest",
                                        methodName = "janeDoeCard",
@@ -43,7 +45,8 @@ class ReportIndexPageTest {
                                        inputExtras = mapOf("Width" to "320dp", "Height" to "wrap_content", "Username" to "Jane Doe"),
                                        keyExtras = mapOf("Width" to "320dp", "Height" to "wrap_content", "Username" to "Jane Doe"),
                                        status = TestResult.ResultType.SUCCESS,
-                                       reportImageDir = File(outputDir, "images"))
+                                       reportImageDir = File(outputDir, "images"),
+                                       deviceDiagnostics = DeviceTestDiagnostics(OK, "some logcat here"))
 
         val john = TestCaseReportInput(className = "com.trevjonez.kontrast.app.CardLayoutKontrastTest",
                                        methodName = "johnDoeCard",
@@ -54,7 +57,8 @@ class ReportIndexPageTest {
                                                          "anotherLongWindedThing" to "so that it wraps lines",
                                                          "yet another" to "long extra"),
                                        status = TestResult.ResultType.FAILURE, //Key and input variance
-                                       reportImageDir = File(outputDir, "images"))
+                                       reportImageDir = File(outputDir, "images"),
+                                       deviceDiagnostics = DeviceTestDiagnostics(OK, "some logcat here"))
 
         val josh = TestCaseReportInput(className = "com.trevjonez.kontrast.app.CardLayoutKontrastTest",
                                        methodName = "joshDoeCard",
@@ -62,7 +66,8 @@ class ReportIndexPageTest {
                                        inputExtras = mapOf(),
                                        keyExtras = mapOf("Width" to "320dp", "Height" to "wrap_content", "Username" to "John Doe"),
                                        status = TestResult.ResultType.SKIPPED, //Missing input
-                                       reportImageDir = File(outputDir, "images"))
+                                       reportImageDir = File(outputDir, "images"),
+                                       deviceDiagnostics = null)
 
         ReportIndex(outputDir, "Index page render test", "Not on a device", listOf(jack, jane, john, josh)).write()
     }

@@ -14,13 +14,19 @@
  *    limitations under the License.
  */
 
-apply plugin: 'kotlin2js'
-apply plugin: 'kotlin-dce-js'
+package com.trevjonez.kontrast.jvm
 
-dependencies {
-    compile group: 'org.jetbrains.kotlin', name: 'kotlin-stdlib-js', version: kotlin_version
-}
+enum class InstrumentationTestStatus {
+    OK, ERROR, FAILURE, IGNORED, FAILED_ASSUMPTION;
 
-compileKotlin2Js {
-    kotlinOptions.sourceMap = true
+    companion object {
+        fun fromCode(code: Int) = when (code) {
+            0    -> OK
+            -1   -> ERROR
+            -2   -> FAILURE
+            -3   -> IGNORED
+            -4   -> FAILED_ASSUMPTION
+            else -> throw IllegalArgumentException("Unknown/Bad code: $code")
+        }
+    }
 }

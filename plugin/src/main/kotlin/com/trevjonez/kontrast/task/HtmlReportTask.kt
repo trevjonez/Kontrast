@@ -39,7 +39,7 @@ open class HtmlReportTask : DefaultTask() {
 
     @TaskAction
     fun invoke() {
-        if(project.gradle.startParameter.taskNames.contains(name))
+        if (project.gradle.startParameter.taskNames.contains(name))
             throw IllegalArgumentException("Html report task is ran automatically after the kontrast test task(s), do not invoke explicitly.")
 
         if (outputDir.exists())
@@ -52,7 +52,7 @@ open class HtmlReportTask : DefaultTask() {
                 TestCaseReportInput(testCase.className, testCase.methodName,
                                     testCase.testKey, testCase.inputExtras,
                                     testCase.keyExtras, testCase.status,
-                                    File(outputDir, "images"))
+                                    testCase.deviceDiagnostics, File(outputDir, "images"))
                         .also { reportCase ->
                             if (testCase.inputImage.exists())
                                 FileUtils.copyFile(testCase.inputImage, reportCase.inputImage)

@@ -14,8 +14,8 @@
  *    limitations under the License.
  */
 
-package com.trevjonez.kontrast.internal
+package com.trevjonez.kontrast.jvm
 
 import java.io.File
 
-internal data class PulledOutput(val localOutputDir: File, val output: TestOutput)
+data class PulledOutput(val localOutputDir: File, val output: TestOutput)

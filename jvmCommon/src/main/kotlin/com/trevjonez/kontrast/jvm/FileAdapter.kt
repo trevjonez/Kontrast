@@ -14,13 +14,20 @@
  *    limitations under the License.
  */
 
-apply plugin: 'kotlin2js'
-apply plugin: 'kotlin-dce-js'
+package com.trevjonez.kontrast.jvm
 
-dependencies {
-    compile group: 'org.jetbrains.kotlin', name: 'kotlin-stdlib-js', version: kotlin_version
-}
+import com.squareup.moshi.FromJson
+import com.squareup.moshi.ToJson
+import java.io.File
 
-compileKotlin2Js {
-    kotlinOptions.sourceMap = true
+class FileAdapter {
+    @ToJson
+    fun toJson(file: File): String {
+        return file.absolutePath
+    }
+
+    @FromJson
+    fun fromJson(value: String): File {
+        return File(value)
+    }
 }

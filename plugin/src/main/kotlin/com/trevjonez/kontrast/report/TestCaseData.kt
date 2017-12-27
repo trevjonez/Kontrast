@@ -16,6 +16,7 @@
 
 package com.trevjonez.kontrast.report
 
+import com.trevjonez.kontrast.jvm.InstrumentationTestStatus
 import org.gradle.api.tasks.testing.TestResult
 import java.io.File
 
@@ -29,6 +30,9 @@ interface TestCaseData {
     val inputImage: File
     val keyImage: File
     val diffImage: File
+    val deviceDiagnostics: DeviceTestDiagnostics?
 
     fun subDirectory() = "$className${File.separator}$methodName${File.separator}$testKey"
 }
+
+data class DeviceTestDiagnostics(val status: InstrumentationTestStatus, val logcatOutput: String)

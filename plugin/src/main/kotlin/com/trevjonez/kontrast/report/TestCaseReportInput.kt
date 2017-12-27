@@ -26,6 +26,7 @@ data class TestCaseReportInput(
         override val inputExtras: Map<String, String>,
         override val keyExtras: Map<String, String>,
         override val status: TestResult.ResultType,
+        override val deviceDiagnostics: DeviceTestDiagnostics?,
         val reportImageDir: File) : TestCaseData {
     override val inputImage = File(reportImageDir, "${subDirectory()}${File.separator}input.png")
     override val keyImage = File(reportImageDir, "${subDirectory()}${File.separator}key.png")

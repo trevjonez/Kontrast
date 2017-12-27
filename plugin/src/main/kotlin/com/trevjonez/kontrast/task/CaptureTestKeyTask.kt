@@ -16,7 +16,8 @@
 
 package com.trevjonez.kontrast.task
 
-import com.trevjonez.kontrast.internal.PulledOutput
+import com.trevjonez.kontrast.jvm.InstrumentationTestStatus
+import com.trevjonez.kontrast.jvm.PulledOutput
 import io.reactivex.Single
 import org.gradle.api.DefaultTask
 import org.gradle.api.tasks.TaskAction
@@ -28,13 +29,22 @@ open class CaptureTestKeyTask : DefaultTask() {
 
     @TaskAction
     fun invoke() {
+        val outputs = pulledOutputs.blockingGet()
+
+        val failingRenders = outputs.filter { it.output.testStatus != InstrumentationTestStatus.OK }
+        if (failingRenders.isNotEmpty()) {
+            throw IllegalStateException("There are failing render test cases. Fix before recording test keys. ${System.lineSeparator()}" +
+                                        failingRenders.joinToString(separator = System.lineSeparator(),
+                                                                    transform = { it.output.keySubDirectory() }))
+        }
+
         if (outputsDir.exists() && !outputsDir.deleteRecursively())
             throw IllegalStateException("Unable to clean output directory: ${outputsDir.absolutePath}")
 
         if (!outputsDir.mkdirs())
             throw IllegalStateException("Unable to create output directory: ${outputsDir.absolutePath}")
 
-        pulledOutputs.blockingGet().forEach {
+        outputs.forEach {
             logger.info("localOutputDir: ${it.localOutputDir.absolutePath}")
             logger.info("Capturing test outputs: ${it.output.methodSubDirectory()}")
             it.localOutputDir.copyRecursively(File(outputsDir, it.output.methodSubDirectory()), true)
