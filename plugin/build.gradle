@@ -72,6 +72,14 @@ task downloadMdcJs(type: Download) {
     onlyIfModified true
 }
 
+task downloadLazyLoadJs(type: Download) {
+    src "https://cdn.jsdelivr.net/npm/lazyload@2.0.0-beta.2/lazyload.js"
+    dest file("$buildDir/lazyload.js")
+    group = "Download Resources"
+    description = "Downloads LazyLad js file"
+    onlyIfModified true
+}
+
 processResources {
     dependsOn(':reportJs:runDceKotlinJs')
     from file("${rootProject.project(":reportJs").buildDir.path}/classes/kotlin/main/min/kotlin.js")
@@ -79,6 +87,7 @@ processResources {
     from file("${rootProject.project(":reportJs").buildDir.path}/classes/kotlin/main/min/kotlinx-html-js.js")
     from downloadMdcCss
     from downloadMdcJs
+    from downloadLazyLoadJs
 }
 
 test {

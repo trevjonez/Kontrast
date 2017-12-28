@@ -16,6 +16,7 @@
 
 package com.trevjonez.kontrast.report
 
+import ar.com.hjg.pngj.PngReader
 import kotlinx.html.ScriptType
 import kotlinx.html.Tag
 import kotlinx.html.a
@@ -113,7 +114,14 @@ class ReportIndexHtml(private val outputDir: File,
                                             text("Actual:")
                                         }
                                         "images${File.separator}${testCase.subDirectory()}${File.separator}input.png".let { imgPath ->
-                                            a(imgPath) { img("input", imgPath, "test-image") }
+                                            a(imgPath) {
+                                                img("input", "", "test-image lazyload") {
+                                                    val size = testCase.inputImage.imageSize()
+                                                    width = size.width.toString()
+                                                    height = size.height.toString()
+                                                    attributes.put("data-src", imgPath)
+                                                }
+                                            }
                                         }
                                     }
 
@@ -128,7 +136,14 @@ class ReportIndexHtml(private val outputDir: File,
                                             text("Expected:")
                                         }
                                         "images${File.separator}${testCase.subDirectory()}${File.separator}key.png".let { imgPath ->
-                                            a(imgPath) { img("key", imgPath, "test-image") }
+                                            a(imgPath) {
+                                                img("key", "", "test-image lazyload") {
+                                                    val size = testCase.keyImage.imageSize()
+                                                    width = size.width.toString()
+                                                    height = size.height.toString()
+                                                    attributes.put("data-src", imgPath)
+                                                }
+                                            }
                                         }
                                     }
 
@@ -143,7 +158,14 @@ class ReportIndexHtml(private val outputDir: File,
                                             text("Difference:")
                                         }
                                         "images${File.separator}${testCase.subDirectory()}${File.separator}diff.png".let { imgPath ->
-                                            a(imgPath) { img("diff", imgPath, "test-image") }
+                                            a(imgPath) {
+                                                img("diff", "", "test-image lazyload") {
+                                                    val size = testCase.diffImage.imageSize()
+                                                    width = size.width.toString()
+                                                    height = size.height.toString()
+                                                    attributes.put("data-src", imgPath)
+                                                }
+                                            }
                                         }
 
                                         val diffExtras = mapDiff(testCase.inputExtras, testCase.keyExtras)
@@ -177,6 +199,8 @@ class ReportIndexHtml(private val outputDir: File,
                         script { src = "js/kotlin.js" }
                         script { src = "js/kotlinx-html-js.js" }
                         script { src = "js/kontrast.js" }
+                        script { src = "js/lazyload.js" }
+                        script(type = ScriptType.textJavaScript) { unsafe { raw("lazyload();") } }
                     }
                 }
             }
@@ -295,3 +319,13 @@ private fun TestCaseData.wasSkipped(): Boolean {
            !(((instrumentationStatus == ON_DEVICE_FAILURE) == true) ||
              ((instrumentationStatus == ON_DEVICE_ERROR) == true))
 }
+
+private fun File.imageSize(): Resolution {
+    val reader = PngReader(this)
+    val width = reader.imgInfo.cols
+    val height = reader.imgInfo.rows
+    reader.close()
+    return Resolution(width, height)
+}
+
+private data class Resolution(val width: Int, val height: Int)
