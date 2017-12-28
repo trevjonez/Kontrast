@@ -131,17 +131,14 @@ The test task is a customized gradle test task that will produce an html and xml
 
 The html report task is a very basic html report to enable viewing and comparison of screen shots.
 
-## Report examples
+## Report example
 
 The report attempts to deliver any relevant data for the test case. 
-For now this is any included extras and the rendered screenshots.
+This is any included extras and the rendered screenshots as well as logcat for the duration of the test as reported by the runner.
 
-![Report index screenshot](reportImages/ReportIndex.png)
+On failing test cases the diff image will have any variant pixels marked in red, highlighting even the smallest changes.
 
-On failing test cases the diff image will have any variant pixels marked in red.
-
-![Report with failing test](reportImages/FailedTest.png)
-
+![Report index screenshot](reportImages/FullReport.png)
 
 ## License
     Copyright 2017 Trevor Jones
