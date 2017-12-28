@@ -20,6 +20,7 @@ import kotlinx.html.ScriptType
 import kotlinx.html.Tag
 import kotlinx.html.a
 import kotlinx.html.body
+import kotlinx.html.button
 import kotlinx.html.div
 import kotlinx.html.h1
 import kotlinx.html.h2
@@ -37,6 +38,7 @@ import kotlinx.html.span
 import kotlinx.html.stream.appendHTML
 import kotlinx.html.style
 import kotlinx.html.title
+import kotlinx.html.unsafe
 import org.gradle.api.tasks.testing.TestResult
 import java.io.File
 import com.trevjonez.kontrast.jvm.InstrumentationTestStatus.ERROR as ON_DEVICE_ERROR
@@ -44,7 +46,10 @@ import com.trevjonez.kontrast.jvm.InstrumentationTestStatus.FAILED_ASSUMPTION as
 import com.trevjonez.kontrast.jvm.InstrumentationTestStatus.FAILURE as ON_DEVICE_FAILURE
 import com.trevjonez.kontrast.jvm.InstrumentationTestStatus.IGNORED as ON_DEVICE_IGNORED
 
-class ReportIndexHtml(val outputDir: File, val variantName: String, val deviceAlias: String, val testCases: List<TestCaseData>) : ReportFile {
+class ReportIndexHtml(private val outputDir: File,
+                      private val variantName: String,
+                      private val deviceAlias: String,
+                      private val testCases: List<TestCaseData>) : ReportFile {
     override fun write() {
         require(outputDir.exists()) { "Invalid output dir, must be pre-existing. ${outputDir.absolutePath}" }
 
@@ -147,12 +152,30 @@ class ReportIndexHtml(val outputDir: File, val variantName: String, val deviceAl
                                         }
                                     }
                                 }
+
+                                if (testCase.logcatFile.exists()) {
+                                    section("mdc-card__supporting-text logcat-button-section") {
+                                        button(classes = "mdc-button mdc-button--raised logcat-button") {
+                                            span("button-text") {
+                                                text("Show Logcat")
+                                            }
+                                            span("logcat-file") {
+                                                text("logcat${File.separator}${testCase.subDirectory()}${File.separator}logcat.txt")
+                                            }
+                                        }
+                                    }
+
+                                    section("mdc-card__supporting-text logcat-text-section") {
+                                        div(classes = "logcat-area logcat-hidden") {}
+                                    }
+                                }
                             }
                         }
 
                         script { src = "js/material-components-web.min.js" }
-                        script(type = ScriptType.textJavaScript) { text("window.mdc.autoInit();") }
+                        script(type = ScriptType.textJavaScript) { unsafe { raw("window.mdc.autoInit();") } }
                         script { src = "js/kotlin.js" }
+                        script { src = "js/kotlinx-html-js.js" }
                         script { src = "js/kontrast.js" }
                     }
                 }
@@ -208,8 +231,8 @@ class ReportIndexHtml(val outputDir: File, val variantName: String, val deviceAl
     private fun TestCaseData.cardBodyMessage(): String {
         return when (status) {
             TestResult.ResultType.SKIPPED -> {
-                deviceDiagnostics?.let {
-                    when (it.status) {
+                instrumentationStatus?.let {
+                    when (it) {
                         ON_DEVICE_FAILURE           -> "Instrumentation portion of test had a failure, inspect logcat for details"
                         ON_DEVICE_ERROR             -> "Instrumentation portion of test had an error, inspect logcat for details"
                         ON_DEVICE_IGNORED           -> "Instrumentation portion of test was ignored"
@@ -264,11 +287,11 @@ private fun TestCaseData.didPass(): Boolean {
 private fun TestCaseData.didFail(): Boolean {
     return status == TestResult.ResultType.FAILURE ||
            (status == TestResult.ResultType.SKIPPED &&
-            ((deviceDiagnostics?.status == ON_DEVICE_FAILURE) || (deviceDiagnostics?.status == ON_DEVICE_ERROR)))
+            ((instrumentationStatus == ON_DEVICE_FAILURE) || (instrumentationStatus == ON_DEVICE_ERROR)))
 }
 
 private fun TestCaseData.wasSkipped(): Boolean {
     return status == TestResult.ResultType.SKIPPED &&
-           !(((deviceDiagnostics?.status == ON_DEVICE_FAILURE) == true) ||
-             ((deviceDiagnostics?.status == ON_DEVICE_ERROR) == true))
+           !(((instrumentationStatus == ON_DEVICE_FAILURE) == true) ||
+             ((instrumentationStatus == ON_DEVICE_ERROR) == true))
 }

@@ -1,0 +1,29 @@
+12-28 17:45:20.065  4509  4526 I TestRunner: started: johnDoeCard(com.trevjonez.kontrast.app.CardLayoutKontrastTest)
+12-28 17:45:20.066  4509  4509 I MonitoringInstr: Activities that are still in CREATED to STOPPED: 0
+12-28 17:45:20.067  4509  4526 W ActivityTestRule: getActivityIntent() returned null using default: Intent(Intent.ACTION_MAIN)
+12-28 17:45:20.067  4509  4526 I ActivityTestRule: Launching activity: ComponentInfo{com.trevjonez.kontrast.app/com.trevjonez.kontrast.KontrastActivity}
+12-28 17:45:20.071  4509  4595 D MonitoringInstr: execStartActivity(context, ibinder, ibinder, activity, intent, int, bundle
+12-28 17:45:20.073  1675  1927 I ActivityManager: START u0 {act=android.intent.action.MAIN flg=0x10000000 cmp=com.trevjonez.kontrast.app/com.trevjonez.kontrast.KontrastActivity} from uid 10085
+12-28 17:45:20.088  4509  4509 D LifecycleMonitor: Lifecycle status change: com.trevjonez.kontrast.KontrastActivity@d0040ac in: PRE_ON_CREATE
+12-28 17:45:20.109  1391  1391 D gralloc_ranchu: gralloc_alloc: Creating ashmem region of size 8298496
+12-28 17:45:20.111  4509  4509 D LifecycleMonitor: Lifecycle status change: com.trevjonez.kontrast.KontrastActivity@d0040ac in: CREATED
+12-28 17:45:20.112  4509  4509 D LifecycleMonitor: Lifecycle status change: com.trevjonez.kontrast.KontrastActivity@d0040ac in: STARTED
+12-28 17:45:20.122  4509  4509 D LifecycleMonitor: Lifecycle status change: com.trevjonez.kontrast.KontrastActivity@d0040ac in: RESUMED
+12-28 17:45:20.132  2368  4565 D DownloadManager: [5] Finished with status SUCCESS
+12-28 17:45:20.144  2602  2681 D EGL_emulation: eglMakeCurrent: 0x9811a4c0: ver 2 0 (tinfo 0x983fe500)
+12-28 17:45:20.150  2480  2614 D EGL_emulation: eglMakeCurrent: 0x9a9846c0: ver 2 0 (tinfo 0x9a983510)
+12-28 17:45:20.159  2368  4596 D DownloadManager: [8] Starting
+12-28 17:45:20.174  2368  4596 D NetworkSecurityConfig: No Network Security Config specified, using platform default
+12-28 17:45:20.181  1391  1391 D gralloc_ranchu: gralloc_alloc: Creating ashmem region of size 8298496
+12-28 17:45:20.184  1391  1391 D gralloc_ranchu: gralloc_alloc: Creating ashmem region of size 8298496
+12-28 17:45:20.186  2602  2679 E ContentStoreEUAS: Failed to commit the deferred actions
+12-28 17:45:20.192  1391  1391 D gralloc_ranchu: gralloc_alloc: Creating ashmem region of size 8298496
+12-28 17:45:20.211  4509  4529 D EGL_emulation: eglMakeCurrent: 0x9a9840c0: ver 2 0 (tinfo 0x9a983330)
+12-28 17:45:20.221  2368  4599 D DownloadManager: [9] Starting
+12-28 17:45:20.231  4509  4514 I zygote  : Do partial code cache collection, code=27KB, data=26KB
+12-28 17:45:20.231  4509  4514 I zygote  : After code cache collection, code=26KB, data=26KB
+12-28 17:45:20.231  4509  4514 I zygote  : Increasing code cache capacity to 128KB
+12-28 17:45:20.238  1675  1697 I ActivityManager: Displayed com.trevjonez.kontrast.app/com.trevjonez.kontrast.KontrastActivity: +148ms
+12-28 17:45:20.248  2368  4599 D NetworkSecurityConfig: No Network Security Config specified, using platform default
+12-28 17:45:20.253  4509  4509 D LifecycleMonitor: Lifecycle status change: com.trevjonez.kontrast.KontrastActivity@d0040ac in: PAUSED
+12-28 17:45:20.257  4509  4526 I TestRunner: finished: johnDoeCard(com.trevjonez.kontrast.app.CardLayoutKontrastTest)

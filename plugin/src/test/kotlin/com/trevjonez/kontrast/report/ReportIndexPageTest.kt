@@ -29,6 +29,10 @@ class ReportIndexPageTest {
         outputDir.mkdirs()
 
         copyDirectoryFromResources("images", outputDir)
+        copyDirectoryFromResources("logcat", outputDir)
+
+        val reportImageDir = File(outputDir, "images")
+        val reportLogcatDir = File(outputDir, "logcat")
 
         val jack = TestCaseReportInput(className = "com.trevjonez.kontrast.app.CardLayoutKontrastTest",
                                        methodName = "jackDoeCard",
@@ -36,8 +40,9 @@ class ReportIndexPageTest {
                                        inputExtras = mapOf("Width" to "320dp", "Height" to "wrap_content", "Username" to "Jack Doe"),
                                        keyExtras = mapOf(),
                                        status = TestResult.ResultType.SKIPPED, //Due to missing test key
-                                       reportImageDir = File(outputDir, "images"),
-                                       deviceDiagnostics = DeviceTestDiagnostics(OK, "some logcat here"))
+                                       reportImageDir = reportImageDir,
+                                       reportLogcatDir = reportLogcatDir,
+                                       instrumentationStatus = OK)
 
         val jane = TestCaseReportInput(className = "com.trevjonez.kontrast.app.CardLayoutKontrastTest",
                                        methodName = "janeDoeCard",
@@ -45,8 +50,9 @@ class ReportIndexPageTest {
                                        inputExtras = mapOf("Width" to "320dp", "Height" to "wrap_content", "Username" to "Jane Doe"),
                                        keyExtras = mapOf("Width" to "320dp", "Height" to "wrap_content", "Username" to "Jane Doe"),
                                        status = TestResult.ResultType.SUCCESS,
-                                       reportImageDir = File(outputDir, "images"),
-                                       deviceDiagnostics = DeviceTestDiagnostics(OK, "some logcat here"))
+                                       reportImageDir = reportImageDir,
+                                       reportLogcatDir = reportLogcatDir,
+                                       instrumentationStatus = OK)
 
         val john = TestCaseReportInput(className = "com.trevjonez.kontrast.app.CardLayoutKontrastTest",
                                        methodName = "johnDoeCard",
@@ -57,8 +63,9 @@ class ReportIndexPageTest {
                                                          "anotherLongWindedThing" to "so that it wraps lines",
                                                          "yet another" to "long extra"),
                                        status = TestResult.ResultType.FAILURE, //Key and input variance
-                                       reportImageDir = File(outputDir, "images"),
-                                       deviceDiagnostics = DeviceTestDiagnostics(OK, "some logcat here"))
+                                       reportImageDir = reportImageDir,
+                                       reportLogcatDir = reportLogcatDir,
+                                       instrumentationStatus = OK)
 
         val josh = TestCaseReportInput(className = "com.trevjonez.kontrast.app.CardLayoutKontrastTest",
                                        methodName = "joshDoeCard",
@@ -66,8 +73,9 @@ class ReportIndexPageTest {
                                        inputExtras = mapOf(),
                                        keyExtras = mapOf("Width" to "320dp", "Height" to "wrap_content", "Username" to "John Doe"),
                                        status = TestResult.ResultType.SKIPPED, //Missing input
-                                       reportImageDir = File(outputDir, "images"),
-                                       deviceDiagnostics = null)
+                                       reportImageDir = reportImageDir,
+                                       reportLogcatDir = reportLogcatDir,
+                                       instrumentationStatus = null)
 
         ReportIndex(outputDir, "Index page render test", "Not on a device", listOf(jack, jane, john, josh)).write()
     }

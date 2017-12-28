@@ -29,6 +29,10 @@ import okio.Okio.source
 import org.slf4j.Logger
 import java.io.BufferedWriter
 import java.net.Socket
+import kotlin.reflect.KClass
+
+typealias StdOut = okio.BufferedSource
+typealias StdErr = okio.BufferedSource
 
 internal fun <T> Completable.andThenEmit(value: T) = andThenObserve { Observable.just(value) }
 
@@ -118,4 +122,106 @@ inline fun <T> Observable<T>.doOnFirst(crossinline action: (T) -> Unit): Observa
             action(it)
         }
     }
+}
+
+fun ProcessBuilder.toObservable(name: String, logger: Logger, stdIn: Observable<String>): Observable<Pair<StdOut, StdErr>> {
+    return Observable.create<Pair<StdOut, StdErr>> { emitter ->
+        try {
+            logger.info("Starting process: ${command().joinToString(separator = " ")}")
+            val process = start()
+            val inWriter = process.outputStream.bufferedWriter()
+            val disposable = CompositeDisposable()
+            emitter.setDisposable(disposable)
+            val stdOut = buffer(source(process.inputStream))
+            val stdErr = buffer(source(process.errorStream))
+
+            stdIn.observeOn(Schedulers.io())
+                    .subscribe {
+                        inWriter.write(it)
+                        inWriter.newLine()
+                        inWriter.flush()
+                    } addTo disposable
+
+            object : Disposable {
+                var disposed = false
+                override fun isDisposed(): Boolean {
+                    return disposed
+                }
+
+                override fun dispose() {
+                    logger.info("Disposing: ${command().joinToString(separator = " ")}")
+                    disposed = true
+                    inWriter.close()
+                }
+            } addTo disposable
+
+
+            if (!emitter.isDisposed) {
+                emitter.onNext(stdOut to stdErr)
+            }
+
+            val result = process.waitFor()
+            if (!emitter.isDisposed) {
+                if (result == 0)
+                    emitter.onComplete()
+                else
+                    emitter.onError(RuntimeException("$name exited with code $result"))
+            }
+        } catch (error: Throwable) {
+            if (!emitter.isDisposed) {
+                emitter.onError(error)
+            }
+        }
+    }
+}
+
+fun ProcessBuilder.toCompletable(name: String, logger: Logger): Completable {
+    return Completable.create { emitter ->
+        try {
+            logger.info("Starting process: ${command().joinToString(separator = " ")}")
+            val process = start()
+            val disposable = CompositeDisposable()
+            emitter.setDisposable(disposable)
+
+            val stdOut = buffer(source(process.inputStream))
+            stdOut.readLines()
+                    .subscribeOn(Schedulers.io())
+                    .subscribe { logger.info("stdOut: $it") } addTo disposable
+
+            val stdErr = buffer(source(process.errorStream))
+            stdErr.readLines()
+                    .subscribeOn(Schedulers.io())
+                    .subscribe { logger.info("stdErr: $it") } addTo disposable
+
+            object : Disposable {
+                var disposed = false
+                override fun isDisposed() = disposed
+
+                override fun dispose() {
+                    logger.info("Disposing: ${command().joinToString(separator = " ")}")
+                    disposed = true
+                }
+            } addTo disposable
+
+            val result = process.waitFor()
+            if (!emitter.isDisposed) {
+                when (result) {
+                    0 -> emitter.onComplete()
+                    else -> emitter.onError(RuntimeException("$name exited with code $result"))
+                }
+            }
+        } catch (error: Throwable) {
+            if (!emitter.isDisposed) {
+                emitter.onError(error)
+            }
+        }
+    }
+}
+
+inline fun <reified T: Any> Observable<T>.never(): Observable<T> {
+    return never(T::class)
+}
+
+fun <T, R: Any> Observable<T>.never(rType: KClass<R>): Observable<R> {
+    return filter { false }.cast(rType.java)
 }

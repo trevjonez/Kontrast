@@ -1,0 +1,26 @@
+12-28 17:45:19.578  4509  4526 I TestRunner: started: jackDoeCard(com.trevjonez.kontrast.app.CardLayoutKontrastTest)
+12-28 17:45:19.579  4509  4509 I MonitoringInstr: Activities that are still in CREATED to STOPPED: 0
+12-28 17:45:19.580  4509  4526 W ActivityTestRule: getActivityIntent() returned null using default: Intent(Intent.ACTION_MAIN)
+12-28 17:45:19.580  4509  4526 I ActivityTestRule: Launching activity: ComponentInfo{com.trevjonez.kontrast.app/com.trevjonez.kontrast.KontrastActivity}
+12-28 17:45:19.582  4509  4540 D MonitoringInstr: execStartActivity(context, ibinder, ibinder, activity, intent, int, bundle
+12-28 17:45:19.582  1675  3194 I ActivityManager: START u0 {act=android.intent.action.MAIN flg=0x10000000 cmp=com.trevjonez.kontrast.app/com.trevjonez.kontrast.KontrastActivity} from uid 10085
+12-28 17:45:19.597  4541  4541 W zygote  : Unexpected CPU variant for X86 using defaults: x86
+12-28 17:45:19.604  1675  1675 I ActivityManager: Start proc 4541:com.google.android.configupdater/u0a4 for service com.google.android.configupdater/.MainJobService
+12-28 17:45:19.610  4509  4509 D LifecycleMonitor: Lifecycle status change: com.trevjonez.kontrast.KontrastActivity@1c99b in: PRE_ON_CREATE
+12-28 17:45:19.617  4509  4509 D LifecycleMonitor: Lifecycle status change: com.trevjonez.kontrast.KontrastActivity@1c99b in: CREATED
+12-28 17:45:19.617  4509  4509 D LifecycleMonitor: Lifecycle status change: com.trevjonez.kontrast.KontrastActivity@1c99b in: STARTED
+12-28 17:45:19.625  1391  1391 D gralloc_ranchu: gralloc_alloc: Creating ashmem region of size 8298496
+12-28 17:45:19.629  4509  4509 D LifecycleMonitor: Lifecycle status change: com.trevjonez.kontrast.KontrastActivity@1c99b in: RESUMED
+12-28 17:45:19.649  1400  1400 D SurfaceFlinger: duplicate layer name: changing com.trevjonez.kontrast.app/com.trevjonez.kontrast.KontrastActivity to com.trevjonez.kontrast.app/com.trevjonez.kontrast.KontrastActivity#1
+12-28 17:45:19.659  2480  2614 D EGL_emulation: eglMakeCurrent: 0x9a9846c0: ver 2 0 (tinfo 0x9a983510)
+12-28 17:45:19.666  2602  2681 D EGL_emulation: eglMakeCurrent: 0x9811a4c0: ver 2 0 (tinfo 0x983fe500)
+12-28 17:45:19.669  1675  3591 I ActivityManager: Killing 2167:com.google.android.deskclock/u0a67 (adj 906): empty #17
+12-28 17:45:19.681  1391  1391 D gralloc_ranchu: gralloc_alloc: Creating ashmem region of size 8298496
+12-28 17:45:19.684  4541  4563 I ConfigUpdater: Update started
+12-28 17:45:19.686  1391  1391 D gralloc_ranchu: gralloc_alloc: Creating ashmem region of size 8298496
+12-28 17:45:19.690  1391  1391 D gralloc_ranchu: gralloc_alloc: Creating ashmem region of size 8298496
+12-28 17:45:19.696  2602  2679 E ContentStoreEUAS: Failed to commit the deferred actions
+12-28 17:45:19.710  4509  4529 D EGL_emulation: eglMakeCurrent: 0x9a9840c0: ver 2 0 (tinfo 0x9a983330)
+12-28 17:45:19.727  1675  1697 I ActivityManager: Displayed com.trevjonez.kontrast.app/com.trevjonez.kontrast.KontrastActivity: +135ms
+12-28 17:45:19.750  4509  4509 D LifecycleMonitor: Lifecycle status change: com.trevjonez.kontrast.KontrastActivity@1c99b in: PAUSED
+12-28 17:45:19.756  4509  4526 I TestRunner: finished: jackDoeCard(com.trevjonez.kontrast.app.CardLayoutKontrastTest)

@@ -28,7 +28,6 @@ import io.reactivex.Completable
 import io.reactivex.Observable
 import io.reactivex.schedulers.Schedulers
 import io.reactivex.subjects.BehaviorSubject
-import okio.Okio
 import okio.Okio.buffer
 import okio.Okio.sink
 import org.gradle.api.tasks.Input
@@ -36,7 +35,9 @@ import org.gradle.api.tasks.InputFile
 import org.gradle.api.tasks.OutputDirectory
 import org.gradle.api.tasks.TaskAction
 import org.slf4j.Logger
+import java.io.BufferedWriter
 import java.io.File
+import java.io.FileWriter
 
 open class RenderOnDeviceTask : AdbCommandTask() {
 
@@ -71,6 +72,19 @@ open class RenderOnDeviceTask : AdbCommandTask() {
         if (!outputsDir.mkdirs())
             throw IllegalStateException("Unable to create output directory: ${outputsDir.absolutePath}")
 
+        val logcatFile = File(outputsDir, "logcatCapture.txt")
+
+        if (!logcatFile.createNewFile())
+            throw IllegalStateException("Failed to create logcat capture file")
+
+        val bufferedWriter = BufferedWriter(FileWriter(logcatFile))
+        val logcatSub = adb.logcat(device)
+                .subscribeOn(Schedulers.io())
+                .observeOn(Schedulers.io())
+                .doOnDispose { bufferedWriter.close() }
+                .subscribe { bufferedWriter.appendln(it) }
+
+
         val pulledOutputs = adb.shell(device, "am instrument -w -r -e debug false -e annotation com.trevjonez.kontrast.KontrastTest $testPackage/$testRunner")
                 .map(String::trim)
                 .takeWhile { !it.startsWith("INSTRUMENTATION_CODE") }
@@ -79,6 +93,8 @@ open class RenderOnDeviceTask : AdbCommandTask() {
                 .writeExtrasToFile(outputsDir, extrasAdapter, logger)
                 .collectInto(mutableSetOf<PulledOutput>()) { set, output -> set.add(output) }
                 .blockingGet()
+
+        logcatSub.dispose()
 
         val ambiguousCases = mutableListOf<String>()
 
@@ -96,7 +112,7 @@ open class RenderOnDeviceTask : AdbCommandTask() {
             throw IllegalStateException("There where ambiguous test outputs, use kontrastRule.ofView(View, String) to disambiguate.${ambiguousCases.joinToString(",\n", "\n")}")
 
         val testCaseListingFile = File(outputsDir, "test-cases.json")
-        val buffer = Okio.buffer(Okio.sink(testCaseListingFile))
+        val buffer = buffer(sink(testCaseListingFile))
         outputSetAdapter.toJson(buffer, pulledOutputs)
         buffer.close()
 

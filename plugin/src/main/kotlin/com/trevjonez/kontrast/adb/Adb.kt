@@ -16,12 +16,16 @@
 
 package com.trevjonez.kontrast.adb
 
+import com.trevjonez.kontrast.internal.never
+import com.trevjonez.kontrast.internal.readLines
+import com.trevjonez.kontrast.internal.toCompletable
+import com.trevjonez.kontrast.internal.toObservable
 import io.reactivex.Completable
 import io.reactivex.Observable
 import io.reactivex.Single
+import io.reactivex.schedulers.Schedulers
 import org.slf4j.Logger
 import java.io.File
-import java.util.stream.Collectors
 
 interface Adb {
     val executable: File
@@ -36,99 +40,93 @@ interface Adb {
 
     fun deleteDir(device: AdbDevice, directory: File): Completable
 
+    fun logcat(device: AdbDevice): Observable<String>
+
     class Impl(override val executable: File, val logger: Logger) : Adb {
         override fun devices(): Single<Set<AdbDevice>> {
-            return Single.fromCallable {
-                ProcessBuilder(executable.absolutePath, "devices").start()
-                        .inputStream.bufferedReader().lines()
-                        .map { logger.info(it); it }
-                        .filter { it.endsWith("offline") || it.endsWith("device") || it.endsWith("unauthorized") }
-                        .map { it.split("""\s""".toRegex()).let { AdbDevice(it[0], AdbStatus.fromString(it[1])) } }
-                        .collect(Collectors.toSet())
-            }
+            return ProcessBuilder(executable.absolutePath, "devices")
+                    .toObservable("adb", logger, Observable.never())
+                    .subscribeOn(Schedulers.io())
+                    .doOnError { logger.info("adb devices root observable threw") }
+                    .flatMap { (stdOut, stdErr) ->
+                        Observable.merge(
+                                stdErr.readLines()
+                                        .subscribeOn(Schedulers.io())
+                                        .doOnNext { logger.info("stdErr: $it") }
+                                        .doOnError { logger.info("stdErr threw: adb devices") }
+                                        .never(),
+                                stdOut.readLines()
+                                        .subscribeOn(Schedulers.io())
+                                        .doOnNext { logger.info("stdOut: $it") }
+                                        .doOnError { logger.info("stdOut threw: adb devices") }
+                                        .onErrorResumeNext { _: Throwable -> Observable.empty<String>() }
+                                        )
+                    }
+                    .map { it.trim() }
+                    .filter { it.endsWith("offline") || it.endsWith("device") || it.endsWith("unauthorized") }
+                    .map { it.split("""\s""".toRegex()).let { AdbDevice(it[0], AdbStatus.fromString(it[1])) } }
+                    .collectInto(mutableSetOf<AdbDevice>()) { set, device -> set.add(device) }
+                    .map { it.toSet() }
         }
 
         override fun install(device: AdbDevice, apk: File, vararg flags: AdbInstallFlag): Completable {
-            return Completable.fromAction {
-                val process = ProcessBuilder(executable.absolutePath,
-                                             "-s", device.id,
-                                             "install",
-                                             *flags.map(AdbInstallFlag::cliFlag).toTypedArray(),
-                                             apk.absolutePath)
-                        .start()
-
-
-                val result = process.waitFor()
-                if (result != 0) {
-                    val builder = StringBuilder()
-                    process.inputStream.bufferedReader().forEachLine { builder.append(it) }
-                    throw RuntimeException("install failed with code: $result\n$builder")
-                }
-            }
+            return ProcessBuilder(executable.absolutePath,
+                                  "-s", device.id,
+                                  "install",
+                                  *flags.map(AdbInstallFlag::cliFlag).toTypedArray(),
+                                  apk.absolutePath)
+                    .toCompletable("adb -s ${device.id} install ${apk.absolutePath}", logger)
         }
 
         override fun pull(device: AdbDevice, remote: File, local: File, preserveTimestamps: Boolean): Completable {
-            return Completable.fromAction {
-                if (!local.exists() && !local.mkdirs()) {
-                    throw RuntimeException("failed to create local output directory")
-                }
-
-                val process = ProcessBuilder(executable.absolutePath,
-                                             "-s", device.id,
-                                             "pull",
-                                             remote.absolutePath,
-                                             local.absolutePath,
-                                             if (preserveTimestamps) "-a" else "")
-                        .start()
-
-                val result = process.waitFor()
-                if (result != 0) {
-                    val builder = StringBuilder()
-                    process.inputStream.bufferedReader().forEachLine { builder.append(it) }
-                    throw RuntimeException("pull file failed with code: $result\n$builder")
-                }
-            }
+            return ProcessBuilder(executable.absolutePath,
+                                  "-s", device.id,
+                                  "pull",
+                                  remote.absolutePath,
+                                  local.absolutePath,
+                                  if (preserveTimestamps) "-a" else "")
+                    .toCompletable("adb -s ${device.id} pull ${remote.absolutePath} ${local.absolutePath}", logger)
+                    .doOnSubscribe {
+                        if (!local.exists() && !local.mkdirs()) {
+                            throw RuntimeException("failed to create local output directory")
+                        }
+                    }
         }
 
         override fun shell(device: AdbDevice, command: String): Observable<String> {
-            return Observable.create { emitter ->
-                try {
-                    val process = ProcessBuilder(executable.absolutePath,
-                                                 "-s", device.id,
-                                                 "shell", command).start()
-
-                    process.inputStream.bufferedReader()
-                            .forEachLine {
-                                logger.info(it)
-                                emitter.onNext(it)
-                            }
-
-                    val result = process.waitFor()
-                    if (result != 0) {
-                        throw RuntimeException("adb shell failed with code: $result, for command: '$command'")
+            return ProcessBuilder(executable.absolutePath,
+                                  "-s", device.id,
+                                  "shell", command)
+                    .toObservable("adb -s ${device.id} shell $command", logger, Observable.never())
+                    .flatMap { (stdOut, stdErr) ->
+                        Observable.merge(
+                                stdOut.readLines().subscribeOn(Schedulers.io()),
+                                stdErr.readLines().subscribeOn(Schedulers.io())
+                                        .doOnNext { logger.info("adb -s ${device.id} shell $command stdErr: $it") }
+                                        .never())
                     }
-
-                    emitter.onComplete()
-                } catch (error: Throwable) {
-                    emitter.onError(error)
-                }
-            }
         }
 
-        override fun deleteDir(device: AdbDevice, directory: File): Completable {
-            return Completable.fromAction {
-                val process = ProcessBuilder(executable.absolutePath,
-                                             "-s", device.id,
-                                             "shell", "rm -rf ${directory.absolutePath}")
-                        .start()
 
-                val result = process.waitFor()
-                if (result != 0) {
-                    val builder = StringBuilder()
-                    process.inputStream.bufferedReader().forEachLine { builder.append(it) }
-                    throw RuntimeException("directory(${directory.absolutePath}) delete failed with code: $result\n$builder")
-                }
-            }
+        override fun deleteDir(device: AdbDevice, directory: File): Completable {
+            return ProcessBuilder(executable.absolutePath,
+                                  "-s", device.id,
+                                  "shell", "rm -rf ${directory.absolutePath}")
+                    .toCompletable("adb -s ${device.id} shell rm -rf ${directory.absolutePath}", logger)
+        }
+
+        override fun logcat(device: AdbDevice): Observable<String> {
+            return ProcessBuilder(executable.absolutePath,
+                                  "-s", device.id,
+                                  "logcat")
+                    .toObservable("logcat", logger, Observable.never())
+                    .flatMap { (stdOut, stdErr) ->
+                        Observable.merge(
+                                stdOut.readLines().subscribeOn(Schedulers.io()),
+                                stdErr.readLines().subscribeOn(Schedulers.io())
+                                        .doOnNext { logger.info("adb logcat stdErr: $it") }
+                                        .never())
+                    }
         }
     }
 }

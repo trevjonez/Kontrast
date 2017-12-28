@@ -54,7 +54,7 @@ configurations {
 
 import de.undercouch.gradle.tasks.download.Download
 
-def mdcVersion = '0.25.0'
+def mdcVersion = '0.27.0'
 
 task downloadMdcCss(type: Download) {
     src "https://unpkg.com/material-components-web@$mdcVersion/dist/material-components-web.min.css"
@@ -76,6 +76,7 @@ processResources {
     dependsOn(':reportJs:runDceKotlinJs')
     from file("${rootProject.project(":reportJs").buildDir.path}/classes/kotlin/main/min/kotlin.js")
     from file("${rootProject.project(":reportJs").buildDir.path}/classes/kotlin/main/min/reportJs.js")
+    from file("${rootProject.project(":reportJs").buildDir.path}/classes/kotlin/main/min/kotlinx-html-js.js")
     from downloadMdcCss
     from downloadMdcJs
 }
@@ -93,8 +94,10 @@ tasks.findByPath('test').dependsOn(':unitTestClient:install')
 tasks.findByPath('test').dependsOn(':androidTestClient:install')
 tasks.findByPath('test').dependsOn(':appClient:install')
 tasks.findByPath('test').dependsOn(':jvmCommon:install')
-tasks.findByPath('test').dependsOn(':plugin:startAvd_Nexus_5X_API_O')
-tasks.findByPath('test').finalizedBy(':plugin:stopAvd_Nexus_5X_API_O')
+if (!project.hasProperty("NoEmulator")) {
+    tasks.findByPath('test').dependsOn(':plugin:startAvd_Nexus_5X_API_O')
+    tasks.findByPath('test').finalizedBy(':plugin:stopAvd_Nexus_5X_API_O')
+}
 
 task sourcesJar(type: Jar, dependsOn: classes) {
     classifier 'sources'
@@ -156,7 +159,7 @@ String androidHome() {
 
 
     String sdkDir = localProperties.getProperty("sdk.dir")
-    if(sdkDir != null) return sdkDir
+    if (sdkDir != null) return sdkDir
 
     throw IllegalStateException("Can't find android sdk as ANDROID_HOME env var or as sdk.dir in rootProject local.properties")
 }

@@ -22,13 +22,15 @@ import org.junit.runner.Description
 import org.junit.runners.model.Statement
 
 class KontrastRule : TestRule {
-    lateinit var className: String
-    lateinit var methodName: String
+    private lateinit var className: String
+    private lateinit var methodName: String
+    private var parameterizedMethodName: String? = null
 
     override fun apply(base: Statement, description: Description): Statement {
         className = description.className
         methodName = description.methodName.let {
             if (it.endsWith(']')) {
+                parameterizedMethodName = it
                 val start = it.indexOf('[')
                 it.removeRange(start, it.length)
             } else it
@@ -41,7 +43,7 @@ class KontrastRule : TestRule {
     }
 
     fun ofView(view: View, testKey: String): LayoutHelper {
-        return LayoutHelper(view, className, methodName, testKey.removeWhiteSpace())
+        return LayoutHelper(view, className, methodName, testKey.removeWhiteSpace(), parameterizedMethodName)
     }
 
     private fun String.removeWhiteSpace(): String {

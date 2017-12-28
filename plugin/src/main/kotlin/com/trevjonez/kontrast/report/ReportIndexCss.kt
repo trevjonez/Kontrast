@@ -18,6 +18,7 @@ package com.trevjonez.kontrast.report
 
 import azadev.kotlin.css.AUTO
 import azadev.kotlin.css.NONE
+import azadev.kotlin.css.NOWRAP
 import azadev.kotlin.css.Stylesheet
 import azadev.kotlin.css.backgroundColor
 import azadev.kotlin.css.backgroundImage
@@ -25,6 +26,7 @@ import azadev.kotlin.css.backgroundPosition
 import azadev.kotlin.css.backgroundSize
 import azadev.kotlin.css.color
 import azadev.kotlin.css.dimens.box
+import azadev.kotlin.css.dimens.inch
 import azadev.kotlin.css.dimens.percent
 import azadev.kotlin.css.dimens.px
 import azadev.kotlin.css.display
@@ -32,8 +34,13 @@ import azadev.kotlin.css.marginBottom
 import azadev.kotlin.css.marginLeft
 import azadev.kotlin.css.marginRight
 import azadev.kotlin.css.marginTop
+import azadev.kotlin.css.maxHeight
 import azadev.kotlin.css.maxWidth
+import azadev.kotlin.css.overflow
+import azadev.kotlin.css.padding
 import azadev.kotlin.css.paddingTop
+import azadev.kotlin.css.resize
+import azadev.kotlin.css.whiteSpace
 import java.io.File
 
 class ReportIndexCss(val outputDir: File) : ReportFile {
@@ -54,7 +61,7 @@ class ReportIndexCss(val outputDir: File) : ReportFile {
             }
 
             ".report-body-content" {
-                maxWidth = 860.px
+                maxWidth = 1024.px
                 marginLeft = AUTO
                 marginRight = AUTO
             }
@@ -93,6 +100,51 @@ class ReportIndexCss(val outputDir: File) : ReportFile {
 
             ".extras-diff" {
                 color = 0xF47F17
+            }
+
+            ".logcat-area" {
+                backgroundColor = 0x2B2B2B
+                maxWidth = 100.percent
+                resize = NONE
+                maxHeight = 8.inch
+                overflow = AUTO
+                padding = 16.px
+            }
+
+            ".logcat-hidden" {
+                display = NONE
+            }
+
+            ".logcat-file" {
+                display = NONE
+            }
+
+            ".logcat-verbose" {
+                color = 0xBBBBBB
+            }
+
+            ".logcat-debug" {
+                color = 0x2196F3
+            }
+
+            ".logcat-info" {
+                color = 0x4CAF50
+            }
+
+            ".logcat-warning" {
+                color = 0xFF9800
+            }
+
+            ".logcat-error" {
+                color = 0xF44336
+            }
+
+            ".logcat-assert" {
+                color = 0xBA68C8
+            }
+
+            ".logcat-text" {
+                whiteSpace = NOWRAP
             }
         }.renderToFile(File(outputDir, "kontrast.css"))
     }
