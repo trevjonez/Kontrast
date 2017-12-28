@@ -23,7 +23,6 @@ version = rootProject.version
 dependencies {
     compile group: 'junit', name: 'junit', version: '4.12'
     compile group: 'org.jetbrains.kotlin', name: 'kotlin-stdlib', version: kotlin_version
-    compile group: 'ar.com.hjg', name: 'pngj', version: '2.1.0'
     compile project(':jvmCommon')
 }
 

@@ -28,6 +28,7 @@ class ReportIndex(val outputDir: File, val variantName: String, val deviceAlias:
         copyFileFromResources("material-components-web.min.js", "material-components-web.min.js", File(outputDir, "js"))
         copyFileFromResources("reportJs.js", "kontrast.js", File(outputDir, "js"))
         copyFileFromResources("kotlinx-html-js.js", "kotlinx-html-js.js", File(outputDir, "js"))
+        copyFileFromResources("lazyload.js", "lazyload.js", File(outputDir, "js"))
         println("Kontrast report: file://${outputDir.absolutePath}/index.html")
     }
 
