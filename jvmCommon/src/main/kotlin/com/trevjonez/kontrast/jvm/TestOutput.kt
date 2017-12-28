@@ -22,6 +22,7 @@ data class TestOutput(val testKey: String,
                       val methodName: String,
                       val description: String?,
                       val className: String,
+                      val parameterizedName: String?,
                       val extras: Map<String, String>,
                       val outputDirectory: File?,
                       val testStatus: InstrumentationTestStatus) {

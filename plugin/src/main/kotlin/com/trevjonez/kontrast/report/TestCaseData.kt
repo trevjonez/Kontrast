@@ -30,9 +30,8 @@ interface TestCaseData {
     val inputImage: File
     val keyImage: File
     val diffImage: File
-    val deviceDiagnostics: DeviceTestDiagnostics?
+    val logcatFile: File
+    val instrumentationStatus: InstrumentationTestStatus?
 
     fun subDirectory() = "$className${File.separator}$methodName${File.separator}$testKey"
 }
-
-data class DeviceTestDiagnostics(val status: InstrumentationTestStatus, val logcatOutput: String)

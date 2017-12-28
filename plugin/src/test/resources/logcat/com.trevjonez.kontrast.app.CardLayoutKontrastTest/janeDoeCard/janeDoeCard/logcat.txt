@@ -1,0 +1,33 @@
+12-28 17:45:18.962  4509  4526 I TestRunner: started: janeDoeCard(com.trevjonez.kontrast.app.CardLayoutKontrastTest)
+12-28 17:45:18.963  4509  4509 I MonitoringInstr: Activities that are still in CREATED to STOPPED: 0
+12-28 17:45:18.966  4509  4526 W ActivityTestRule: getActivityIntent() returned null using default: Intent(Intent.ACTION_MAIN)
+12-28 17:45:18.966  4509  4526 I ActivityTestRule: Launching activity: ComponentInfo{com.trevjonez.kontrast.app/com.trevjonez.kontrast.KontrastActivity}
+12-28 17:45:18.967  4509  4528 D MonitoringInstr: execStartActivity(context, ibinder, ibinder, activity, intent, int, bundle
+12-28 17:45:18.968  1675  3194 I ActivityManager: START u0 {act=android.intent.action.MAIN flg=0x14000000 cmp=com.trevjonez.kontrast.app/com.trevjonez.kontrast.KontrastActivity} from uid 10085
+12-28 17:45:19.010  4509  4509 D LifecycleMonitor: Lifecycle status change: com.trevjonez.kontrast.KontrastActivity@fcac7ec in: PRE_ON_CREATE
+12-28 17:45:19.024  4509  4509 D LifecycleMonitor: Lifecycle status change: com.trevjonez.kontrast.KontrastActivity@fcac7ec in: CREATED
+12-28 17:45:19.024  4509  4509 D LifecycleMonitor: Lifecycle status change: com.trevjonez.kontrast.KontrastActivity@fcac7ec in: STARTED
+12-28 17:45:19.029  1391  1391 D gralloc_ranchu: gralloc_alloc: Creating ashmem region of size 8298496
+12-28 17:45:19.040  4509  4509 D LifecycleMonitor: Lifecycle status change: com.trevjonez.kontrast.KontrastActivity@fcac7ec in: RESUMED
+12-28 17:45:19.049  1400  1432 E SurfaceFlinger: ro.sf.lcd_density must be defined as a build property
+12-28 17:45:19.049  4509  4529 D OpenGLRenderer: HWUI GL Pipeline
+12-28 17:45:19.080  2602  2681 D EGL_emulation: eglMakeCurrent: 0x9811a4c0: ver 2 0 (tinfo 0x983fe500)
+12-28 17:45:19.080  2480  2614 D EGL_emulation: eglMakeCurrent: 0x9a9846c0: ver 2 0 (tinfo 0x9a983510)
+12-28 17:45:19.082  1391  1391 D gralloc_ranchu: gralloc_alloc: Creating ashmem region of size 8298496
+12-28 17:45:19.084  4509  4529 D         : HostConnection::get() New Host Connection established 0x9a958900, tid 4529
+12-28 17:45:19.086  4509  4529 I OpenGLRenderer: Initialized EGL, version 1.4
+12-28 17:45:19.086  4509  4529 D OpenGLRenderer: Swap behavior 1
+12-28 17:45:19.086  4509  4529 W OpenGLRenderer: Failed to choose config with EGL_SWAP_BEHAVIOR_PRESERVED, retrying without...
+12-28 17:45:19.086  4509  4529 D OpenGLRenderer: Swap behavior 0
+12-28 17:45:19.091  1391  1391 D gralloc_ranchu: gralloc_alloc: Creating ashmem region of size 8298496
+12-28 17:45:19.092  4509  4529 D EGL_emulation: eglCreateContext: 0x9a9840c0: maj 2 min 0 rcv 2
+12-28 17:45:19.098  1391  1391 D gralloc_ranchu: gralloc_alloc: Creating ashmem region of size 8298496
+12-28 17:45:19.106  4509  4529 D EGL_emulation: eglMakeCurrent: 0x9a9840c0: ver 2 0 (tinfo 0x9a983330)
+12-28 17:45:19.160  4509  4529 D EGL_emulation: eglMakeCurrent: 0x9a9840c0: ver 2 0 (tinfo 0x9a983330)
+12-28 17:45:19.215  1675  1697 I ActivityManager: Displayed com.trevjonez.kontrast.app/com.trevjonez.kontrast.KontrastActivity: +219ms
+12-28 17:45:19.237  1675  1927 D VoldConnector: SND -> {39 volume mkdirs /storage/emulated/0/Android/data/com.trevjonez.kontrast.app/files/Kontrast/com.trevjonez.kontrast.app.CardLayoutKontrastTest/janeDoeCard/janeDoeCard/}
+12-28 17:45:19.243  1675  1753 D VoldConnector: RCV <- {200 39 Command succeeded}
+12-28 17:45:19.262  4509  4509 D LifecycleMonitor: Lifecycle status change: com.trevjonez.kontrast.KontrastActivity@fcac7ec in: PAUSED
+12-28 17:45:19.263  2602  2641 E SQLiteLog: (1) no such table: blob_table
+12-28 17:45:19.265  2602  2641 E ContentStoreEUAS: Failed to commit the deferred actions
+12-28 17:45:19.267  4509  4526 I TestRunner: finished: janeDoeCard(com.trevjonez.kontrast.app.CardLayoutKontrastTest)

@@ -42,6 +42,12 @@ internal data class Collector(val chunk: String = "", val closed: Boolean = fals
             } else it
         }
 
+        val parameterizedName = chunk.substringBetween("$INST_STAT: Kontrast:ParameterizedName=", INST_STAT).trim().emptyIsNull()
+                                ?: chunk.substringBetween("$INST_STAT: test=", INST_STAT).trim().let {
+            if (it.endsWith(']')) it
+            else null
+        }
+
         val className = chunk.substringBetween("$INST_STAT: Kontrast:ClassName=", INST_STAT).trim().emptyIsNull()
                         ?: chunk.substringBetween("$INST_STAT: class=", INST_STAT).trim()
 
@@ -52,7 +58,10 @@ internal data class Collector(val chunk: String = "", val closed: Boolean = fals
 
         val outputDirectory = chunk.substringBetween("$INST_STAT: Kontrast:OutputDir=", INST_STAT).trim().emptyIsNull()?.toFile()
 
-        return TestOutput(testKey, methodName, description, className, extras, outputDirectory, fromCode(latestStatusCode))
+        return TestOutput(testKey, methodName,
+                          description, className,
+                          parameterizedName, extras,
+                          outputDirectory, fromCode(latestStatusCode))
     }
 
     private fun String.substringBetween(first: String, second: String): String {
@@ -88,5 +97,9 @@ internal data class Collector(val chunk: String = "", val closed: Boolean = fals
 }
 
 private fun String.emptyIsNull(): String? {
-    return if (isEmpty()) null else this
+    return when {
+        isEmpty()      -> null
+        this == "null" -> null
+        else           -> this
+    }
 }

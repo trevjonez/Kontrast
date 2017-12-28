@@ -52,16 +52,25 @@ open class HtmlReportTask : DefaultTask() {
                 TestCaseReportInput(testCase.className, testCase.methodName,
                                     testCase.testKey, testCase.inputExtras,
                                     testCase.keyExtras, testCase.status,
-                                    testCase.deviceDiagnostics, File(outputDir, "images"))
+                                    testCase.instrumentationStatus,
+                                    File(outputDir, "images"),
+                                    File(outputDir, "logcat"))
                         .also { reportCase ->
-                            if (testCase.inputImage.exists())
+                            if (testCase.inputImage.exists()) {
                                 FileUtils.copyFile(testCase.inputImage, reportCase.inputImage)
+                            }
 
-                            if (testCase.keyImage.exists())
+                            if (testCase.keyImage.exists()) {
                                 FileUtils.copyFile(testCase.keyImage, reportCase.keyImage)
+                            }
 
-                            if (testCase.diffImage.exists())
+                            if (testCase.diffImage.exists()) {
                                 FileUtils.copyFile(testCase.diffImage, reportCase.diffImage)
+                            }
+
+                            if (testCase.logcatFile.exists()) {
+                                FileUtils.copyFile(testCase.logcatFile, reportCase.logcatFile)
+                            }
                         }
             }
         }

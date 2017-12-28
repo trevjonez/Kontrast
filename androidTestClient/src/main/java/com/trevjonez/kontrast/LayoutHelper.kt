@@ -30,17 +30,21 @@ import android.view.View.MeasureSpec.UNSPECIFIED
 import android.view.View.MeasureSpec.makeMeasureSpec
 import java.io.File
 
-class LayoutHelper(val view: View, val className: String, val methodName: String, val testKey: String) {
+class LayoutHelper(val view: View,
+                   val className: String,
+                   val methodName: String,
+                   val testKey: String,
+                   val parameterizedName: String?) {
     companion object {
         const val KONTRAST_SIGNAL_CODE = 42
         const val CLASS_NAME = "ClassName"
         const val METHOD_NAME = "MethodName"
+        const val PARAMETERIZED_NAME = "ParameterizedName"
         const val TEST_KEY = "TestKey"
         const val EXTRAS = "Extras"
         const val DESCRIPTION = "Description"
         const val OUTPUT_DIR = "OutputDir"
         const val KONTRAST = "Kontrast"
-
     }
 
     val outputDirectory: File by lazy {
@@ -126,6 +130,7 @@ class LayoutHelper(val view: View, val className: String, val methodName: String
         val data = Bundle().apply {
             putString("$KONTRAST:$CLASS_NAME", className)
             putString("$KONTRAST:$METHOD_NAME", methodName)
+            putString("$KONTRAST:$PARAMETERIZED_NAME", parameterizedName)
             putString("$KONTRAST:$TEST_KEY", testKey)
             putString("$KONTRAST:$EXTRAS", extras.map({ (k, v) -> """"$k"KVP_DELIMITER"$v"""" }).joinToString(prefix = "[", postfix = "]", separator = "EXTRA_DELIMITER"))
             putString("$KONTRAST:$DESCRIPTION", description)

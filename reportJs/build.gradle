@@ -19,6 +19,7 @@ apply plugin: 'kotlin-dce-js'
 
 dependencies {
     compile group: 'org.jetbrains.kotlin', name: 'kotlin-stdlib-js', version: kotlin_version
+    compile group: 'org.jetbrains.kotlinx', name: 'kotlinx-html-js', version: kotlinx_html_version
 }
 
 compileKotlin2Js {

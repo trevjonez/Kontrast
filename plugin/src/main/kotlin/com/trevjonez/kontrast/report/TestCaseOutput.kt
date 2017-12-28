@@ -16,6 +16,7 @@
 
 package com.trevjonez.kontrast.report
 
+import com.trevjonez.kontrast.jvm.InstrumentationTestStatus
 import org.gradle.api.tasks.testing.TestResult
 import java.io.File
 
@@ -26,11 +27,12 @@ data class TestCaseOutput(
         override val inputExtras: Map<String, String>,
         override val keyExtras: Map<String, String>,
         override val status: TestResult.ResultType,
-        override val deviceDiagnostics: DeviceTestDiagnostics?,
+        override val instrumentationStatus: InstrumentationTestStatus?,
         val inputRoot: File,
         val keyRoot: File) : TestCaseData {
     override val inputImage = File(inputRoot, "${subDirectory()}${File.separator}image.png")
     override val keyImage = File(keyRoot, "${subDirectory()}${File.separator}image.png")
     override val diffImage = File(inputRoot, "${subDirectory()}${File.separator}diff.png")
+    override val logcatFile= File(inputRoot, "${subDirectory()}${File.separator}logcat.txt")
 }
 
