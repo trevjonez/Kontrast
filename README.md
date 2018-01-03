@@ -11,7 +11,7 @@ In the appropriate `build.gradle` file(s):
  1. Add the jitpack maven repository and classpath dependency. 
 ```groovy
 buildscript {
-    ext.kontrast_version = '0.3.0'
+    ext.kontrast_version = '0.3.1'
     repositories {
         maven { url "https://jitpack.io" }
     }
