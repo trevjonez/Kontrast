@@ -7,7 +7,9 @@ import org.w3c.dom.HTMLCollection
 import org.w3c.dom.HTMLElement
 import org.w3c.dom.asList
 import org.w3c.dom.get
-import org.w3c.fetch.Request
+import org.w3c.xhr.TEXT
+import org.w3c.xhr.XMLHttpRequest
+import org.w3c.xhr.XMLHttpRequestResponseType
 import kotlin.browser.document
 import kotlin.browser.window
 import kotlin.dom.addClass
@@ -105,9 +107,13 @@ private fun Element.getLogcatFile(): String {
 }
 
 private fun loadLogcatFile(logcatFile: String, logcatArea: Element) {
-    window.fetch(Request(logcatFile)).then { response ->
-        response.text().then { responseText ->
-            spanAndAppendLogcatLines(responseText, logcatArea)
+    XMLHttpRequest().also { client ->
+        client.apply {
+            withCredentials = true
+            responseType = XMLHttpRequestResponseType.TEXT
+            open("GET", logcatFile)
+            onreadystatechange = { spanAndAppendLogcatLines(responseText, logcatArea) }
+            send()
         }
     }
 }
