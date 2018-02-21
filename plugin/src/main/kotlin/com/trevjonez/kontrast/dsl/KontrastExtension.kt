@@ -16,6 +16,7 @@
 
 package com.trevjonez.kontrast.dsl
 
+import com.trevjonez.kontrast.KontrastPlugin
 import org.gradle.api.Project
 import java.io.File
 
@@ -45,5 +46,11 @@ open class KontrastExtension(project: Project) {
 
     fun targetVariant(variantName: String) {
         targetVariants.add(variantName)
+    }
+
+    var artSettlingTimeMillis: Long = KontrastPlugin.DEFAULT_SETTLING_TIME
+
+    fun artSettlingTimeMillis(timeMillis: Long) {
+        artSettlingTimeMillis = timeMillis
     }
 }

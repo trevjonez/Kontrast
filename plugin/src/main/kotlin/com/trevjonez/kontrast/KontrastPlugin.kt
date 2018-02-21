@@ -30,6 +30,7 @@ import com.trevjonez.kontrast.internal.testEvents
 import com.trevjonez.kontrast.jvm.FileAdapter
 import com.trevjonez.kontrast.jvm.PulledOutput
 import com.trevjonez.kontrast.report.TestCaseOutput
+import com.trevjonez.kontrast.task.ArtSettlingTask
 import com.trevjonez.kontrast.task.CaptureTestKeyTask
 import com.trevjonez.kontrast.task.HtmlReportTask
 import com.trevjonez.kontrast.task.InstallApkTask
@@ -59,7 +60,8 @@ class KontrastPlugin : Plugin<Project> {
     companion object {
         const val KONTRAST_CONFIG = "kontrast"
         const val GROUP = "Kontrast"
-        const val VERSION = "0.3.1"
+
+        const val DEFAULT_SETTLING_TIME = 5000L
     }
 
     internal lateinit var adb: Adb
@@ -75,10 +77,10 @@ class KontrastPlugin : Plugin<Project> {
 
         if (project.configurations.findByName(KONTRAST_CONFIG) == null) {
             project.configurations.create(KONTRAST_CONFIG)
-            project.dependencies.add(KONTRAST_CONFIG, "com.github.trevjonez.Kontrast:unitTestClient:$VERSION")
+            project.dependencies.add(KONTRAST_CONFIG, "com.github.trevjonez.Kontrast:unitTestClient:${BuildConfig.VERSION}")
         }
 
-        project.dependencies.add("androidTestImplementation", "com.github.trevjonez.Kontrast:androidTestClient:$VERSION")
+        project.dependencies.add("androidTestImplementation", "com.github.trevjonez.Kontrast:androidTestClient:${BuildConfig.VERSION}")
 
 
         val unzipTestTask = project.createTask(type = Copy::class,
@@ -156,7 +158,12 @@ class KontrastPlugin : Plugin<Project> {
             availableDevices.forEach { device ->
                 val mainInstall = createMainInstallTask(project, variant, device)
                 val testInstall = createTestInstallTask(project, variant, device)
-                val render = createRenderTask(project, variant, device, mainInstall, testInstall)
+
+                val artSettle = if(device.isEmulator) {
+                    createSettlingTask(project, variant,device, mainInstall, testInstall)
+                } else null
+
+                val render = createRenderTask(project, variant, device, mainInstall, testInstall, artSettle)
                 val keyCapture = createKeyCaptureTask(project, variant, render, device)
                 val report = createReportTask(project, variant, device)
                 createTestTask(project, variant, render, keyCapture, unziptestTask, report, device)
@@ -265,11 +272,11 @@ class KontrastPlugin : Plugin<Project> {
         }
     }
 
-    private fun createRenderTask(project: Project, variant: ApplicationVariant, targetDevice: AdbDevice, mainInstall: InstallApkTask, testInstall: InstallApkTask): RenderOnDeviceTask {
+    private fun createRenderTask(project: Project, variant: ApplicationVariant, targetDevice: AdbDevice, mainInstall: InstallApkTask, testInstall: InstallApkTask, artSettlingTask: ArtSettlingTask?): RenderOnDeviceTask {
         return project.createTask(type = RenderOnDeviceTask::class,
                                   name = "render${variant.name.capitalize()}KontrastViews_${targetDevice.alias ?: targetDevice.id}",
                                   description = "Run kontrast rendering step",
-                                  dependsOn = listOf(mainInstall, testInstall)).apply {
+                                  dependsOn = artSettlingTask?.let { listOf(it) } ?: listOf(mainInstall, testInstall)).apply {
             device = targetDevice
             testRunner = variant.testRunner
             testPackage = "${variant.applicationId}.test"
@@ -279,6 +286,15 @@ class KontrastPlugin : Plugin<Project> {
             appApk = variant.apk
             testApk = variant.testApk
             outputs.upToDateWhen { false }
+        }
+    }
+
+    private fun createSettlingTask(project: Project, variant: ApplicationVariant, targetDevice: AdbDevice, mainInstall: InstallApkTask, testInstall: InstallApkTask): ArtSettlingTask {
+        return project.createTask(type = ArtSettlingTask::class,
+                                  name = "settleArt${variant.name.capitalize()}_${targetDevice.alias ?: targetDevice.id}",
+                                  description = "Give the emulator time to settle after apk install to allow art to not segfault on instrumentation invocation.",
+                                  dependsOn = listOf(mainInstall, testInstall)).apply {
+            waitingPeriodMilli = kontrastDsl.artSettlingTimeMillis
         }
     }
 
