@@ -33,8 +33,8 @@ android {
 }
 
 dependencies {
-    compile group: 'org.jetbrains.kotlin', name: 'kotlin-stdlib', version: kotlin_version
-    compile group: 'com.android.support', name: 'appcompat-v7', version: support_lib_version
+    implementation group: 'org.jetbrains.kotlin', name: 'kotlin-stdlib', version: kotlin_version
+    api group: 'com.android.support', name: 'appcompat-v7', version: support_lib_version
 }
 
 task sourcesJar(type: Jar) {

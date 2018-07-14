@@ -15,10 +15,10 @@
  */
 
 buildscript {
-    ext.kotlin_version = '1.2.21'
+    ext.kotlin_version = '1.2.51'
     ext.kotlinx_html_version = '0.6.8'
-    ext.android_plugin_version = '3.0.1'
-    ext.support_lib_version = '26.1.0'
+    ext.android_plugin_version = '3.1.3'
+    ext.support_lib_version = '27.1.1'
     ext.min_sdk = 16
     ext.target_sdk = 27
 
@@ -26,13 +26,13 @@ buildscript {
         google()
         jcenter()
         maven { url "https://jitpack.io" }
-        maven { url 'https://plugins.gradle.org/m2/' }
+        gradlePluginPortal()
     }
     dependencies {
         classpath group: 'org.jetbrains.kotlin', name: 'kotlin-gradle-plugin', version: kotlin_version
         classpath group: 'com.netflix.nebula', name: 'nebula-kotlin-plugin', version: kotlin_version
         classpath group: 'com.android.tools.build', name: 'gradle', version: android_plugin_version
-        classpath group: 'com.github.dcendents', name: 'android-maven-gradle-plugin', version: '1.5'
+        classpath group: 'com.github.dcendents', name: 'android-maven-gradle-plugin', version: '2.1'
         classpath group: 'de.undercouch', name: 'gradle-download-task', version: '3.3.0'
         classpath group: 'com.github.trevjonez', name: 'AVD-Gradle-Plugin', version: '0.4.0'
         classpath group: 'gradle.plugin.de.fuerstenau', name: 'BuildConfigPlugin', version: '1.1.8'
@@ -51,4 +51,4 @@ task clean(type: Delete) {
 }
 
 group = 'com.github.trevjonez.Kontrast'
-version = '0.4.0'
+version = '0.5.0'

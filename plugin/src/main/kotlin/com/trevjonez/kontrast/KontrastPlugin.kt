@@ -30,7 +30,6 @@ import com.trevjonez.kontrast.internal.testEvents
 import com.trevjonez.kontrast.jvm.FileAdapter
 import com.trevjonez.kontrast.jvm.PulledOutput
 import com.trevjonez.kontrast.report.TestCaseOutput
-import com.trevjonez.kontrast.task.ArtSettlingTask
 import com.trevjonez.kontrast.task.CaptureTestKeyTask
 import com.trevjonez.kontrast.task.HtmlReportTask
 import com.trevjonez.kontrast.task.InstallApkTask
@@ -102,6 +101,7 @@ class KontrastPlugin : Plugin<Project> {
 
     private fun configureUnzipTask(project: Project, unzipTestTask: Copy) {
         val kontrastConfig = project.configurations.findByName(KONTRAST_CONFIG)
+                             ?: throw IllegalStateException("Unable to find kontrast configuration")
 
         val unitTestClientJar = kontrastConfig.files.find { it.name.contains("unitTestClient") }
 
@@ -159,11 +159,7 @@ class KontrastPlugin : Plugin<Project> {
                 val mainInstall = createMainInstallTask(project, variant, device)
                 val testInstall = createTestInstallTask(project, variant, device)
 
-                val artSettle = if(device.isEmulator) {
-                    createSettlingTask(project, variant,device, mainInstall, testInstall)
-                } else null
-
-                val render = createRenderTask(project, variant, device, mainInstall, testInstall, artSettle)
+                val render = createRenderTask(project, variant, device, mainInstall, testInstall)
                 val keyCapture = createKeyCaptureTask(project, variant, render, device)
                 val report = createReportTask(project, variant, device)
                 createTestTask(project, variant, render, keyCapture, unziptestTask, report, device)
@@ -173,9 +169,11 @@ class KontrastPlugin : Plugin<Project> {
 
     private fun createReportTask(project: Project, variant: ApplicationVariant, targetDevice: AdbDevice): HtmlReportTask {
         return project.createTask(type = HtmlReportTask::class,
-                                  name = "generate${variant.name.capitalize()}KontrastHtmlReport_${targetDevice.alias ?: targetDevice.id}",
+                                  name = "generate${variant.name.capitalize()}KontrastHtmlReport_${targetDevice.alias
+                                                                                                   ?: targetDevice.id}",
                                   description = "Generate HTML test result report").apply {
-            outputDir = File(project.buildDir, "reports${File.separator}Kontrast${File.separator}${variant.name}${File.separator}${targetDevice.alias ?: targetDevice.id}")
+            outputDir = File(project.buildDir, "reports${File.separator}Kontrast${File.separator}${variant.name}${File.separator}${targetDevice.alias
+                                                                                                                                   ?: targetDevice.id}")
             variantName = variant.name
             deviceAlias = targetDevice.alias ?: targetDevice.id
             outputs.upToDateWhen { false }
@@ -186,7 +184,8 @@ class KontrastPlugin : Plugin<Project> {
                                keyTask: CaptureTestKeyTask, unzipTestTask: Copy, reportTask: HtmlReportTask,
                                targetDevice: AdbDevice): Test {
         return project.createTask(type = Test::class,
-                                  name = "test${variant.name.capitalize()}KontrastTest_${targetDevice.alias ?: targetDevice.id}",
+                                  name = "test${variant.name.capitalize()}KontrastTest_${targetDevice.alias
+                                                                                         ?: targetDevice.id}",
                                   description = "Compare current captured key with render results",
                                   dependsOn = listOf(renderTask, unzipTestTask)).apply {
             useJUnit()
@@ -209,13 +208,15 @@ class KontrastPlugin : Plugin<Project> {
                                 .split("$$")
 
                         val inputExtras = try {
-                            adapter.fromJson(buffer(source(File(renderTask.outputsDir, "${names.joinToString(File.separator)}${File.separator}extras.json")))) ?: mapOf()
+                            adapter.fromJson(buffer(source(File(renderTask.outputsDir, "${names.joinToString(File.separator)}${File.separator}extras.json"))))
+                            ?: mapOf()
                         } catch (ignore: FileNotFoundException) {
                             mapOf<String, String>()
                         }
 
                         val keyExtras = try {
-                            adapter.fromJson(buffer(source(File(keyTask.outputsDir, "${names.joinToString(File.separator)}${File.separator}extras.json")))) ?: mapOf()
+                            adapter.fromJson(buffer(source(File(keyTask.outputsDir, "${names.joinToString(File.separator)}${File.separator}extras.json"))))
+                            ?: mapOf()
                         } catch (ignore: FileNotFoundException) {
                             mapOf<String, String>()
                         }
@@ -239,10 +240,12 @@ class KontrastPlugin : Plugin<Project> {
                         buffer(source(logcatCaptureFile)).readLines()
                                 .subscribeOn(Schedulers.io())
                                 .skipWhile {
-                                    !it.contains("TestRunner: started: ${pulledOutput?.output?.parameterizedName ?: methodName}($className)")
+                                    !it.contains("TestRunner: started: ${pulledOutput?.output?.parameterizedName
+                                                                         ?: methodName}($className)")
                                 }
                                 .takeUntil {
-                                    it.contains("TestRunner: finished: ${pulledOutput?.output?.parameterizedName ?: methodName}($className)")
+                                    it.contains("TestRunner: finished: ${pulledOutput?.output?.parameterizedName
+                                                                         ?: methodName}($className)")
                                 }
                                 .blockingSubscribe {
                                     bufferedWriter.appendln(it)
@@ -251,7 +254,7 @@ class KontrastPlugin : Plugin<Project> {
 
                         bufferedWriter.close()
 
-                        if(linesWritten == 0) {
+                        if (linesWritten == 0) {
                             logcatFile.delete()
                         }
 
@@ -263,20 +266,23 @@ class KontrastPlugin : Plugin<Project> {
 
     private fun createKeyCaptureTask(project: Project, variant: ApplicationVariant, renderTask: RenderOnDeviceTask, targetDevice: AdbDevice): CaptureTestKeyTask {
         return project.createTask(type = CaptureTestKeyTask::class,
-                                  name = "capture${variant.name.capitalize()}TestKeys_${targetDevice.alias ?: targetDevice.id}",
+                                  name = "capture${variant.name.capitalize()}TestKeys_${targetDevice.alias
+                                                                                        ?: targetDevice.id}",
                                   description = "Capture the current render outputs as new test key",
                                   dependsOn = listOf(renderTask)).apply {
             pulledOutputs = renderTask.resultSubject.firstOrError()
-            outputsDir = File(kontrastDsl.testKeyRoot, "${variant.name}${File.separator}${targetDevice.alias ?: targetDevice.id}")
+            outputsDir = File(kontrastDsl.testKeyRoot, "${variant.name}${File.separator}${targetDevice.alias
+                                                                                          ?: targetDevice.id}")
             outputs.upToDateWhen { false }
         }
     }
 
-    private fun createRenderTask(project: Project, variant: ApplicationVariant, targetDevice: AdbDevice, mainInstall: InstallApkTask, testInstall: InstallApkTask, artSettlingTask: ArtSettlingTask?): RenderOnDeviceTask {
+    private fun createRenderTask(project: Project, variant: ApplicationVariant, targetDevice: AdbDevice, mainInstall: InstallApkTask, testInstall: InstallApkTask): RenderOnDeviceTask {
         return project.createTask(type = RenderOnDeviceTask::class,
-                                  name = "render${variant.name.capitalize()}KontrastViews_${targetDevice.alias ?: targetDevice.id}",
+                                  name = "render${variant.name.capitalize()}KontrastViews_${targetDevice.alias
+                                                                                            ?: targetDevice.id}",
                                   description = "Run kontrast rendering step",
-                                  dependsOn = artSettlingTask?.let { listOf(it) } ?: listOf(mainInstall, testInstall)).apply {
+                                  dependsOn = listOf(mainInstall, testInstall)).apply {
             device = targetDevice
             testRunner = variant.testRunner
             testPackage = "${variant.applicationId}.test"
@@ -289,19 +295,11 @@ class KontrastPlugin : Plugin<Project> {
         }
     }
 
-    private fun createSettlingTask(project: Project, variant: ApplicationVariant, targetDevice: AdbDevice, mainInstall: InstallApkTask, testInstall: InstallApkTask): ArtSettlingTask {
-        return project.createTask(type = ArtSettlingTask::class,
-                                  name = "settleArt${variant.name.capitalize()}_${targetDevice.alias ?: targetDevice.id}",
-                                  description = "Give the emulator time to settle after apk install to allow art to not segfault on instrumentation invocation.",
-                                  dependsOn = listOf(mainInstall, testInstall)).apply {
-            waitingPeriodMilli = kontrastDsl.artSettlingTimeMillis
-        }
-    }
-
     private fun createTestInstallTask(project: Project, variant: ApplicationVariant, targetDevice: AdbDevice): InstallApkTask {
-        val assembleTestTask = project.tasks.findByName("assemble${variant.name.capitalize()}AndroidTest")
+        val assembleTestTask = project.tasks.findByName("assemble${variant.name.capitalize()}AndroidTest")!!
         return project.createTask(type = InstallApkTask::class,
-                                  name = "install${variant.name.capitalize()}TestApk_${targetDevice.alias ?: targetDevice.id}",
+                                  name = "install${variant.name.capitalize()}TestApk_${targetDevice.alias
+                                                                                       ?: targetDevice.id}",
                                   description = "Install test apk for variant ${variant.name}",
                                   dependsOn = listOf(assembleTestTask)).apply {
             apk = variant.testApk
@@ -310,9 +308,10 @@ class KontrastPlugin : Plugin<Project> {
     }
 
     private fun createMainInstallTask(project: Project, variant: ApplicationVariant, targetDevice: AdbDevice): InstallApkTask {
-        val assembleTask = project.tasks.findByName("assemble${variant.name.capitalize()}")
+        val assembleTask = project.tasks.findByName("assemble${variant.name.capitalize()}")!!
         return project.createTask(type = InstallApkTask::class,
-                                  name = "install${variant.name.capitalize()}Apk_${targetDevice.alias ?: targetDevice.id}",
+                                  name = "install${variant.name.capitalize()}Apk_${targetDevice.alias
+                                                                                   ?: targetDevice.id}",
                                   description = "Install main apk for variant ${variant.name}",
                                   dependsOn = listOf(assembleTask)).apply {
             apk = variant.apk

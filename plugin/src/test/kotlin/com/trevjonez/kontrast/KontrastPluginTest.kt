@@ -151,11 +151,11 @@ class KontrastPluginTest {
 
     fun rootGradleFileContents(kontrastVersion: String) = """
 buildscript {
-    ext.kotlin_version = '1.1.60'
-    ext.android_plugin_version = '3.0.0'
-    ext.support_lib_version = '26.1.0'
+    ext.kotlin_version = '1.2.51'
+    ext.android_plugin_version = '3.1.3'
+    ext.support_lib_version = '27.1.1'
     ext.min_sdk = 16
-    ext.target_sdk = 26
+    ext.target_sdk = 27
 
     repositories {
         google()

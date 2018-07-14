@@ -39,7 +39,7 @@ dependencies {
     api group: 'org.jetbrains.kotlin', name: 'kotlin-stdlib', version: kotlin_version
     kapt group: 'com.android.databinding', name: 'compiler', version: android_plugin_version
     api group: 'com.android.support', name: 'cardview-v7', version: support_lib_version
-    api group: 'com.android.support.constraint', name: 'constraint-layout', version: '1.0.2'
+    api group: 'com.android.support.constraint', name: 'constraint-layout', version: '1.1.2'
 
     androidTestImplementation group: 'junit', name: 'junit', version: '4.12'
 }

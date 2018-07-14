@@ -22,7 +22,7 @@ import org.gradle.api.DefaultTask
 
 abstract class AdbCommandTask: DefaultTask() {
     val plugin: KontrastPlugin
-        get() = project.plugins.findPlugin(KontrastPlugin::class.java)
+        get() = project.plugins.findPlugin(KontrastPlugin::class.java)!!
 
     val adb: Adb
         get() = plugin.adb
