@@ -16,29 +16,35 @@
 
 package com.trevjonez.kontrast.runner
 
+import android.annotation.SuppressLint
 import android.app.Activity
 import android.app.Instrumentation
 import android.content.pm.PackageManager.GET_META_DATA
+import android.os.Build
 import android.os.Bundle
+import android.os.ParcelFileDescriptor.AutoCloseInputStream
 import androidx.test.internal.runner.TestRequestBuilder
+import androidx.test.internal.runner.TestSize
 import androidx.test.runner.MonitoringInstrumentation
+import androidx.test.runner.lifecycle.ApplicationLifecycleCallback
+import androidx.test.runner.screenshot.ScreenCaptureProcessor
 import org.junit.runner.Request
-import org.junit.runner.Runner
 import org.junit.runner.manipulation.Filter
 import org.junit.runner.notification.RunListener
 import org.junit.runners.model.RunnerBuilder
+import java.io.BufferedReader
+import java.io.File
+import java.io.FileReader
+import java.io.InputStreamReader
 
-class KontrastTestParser {
-}
+abstract class OrchestratingAndroidJunitTestRunner<RunnerArgs : OrchestratingAndroidJunitTestRunner.Args> : MonitoringInstrumentation() {
+    lateinit var arguments: Bundle
+    val runnerArgs: RunnerArgs by lazy { parseRunnerArgs() }
 
-class KontrastTestRunner : MonitoringInstrumentation() {
-    private lateinit var arguments: Bundle
-    private lateinit var runnerArgs: KontrastTestRunner.Args
+    abstract fun parseRunnerArgs(): RunnerArgs
 
     override fun onCreate(arguments: Bundle) {
         this.arguments = arguments
-        this.runnerArgs = Args.from(this, arguments)
-        //TODO Parse arguments
         //TODO Wait for debugger?
         //TODO Usage analytics?
 
@@ -65,8 +71,7 @@ class KontrastTestRunner : MonitoringInstrumentation() {
 
     fun buildRequest(): Request {
         return TestRequestBuilder(this, arguments).apply {
-            addPathToScan(runnerArgs.classpathToScan)
-
+            addPathsToScan(runnerArgs.classpathToScan)
             if (runnerArgs.classpathToScan.isEmpty()) {
                 addPathToScan(context.packageCodePath)
             }
@@ -111,10 +116,12 @@ class KontrastTestRunner : MonitoringInstrumentation() {
 
         open val testPackages by lazy {
             coalesceCsv(TEST_PACKAGE, bundle, manifestBundle)
+                    .plus(testsFile.packages)
         }
 
         open val notTestPackages by lazy {
             coalesceCsv(NOT_TEST_PACKAGE, bundle, manifestBundle)
+                    .plus(notTestsFile.packages)
         }
 
         open val testSize by lazy {
@@ -135,7 +142,7 @@ class KontrastTestRunner : MonitoringInstrumentation() {
 
         open val listeners by lazy {
             coalesceCsv(LISTENER, bundle, manifestBundle)
-                    .map { instantiateListener(it) }
+                    .map { instantiate<RunListener>(it) }
         }
 
         open val filters by lazy {
@@ -146,6 +153,83 @@ class KontrastTestRunner : MonitoringInstrumentation() {
         open val runnerBuilderClasses by lazy {
             coalesceCsv(RUNNER_BUILDER, bundle, manifestBundle)
                     .map { Class.forName(it) as Class<out RunnerBuilder> }
+        }
+
+        open val testsFile by lazy {
+            coalesceTestFile(instrumentation, TEST_FILE, bundle, manifestBundle)
+        }
+
+        open val tests by lazy {
+            coalesceCsv(TEST_CLASS, bundle, manifestBundle)
+                    .map { it.asTestArg() }
+                    .plus(testsFile.tests)
+        }
+
+        open val notTestsFile by lazy {
+            coalesceTestFile(instrumentation, NOT_TEST_FILE, bundle, manifestBundle)
+        }
+
+        open val notTests by lazy {
+            coalesceCsv(NOT_TEST_CLASS, bundle, manifestBundle)
+                    .map { it.asTestArg() }
+                    .plus(notTestsFile.tests)
+        }
+
+        open val numShards by lazy {
+            cascadeUnsignedInt(NUM_SHARDS, bundle, manifestBundle)
+        }
+
+        open val shardIndex by lazy {
+            cascadeUnsignedInt(SHARD_INDEX, bundle, manifestBundle)
+        }
+
+        open val disableAnalytics by lazy {
+            cascadeBoolean(DISABLE_ANALYTICS, bundle, manifestBundle)
+        }
+
+        open val appListeners by lazy {
+            coalesceCsv(APP_LISTENER, bundle, manifestBundle)
+                    .map { instantiate<ApplicationLifecycleCallback>(it) }
+        }
+
+        open val classLoader by lazy {
+            coalesceCsv(CLASS_LOADER, bundle, manifestBundle)
+                    .singleOrNull()?.let {
+                        instantiate<ClassLoader>(it)
+                    }
+        }
+
+        open val classpathToScan by lazy {
+            coalesceClasspath(CLASSPATH_TO_SCAN, bundle, manifestBundle).toSet()
+        }
+
+        open val remoteMethod by lazy {
+            cascadeString(REMOTE_INIT_METHOD, bundle, manifestBundle)?.asTestArg()
+        }
+
+        open val targetProcess by lazy {
+            cascadeString(TARGET_PROCESS, bundle, manifestBundle)
+        }
+
+        open val screenCaptureProcessors by lazy {
+            coalesceCsv(SCREENSHOT_PROCESSORS, bundle, manifestBundle)
+                    .map { instantiate<ScreenCaptureProcessor>(it) }
+        }
+
+        open val orchestratorService by lazy {
+            cascadeString(ORCHESTRATOR_SERVICE, bundle, manifestBundle)
+        }
+
+        open val listTestsForOrchestrator by lazy {
+            cascadeBoolean(LIST_TESTS_FOR_ORCHESTRATOR, bundle, manifestBundle)
+        }
+
+        open val shellExecBinderKey by lazy {
+            cascadeString(SHELL_EXEC_BINDER_KEY, bundle, manifestBundle)
+        }
+
+        open val newRunListenerMode by lazy {
+            cascadeBoolean(RUN_LISTENER_NEW_ORDER, bundle, manifestBundle)
         }
 
         fun cascadeBoolean(key: String, vararg bundles: Bundle, default: Boolean = false): Boolean {
@@ -177,7 +261,51 @@ class KontrastTestRunner : MonitoringInstrumentation() {
 
         fun coalesceCsv(key: String, vararg bundles: Bundle): List<String> {
             return coalesce(*bundles) {
-                getString(key, "").split(',')
+                getString(key, "").split(CLASS_SEPARATOR)
+            }
+        }
+
+        fun coalesceTestFile(instrumentation: Instrumentation, key: String, vararg bundles: Bundle): TestFileArg {
+            return bundles.map { bundle ->
+                bundle.getString(key)?.let { filePath ->
+                    instrumentation.openFile(filePath).useLines { lines ->
+                        lines.fold(mutableListOf<TestArg>() to mutableListOf<String>()) { collector, line ->
+                            collector.apply {
+                                if (line.isClassOrMethod) {
+                                    first.add(line.asTestArg())
+                                } else {
+                                    second.addAll(line.split(CLASS_SEPARATOR))
+                                }
+                            }
+                        }
+                    }
+                } ?: emptyList<TestArg>() to emptyList<String>()
+            }.let { fileContents ->
+                TestFileArg(fileContents.map { it.first }.flatten(), fileContents.map { it.second }.flatten())
+            }
+        }
+
+        val String.isClassOrMethod: Boolean
+            get() = matches(CLASS_OR_METHOD_REGEX)
+
+        val String.validatePackage: String
+            get() = apply { require(matches(VALID_PACKAGE_REGEX)) }
+
+        @SuppressLint("NewApi")
+        fun Instrumentation.openFile(path: String): BufferedReader {
+            val isInstantApp = Build.VERSION.SDK_INT >= 26 && context.packageManager.isInstantApp
+            val readerImpl = if (isInstantApp) {
+                InputStreamReader(AutoCloseInputStream(uiAutomation.executeShellCommand("cat $path")))
+            } else {
+                FileReader(File(path))
+            }
+
+            return BufferedReader(readerImpl)
+        }
+
+        fun coalesceClasspath(key: String, vararg bundles: Bundle): List<String> {
+            return coalesce(*bundles) {
+                getString(key, "").split(CLASSPATH_SEPARATOR)
             }
         }
 
@@ -185,11 +313,11 @@ class KontrastTestRunner : MonitoringInstrumentation() {
             return bundles.map { it.get() }.flatten()
         }
 
-        fun instantiateListener(className: String): RunListener {
+        fun <T : Any> instantiate(className: String): T {
             return Class.forName(className)
                     .getConstructor().apply {
                         isAccessible = true
-                    }.newInstance() as RunListener
+                    }.newInstance() as T
         }
 
         fun instantiateFilter(className: String, bundle: Bundle): Filter {
@@ -204,7 +332,40 @@ class KontrastTestRunner : MonitoringInstrumentation() {
         }
 
         open fun configureRequest(builder: TestRequestBuilder) {
+            builder.apply {
+                tests.forEach { (className, methodName) ->
+                    if (methodName.isNullOrBlank()) addTestClass(className)
+                    else addTestMethod(className, methodName)
+                }
 
+                notTests.forEach { (className, methodName) ->
+                    if (methodName.isNullOrBlank()) removeTestClass(className)
+                    else removeTestMethod(className, methodName)
+                }
+
+                testPackages.forEach { addTestPackage(it) }
+
+                notTestPackages.forEach { removeTestPackage(it) }
+
+                testSize?.let { addTestSizeFilter(TestSize.fromString(it)) }
+
+                annotation?.let { addAnnotationInclusionFilter(it) }
+
+                notAnnotations.forEach { addAnnotationExclusionFilter(it) }
+
+                filters.forEach { addFilter(it) }
+
+                if (testTimeout > 0) setPerTestTimeout(testTimeout)
+
+                if (numShards > 0 && shardIndex >= 0 && shardIndex < numShards)
+                    addShardingFilter(numShards, shardIndex)
+
+                setSkipExecution(logOnly)
+
+                classLoader?.let { setClassLoader(it) }
+
+                runnerBuilderClasses.forEach { addCustomRunnerBuilderClass(it) }
+            }
         }
 
         companion object {
@@ -240,6 +401,37 @@ class KontrastTestRunner : MonitoringInstrumentation() {
             const val LIST_TESTS_FOR_ORCHESTRATOR = "listTestsForOrchestrator"
             const val SHELL_EXEC_BINDER_KEY = "shellExecBinderKey"
             const val RUN_LISTENER_NEW_ORDER = "newRunListenerMode"
+
+            const val CLASS_SEPARATOR = ','
+            const val CLASSPATH_SEPARATOR = ':'
+
+            val CLASS_OR_METHOD_REGEX =
+                    """^([\p{L}_$][\p{L}\p{N}_$]*\.)*[\p{Lu}_$][\p{L}\p{N}_$]*(#[\p{L}_$][\p{L}\p{N}_$]*)?$""".toRegex()
+
+            val VALID_PACKAGE_REGEX =
+                    """^([\p{L}_$][\p{L}\p{N}_$]*\.)*[\p{L}_$][\p{L}\p{N}_$]*$""".toRegex()
         }
     }
 }
+
+data class TestFileArg(val tests: List<TestArg>, val packages: List<String>)
+
+data class TestArg(val className: String, val methodName: String? = null) {
+    companion object {
+        const val METHOD_SEPARATOR = '#'
+
+        @JvmStatic
+        fun from(arg: String): TestArg {
+            val methodIndex = arg.indexOf(METHOD_SEPARATOR)
+            return if (methodIndex > 0) {
+                val className = arg.substring(0, methodIndex)
+                val methodName = arg.substring(methodIndex + 1)
+                TestArg(className, methodName)
+            } else {
+                TestArg(arg)
+            }
+        }
+    }
+}
+
+fun String.asTestArg() = TestArg.from(this)
