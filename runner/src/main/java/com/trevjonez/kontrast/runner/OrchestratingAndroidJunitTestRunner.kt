@@ -19,15 +19,24 @@ package com.trevjonez.kontrast.runner
 import android.annotation.SuppressLint
 import android.app.Activity
 import android.app.Instrumentation
+import android.content.Context
 import android.content.pm.PackageManager.GET_META_DATA
 import android.os.Build
 import android.os.Bundle
+import android.os.Debug
 import android.os.ParcelFileDescriptor.AutoCloseInputStream
+import android.util.Log
+import androidx.test.internal.runner.TestExecutor
 import androidx.test.internal.runner.TestRequestBuilder
 import androidx.test.internal.runner.TestSize
+import androidx.test.internal.runner.listener.*
+import androidx.test.internal.util.ReflectionUtil.reflectivelyInvokeRemoteMethod
 import androidx.test.runner.MonitoringInstrumentation
 import androidx.test.runner.lifecycle.ApplicationLifecycleCallback
+import androidx.test.runner.lifecycle.ApplicationLifecycleMonitorRegistry
 import androidx.test.runner.screenshot.ScreenCaptureProcessor
+import androidx.test.runner.screenshot.Screenshot.addScreenCaptureProcessors
+import org.junit.runner.Description
 import org.junit.runner.Request
 import org.junit.runner.manipulation.Filter
 import org.junit.runner.notification.RunListener
@@ -37,19 +46,42 @@ import java.io.File
 import java.io.FileReader
 import java.io.InputStreamReader
 
-abstract class OrchestratingAndroidJunitTestRunner<RunnerArgs : OrchestratingAndroidJunitTestRunner.Args> : MonitoringInstrumentation() {
+abstract class OrchestratingAndroidJunitTestRunner<
+        RunnerArgs : OrchestratingAndroidJunitTestRunner.Args,
+        OrchestrationListener : OrchestratingAndroidJunitTestRunner.Listener
+        > : MonitoringInstrumentation() {
+
     lateinit var arguments: Bundle
     val runnerArgs: RunnerArgs by lazy { parseRunnerArgs() }
+    var orchestrationListener: OrchestrationListener? = null
+    private val instrumentationResultPrinter = InstrumentationResultPrinter()
 
+    open val logTag: String = "AbsOrchestratingRunner"
     abstract fun parseRunnerArgs(): RunnerArgs
+    abstract fun makeListener(): OrchestrationListener
 
     override fun onCreate(arguments: Bundle) {
         this.arguments = arguments
-        //TODO Wait for debugger?
-        //TODO Usage analytics?
+
+        if (runnerArgs.waitForDebugger) {
+            Log.i(logTag, "Waiting for debugger to connect...")
+            Debug.waitForDebugger()
+            Log.i(logTag, "Debugger connected.")
+        }
 
         super.onCreate(arguments)
 
+        runnerArgs.appListeners.forEach {
+            ApplicationLifecycleMonitorRegistry.getInstance().addLifecycleCallback(it)
+        }
+
+        addScreenCaptureProcessors(runnerArgs.screenCaptureProcessors.toSet())
+
+        if (runnerArgs.orchestratorService != null
+            && isPrimaryInstrProcess(runnerArgs.targetProcess)) {
+            orchestrationListener = makeListener()
+            orchestrationListener!!.connect(context)
+        }
 
         //if orch service provided and primary inst process
         //connect and wait to be called
@@ -58,15 +90,41 @@ abstract class OrchestratingAndroidJunitTestRunner<RunnerArgs : OrchestratingAnd
     }
 
     override fun onStart() {
-        //TODO JS bridge?
+        setJsBridgeClassName("androidx.test.espresso.web.bridge.JavaScriptBridge")
         super.onStart()
 
-        if (/* List tests for orch && isPrimaryInst*/isPrimaryInstrProcess(runnerArgs.targetProcess)) {
-            val testRequest = buildRequest()
-            //listener.addTests(testRequest.getRunner().getDescription())
+        if (runnerArgs.listTestsForOrchestrator && isPrimaryInstrProcess(runnerArgs.targetProcess)) {
+            orchestrationListener!!.addTests(buildRequest().runner.description)
             finish(Activity.RESULT_OK, Bundle.EMPTY)
             return
         }
+
+        runnerArgs.remoteMethod?.let { (className, methodName) ->
+            reflectivelyInvokeRemoteMethod(className, methodName)
+        }
+
+        if (!isPrimaryInstrProcess(runnerArgs.targetProcess)) {
+            Log.i(logTag, "Runner is idle...")
+            return
+        }
+
+        val results = try {
+            TestExecutor.Builder(this).addListeners().build().execute(buildRequest())
+        } catch (error: RuntimeException) {
+            val msg = "Fatal exception when running tests"
+            Log.e(logTag, msg, error)
+            Bundle().apply {
+                putString(Instrumentation.REPORT_KEY_STREAMRESULT,
+                          "$msg\n${Log.getStackTraceString(error)}")
+            }
+        }
+
+        finish(Activity.RESULT_OK, results)
+    }
+
+    override fun onException(obj: Any, e: Throwable): Boolean {
+        instrumentationResultPrinter.reportProcessCrash(e)
+        return super.onException(obj, e)
     }
 
     fun buildRequest(): Request {
@@ -80,7 +138,62 @@ abstract class OrchestratingAndroidJunitTestRunner<RunnerArgs : OrchestratingAnd
         }.build()
     }
 
-    abstract class Args(instrumentation: Instrumentation, bundle: Bundle) {
+    fun TestExecutor.Builder.addListeners() = apply {
+        if (runnerArgs.newRunListenerMode) addListenersNewOrder(this)
+        else addListenersLegacyOrder(this)
+    }
+
+    fun TestExecutor.Builder.addArgListeners() = apply {
+        runnerArgs.listeners.forEach { addRunListener(it) }
+    }
+
+    fun TestExecutor.Builder.addDelayListener() = apply {
+        if (runnerArgs.delayInMillis > 0) {
+            addRunListener(DelayInjector(runnerArgs.delayInMillis))
+        }
+    }
+
+    fun TestExecutor.Builder.addCoverageListener() = apply {
+        if (runnerArgs.codeCoverage) {
+            addRunListener(CoverageListener(runnerArgs.codeCoveragePath))
+        }
+    }
+
+    fun addListenersNewOrder(builder: TestExecutor.Builder) {
+        builder.addArgListeners()
+        when {
+            runnerArgs.logOnly -> builder.addRunListener(this.instrumentationResultPrinter)
+            runnerArgs.suiteAssignment -> builder.addRunListener(SuiteAssignmentPrinter())
+            else -> {
+                builder.addRunListener(LogRunListener())
+                builder.addDelayListener()
+                builder.addCoverageListener()
+                builder.addRunListener(orchestrationListener ?: instrumentationResultPrinter)
+                builder.addRunListener(ActivityFinisherRunListener(this, ActivityFinisher()) {
+                    waitForActivitiesToComplete()
+                })
+            }
+        }
+    }
+
+    fun addListenersLegacyOrder(builder: TestExecutor.Builder) {
+        when {
+            runnerArgs.logOnly -> builder.addRunListener(this.instrumentationResultPrinter)
+            runnerArgs.suiteAssignment -> builder.addRunListener(SuiteAssignmentPrinter())
+            else -> {
+                builder.addRunListener(LogRunListener())
+                builder.addRunListener(orchestrationListener ?: instrumentationResultPrinter)
+                builder.addRunListener(ActivityFinisherRunListener(this, ActivityFinisher()) {
+                    waitForActivitiesToComplete()
+                })
+                builder.addDelayListener()
+                builder.addCoverageListener()
+            }
+        }
+        builder.addArgListeners()
+    }
+
+    open class Args(instrumentation: Instrumentation, bundle: Bundle) {
 
         val manifestBundle: Bundle
 
@@ -89,6 +202,9 @@ abstract class OrchestratingAndroidJunitTestRunner<RunnerArgs : OrchestratingAnd
             val instInfo = packageManager.getInstrumentationInfo(instrumentation.componentName, GET_META_DATA)
             manifestBundle = instInfo.metaData
         }
+
+        open val waitForDebugger: Boolean
+            get() = debug && !listTestsForOrchestrator
 
         open val debug: Boolean by lazy {
             cascadeBoolean(DEBUG, bundle, manifestBundle)
@@ -412,26 +528,9 @@ abstract class OrchestratingAndroidJunitTestRunner<RunnerArgs : OrchestratingAnd
                     """^([\p{L}_$][\p{L}\p{N}_$]*\.)*[\p{L}_$][\p{L}\p{N}_$]*$""".toRegex()
         }
     }
-}
 
-data class TestFileArg(val tests: List<TestArg>, val packages: List<String>)
-
-data class TestArg(val className: String, val methodName: String? = null) {
-    companion object {
-        const val METHOD_SEPARATOR = '#'
-
-        @JvmStatic
-        fun from(arg: String): TestArg {
-            val methodIndex = arg.indexOf(METHOD_SEPARATOR)
-            return if (methodIndex > 0) {
-                val className = arg.substring(0, methodIndex)
-                val methodName = arg.substring(methodIndex + 1)
-                TestArg(className, methodName)
-            } else {
-                TestArg(arg)
-            }
-        }
+    abstract class Listener : RunListener() {
+        abstract fun connect(context: Context)
+        abstract fun addTests(description: Description)
     }
 }
-
-fun String.asTestArg() = TestArg.from(this)
