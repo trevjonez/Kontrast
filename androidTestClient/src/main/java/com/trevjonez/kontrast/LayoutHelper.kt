@@ -21,13 +21,13 @@ import android.graphics.Bitmap
 import android.graphics.Canvas
 import android.os.Build
 import android.os.Bundle
-import android.support.test.InstrumentationRegistry
 import android.util.Log
 import android.util.TypedValue
 import android.view.View
 import android.view.View.MeasureSpec.EXACTLY
 import android.view.View.MeasureSpec.UNSPECIFIED
 import android.view.View.MeasureSpec.makeMeasureSpec
+import androidx.test.platform.app.InstrumentationRegistry
 import java.io.File
 
 class LayoutHelper(val view: View,

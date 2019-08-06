@@ -44,7 +44,6 @@ import org.gradle.api.DefaultTask
 import org.gradle.api.Plugin
 import org.gradle.api.Project
 import org.gradle.api.Task
-import org.gradle.api.internal.file.collections.SimpleFileCollection
 import org.gradle.api.tasks.Copy
 import org.gradle.api.tasks.testing.Test
 import org.gradle.api.tasks.testing.TestDescriptor
@@ -193,7 +192,7 @@ class KontrastPlugin : Plugin<Project> {
             systemProperty("KontrastKeyDir", keyTask.outputsDir.absolutePath)
             val config = project.configurations.findByName(KONTRAST_CONFIG)
             classpath = config
-            testClassesDirs = SimpleFileCollection(unzipTestTask.destinationDir)
+            testClassesDirs = project.files(unzipTestTask.destinationDir)
             keyTask.finalizedBy(this)
             setFinalizedBy(listOf(reportTask))
             outputs.upToDateWhen { false }

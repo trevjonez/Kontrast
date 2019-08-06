@@ -17,10 +17,10 @@
 package com.trevjonez.kontrast
 
 import android.app.Activity
-import android.support.test.internal.runner.junit4.statement.UiThreadStatement
-import android.support.test.rule.ActivityTestRule
 import android.view.LayoutInflater
 import android.view.View
+import androidx.test.internal.runner.junit4.statement.UiThreadStatement
+import androidx.test.rule.ActivityTestRule
 import org.junit.Rule
 
 

@@ -18,28 +18,25 @@ apply plugin: 'com.android.library'
 apply plugin: 'kotlin-android'
 apply plugin: 'com.github.dcendents.android-maven'
 
-group = rootProject.group
-version = rootProject.version
-
 android {
-    compileSdkVersion target_sdk
+    compileSdkVersion target_sdk.toInteger()
 
     defaultConfig {
-        minSdkVersion min_sdk
-        targetSdkVersion target_sdk
+        minSdkVersion min_sdk.toInteger()
+        targetSdkVersion target_sdk.toInteger()
         versionCode 1
-        versionName project.version != null ? project.version : 'unspecified'
+        versionName project.version
     }
 }
 
 dependencies {
-    implementation group: 'org.jetbrains.kotlin', name: 'kotlin-stdlib', version: kotlin_version
-    api group: 'com.android.support', name: 'appcompat-v7', version: support_lib_version
+    implementation "org.jetbrains.kotlin:kotlin-stdlib-jdk8:$kotlin_version"
+    api "androidx.appcompat:appcompat:1.0.2"
 }
 
 task sourcesJar(type: Jar) {
     from android.sourceSets.main.java.srcDirs
-    classifier = 'sources'
+    archiveClassifier = 'sources'
 }
 
 task javadoc(type: Javadoc) {
@@ -49,8 +46,8 @@ task javadoc(type: Javadoc) {
 }
 
 task javadocJar(type: Jar, dependsOn: javadoc) {
-    classifier = 'javadoc'
     from javadoc.destinationDir
+    archiveClassifier = 'javadoc'
 }
 
 artifacts {

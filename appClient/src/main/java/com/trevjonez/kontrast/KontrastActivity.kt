@@ -16,7 +16,7 @@
 
 package com.trevjonez.kontrast
 
-import android.support.v7.app.AppCompatActivity
+import androidx.appcompat.app.AppCompatActivity
 
 /**
  * Due to the nature of most applications depending on appcompat for things such as vector drawables

@@ -17,8 +17,8 @@
 package com.trevjonez.kontrast.app
 
 import android.annotation.SuppressLint
-import android.support.v4.content.ContextCompat
 import android.widget.FrameLayout
+import androidx.core.content.ContextCompat
 import com.trevjonez.kontrast.KontrastTest
 import com.trevjonez.kontrast.KontrastTestBase
 import com.trevjonez.kontrast.app.databinding.CardLayoutBinding

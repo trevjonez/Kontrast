@@ -22,18 +22,18 @@ group = rootProject.group
 version = rootProject.version
 
 dependencies {
-    compile group: 'ar.com.hjg', name: 'pngj', version: '2.1.0'
-    compile group: 'com.squareup.moshi', name: 'moshi', version: '1.5.0'
+    api 'ar.com.hjg:pngj:2.1.0'
+    api 'com.squareup.moshi:moshi:1.8.0'
 }
 
 task sourcesJar(type: Jar, dependsOn: classes) {
-    classifier 'sources'
     from sourceSets.main.allSource
+    archiveClassifier = 'sources'
 }
 
 task javadocJar(type: Jar, dependsOn: javadoc) {
-    classifier 'javadoc'
     from javadoc.destinationDir
+    archiveClassifier = 'javadoc'
 }
 
 artifacts {

@@ -31,8 +31,9 @@ class KontrastPluginTest {
             deleteRecursively()
             mkdirs()
             copyDirectory(File(".", "../app"), File(this, "app"))
-            File(this, "local.properties").writeText("sdk.dir=${System.getenv("HOME")}/Library/Android/sdk")
+            File(this, "local.properties").writeText("sdk.dir=${System.getenv("ANDROID_HOME")}")
             File(this, "settings.gradle").writeText("include ':app'")
+            File(this, "gradle.properties").writeText(rootGradlePropertiesContents())
             File(this, "build.gradle").writeText(rootGradleFileContents(kontrastVersion))
             File(this, "app/kontrast.gradle").writeText(kontrastGradleContents(kontrastVersion))
         }
@@ -68,8 +69,9 @@ class KontrastPluginTest {
             mkdirs()
             copyDirectory(File(".", "../app"), File(this, "app"))
             copyDirectory(File(javaClass.getResource("/Kontrast").path), File(this, "app/Kontrast"))
-            File(this, "local.properties").writeText("sdk.dir=${System.getenv("HOME")}/Library/Android/sdk")
+            File(this, "local.properties").writeText("sdk.dir=${System.getenv("ANDROID_HOME")}")
             File(this, "settings.gradle").writeText("include ':app'")
+            File(this, "gradle.properties").writeText(rootGradlePropertiesContents())
             File(this, "build.gradle").writeText(rootGradleFileContents(kontrastVersion))
             File(this, "app/kontrast.gradle").writeText(kontrastGradleContents(kontrastVersion))
         }
@@ -108,8 +110,9 @@ class KontrastPluginTest {
             mkdirs()
             copyDirectory(File(".", "../app"), File(this, "app"))
             copyDirectory(File(javaClass.getResource("/Kontrast").path), File(this, "app/Kontrast"))
-            File(this, "local.properties").writeText("sdk.dir=${System.getenv("HOME")}/Library/Android/sdk")
+            File(this, "local.properties").writeText("sdk.dir=${System.getenv("ANDROID_HOME")}")
             File(this, "settings.gradle").writeText("include ':app'")
+            File(this, "gradle.properties").writeText(rootGradlePropertiesContents())
             File(this, "build.gradle").writeText(rootGradleFileContents(kontrastVersion))
             File(this, "app/kontrast.gradle").writeText(kontrastGradleContents(kontrastVersion))
             File(this, "app/src/androidTest/java/com/trevjonez/kontrast/app/CardLayoutKontrastTest.kt").apply {
@@ -151,11 +154,11 @@ class KontrastPluginTest {
 
     fun rootGradleFileContents(kontrastVersion: String) = """
 buildscript {
-    ext.kotlin_version = '1.2.51'
-    ext.android_plugin_version = '3.1.3'
-    ext.support_lib_version = '27.1.1'
+    ext.kotlin_version = '1.3.41'
+    ext.android_plugin_version = '3.4.2'
+
     ext.min_sdk = 16
-    ext.target_sdk = 27
+    ext.target_sdk = 28
 
     repositories {
         google()
@@ -184,5 +187,9 @@ apply plugin: 'kontrast'
 dependencies {
     debugApi group: 'com.github.trevjonez.Kontrast', name: 'appClient', version: '$kontrastVersion'
 }
+"""
+
+    fun rootGradlePropertiesContents() = """android.useAndroidX=true
+android.enableJetifier=true
 """
 }

@@ -21,19 +21,19 @@ group = rootProject.group
 version = rootProject.version
 
 dependencies {
-    compile group: 'junit', name: 'junit', version: '4.12'
-    compile group: 'org.jetbrains.kotlin', name: 'kotlin-stdlib', version: kotlin_version
-    compile project(':jvmCommon')
+    implementation 'junit:junit:4.12'
+    implementation "org.jetbrains.kotlin:kotlin-stdlib-jdk8:$kotlin_version"
+    implementation project(':jvmCommon')
 }
 
 task sourcesJar(type: Jar, dependsOn: classes) {
-    classifier 'sources'
     from sourceSets.main.allSource
+    archiveClassifier =  'sources'
 }
 
 task javadocJar(type: Jar, dependsOn: javadoc) {
-    classifier 'javadoc'
     from javadoc.destinationDir
+    archiveClassifier =  'javadoc'
 }
 
 artifacts {
